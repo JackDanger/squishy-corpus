@@ -99,6 +99,7 @@ SOURCE_LINKS = {
     "brotli_spec": "https://datatracker.ietf.org/doc/html/rfc7932",
     "deflate_spec": "https://datatracker.ietf.org/doc/html/rfc1951",
     "jack":      "https://jackdanger.com",
+    "squash":    "https://github.com/nemequ/squash-corpus",
 }
 
 # ─── CSS ──────────────────────────────────────────────────────────────────
@@ -401,7 +402,7 @@ curl -s https://{bucket}/{prefix}/<a href="{base_url(bucket, prefix, 'listing.ht
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>The Squishy Corpus</title>
-  <meta name="description" content="Squishy — a corpus of real, weird, and intentionally broken files for testing compression and decompression libraries. Silesia, modern web data, pathological inputs, and CVE-shaped fixtures.">
+  <meta name="description" content="Test files for compression and decompression libraries: Silesia, modern web files, decoder edge cases, and intentionally malformed fixtures. Pre-compressed in every common format, served from a CDN with stable URLs.">
   <link rel="canonical" href="https://{bucket}/{prefix}/">
   <style>{CSS}</style>
 </head>
@@ -410,13 +411,16 @@ curl -s https://{bucket}/{prefix}/<a href="{base_url(bucket, prefix, 'listing.ht
 <header class="hero">
   <div class="inner">
     <h1>The Squishy Corpus</h1>
-    <p class="lede">A corpus of heterogonous compressed content, optimized for authors of compression/decompression algorithms.</p>
-    <p class="lede">This began as a mirror of [the Silesia corpus](https://sun.aei.polsl.pl/~sdeor/index.php?page=silesia) combined with the [Squash Corpus](https://github.com/nemequ/squash-corpus), I expanded it to include pathological files (entropy extremes, files aligned to compression windows, already-compressed input, etc.) as well as malformed content, then encoded every file in every popular compression format. It's served through a CDN so you can use it in CI and scripts for testing your edge cases.
-    </p>
-    <p class="lede">Squishy pulls together the canonical <a href="{SOURCE_LINKS['silesia']}">Silesia corpus</a> (Sebastian Deorowicz, 2003),
-    a small set of modern web and data files, deterministically-generated pathological inputs
-    on every interesting decoder boundary, and a museum of malformed fixtures shaped to look
-    like real-world decoder CVE classes. Maintained by <a href="{SOURCE_LINKS['jack']}">Jack Danger</a>.</p>
+        <p class="lede">
+            I built this while working on <a href="https://github.com/JackDanger/gzippy">a compression library</a>
+            where I needed test fixtures to cover all kinds of edge cases.
+            <a href="https://jackdanger.com/squishy">Squishy</a>
+            starts from the classic <a href="{SOURCE_LINKS['silesia']}">Silesia corpus</a>, adds modern files from <a href="{SOURCE_LINKS['squash']}">Squash</a>,
+            then adds synthetically-generated inputs designed to land on specific decoder edge cases. This
+            includes a collection of intentionally malformed fixtures shaped after real CVE classes. Everything
+            is pre-compressed in every common format and served from a CDN with stable, immutable URLs — usable
+            from CI without vendoring anything.
+        </p>
     <div class="chips">
       <span class="chip">{total_count} artifacts</span>
       <span class="chip">{human_size(total_size)} total</span>
@@ -467,14 +471,15 @@ curl -s https://{bucket}/{prefix}/<a href="{base_url(bucket, prefix, 'listing.ht
   the same terms as the upstream distribution.</p>
 
   <h3>Modern</h3>
-  <p>License-clean fetches from the open web — <a href="{SOURCE_LINKS['jquery']}">jQuery 2.1.4</a>
+  <p>The three fetched files — <a href="{SOURCE_LINKS['jquery']}">jQuery 2.1.4</a>
   (<a href="{SOURCE_LINKS['mit']}">MIT</a>), <a href="{SOURCE_LINKS['bootstrap']}">Bootstrap 3.3.6</a>
   (<a href="{SOURCE_LINKS['mit']}">MIT</a>), and a snapshot of the <a href="{SOURCE_LINKS['eff']}">EFF</a>
-  homepage as a representative HTML sample. Alongside, a small set of synthetic but representative
-  modern files generated locally from a fixed PRNG seed: a JSON record collection, an NDJSON log dump,
-  a SQLite database, a parquet-shaped fixture, protobuf wire bytes, syslog-style lines, and
-  deterministic random bytes. Synthetic content is in the
-  <a href="{SOURCE_LINKS['cc0']}">public domain (CC0)</a>.</p>
+  homepage — are the license-clean items carried over from <a href="{SOURCE_LINKS['squash']}">Evan
+  Nemerson's Squash corpus</a>. Items in the Squash corpus with redistribution concerns (system
+  binaries, firmware images) were replaced with the synthetics below. Alongside: a JSON record
+  collection, an NDJSON log dump, a SQLite database, a parquet-shaped fixture, protobuf wire bytes,
+  syslog-style lines, and deterministic random bytes — all generated locally from a fixed PRNG seed.
+  Synthetic content is <a href="{SOURCE_LINKS['cc0']}">CC0</a>.</p>
 
   <h3>Pathological</h3>
   <p>Generated locally from a fixed seed. Sub-window-size inputs (0, 1, 13, 256, 4095, 65535 bytes —
