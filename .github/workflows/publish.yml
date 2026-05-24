@@ -1,0 +1,96 @@
+name: Build and publish Squishy
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: 'Which tier to publish (full / nightly / pr — for testing the pipeline cheaply)'
+        required: false
+        default: 'full'
+
+# Single publisher at a time. Cancel any in-progress run when a new one starts.
+concurrency:
+  group: publish
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350   # corpus build + upload can take 3–5 hours; just under 6h job cap
+    env:
+      # The Makefile uses ?= so an empty AWS_VAULT bypasses aws-vault on CI.
+      AWS_VAULT: ""
+      AWS_REGION: us-east-1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Free disk on runner
+        # GitHub runners ship with ~14 GB free. Removing preinstalled toolchains
+        # we don't need buys us another ~25 GB, which is plenty for streaming.
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/local/share/boost
+          sudo apt-get clean
+          df -h /
+
+      - name: Install compressors
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gzip bzip2 xz-utils zstd lz4 brotli \
+            lzip lzop p7zip-full squashfs-tools \
+            cpio binutils \
+            zip unzip \
+            jq python3
+          # zpaq is in older repos but missing on ubuntu-24.04; install if available
+          sudo apt-get install -y zpaq || echo "zpaq unavailable; rules that use it will skip"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Verify AWS access
+        run: aws sts get-caller-identity
+
+      - name: make doctor (pin tool versions)
+        run: make doctor
+
+      - name: Build raw inputs
+        run: make raw
+
+      - name: Stream-publish (build → upload → delete each artifact)
+        run: make stream-publish
+
+      - name: Build + publish dict, negative, and meta
+        run: make negative-publish
+
+      - name: Repair any drift in storage class / content-type
+        run: make storage-reduce
+
+      - name: Invalidate CloudFront index files
+        if: ${{ secrets.CLOUDFRONT_DIST != '' }}
+        env:
+          CLOUDFRONT_DIST: ${{ secrets.CLOUDFRONT_DIST }}
+        run: make invalidate
+
+      - name: Upload publish log as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-log
+          path: build/meta/*.log
+          retention-days: 14
