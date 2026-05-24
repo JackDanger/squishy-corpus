@@ -67,9 +67,18 @@ negative/                                      # intentionally malformed — see
 
 ## Publishing
 
-`.github/workflows/publish.yml` runs `make stream-publish` against `s3://jackdanger.com/squishy/` on push to `main` and on manual dispatch. AWS credentials live as repo secrets (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`).
+The published corpus at https://jackdanger.com/squishy/ is built and pushed from the maintainer's laptop:
 
-To publish to your own bucket, fork the repo, set the secrets, and edit `S3_BUCKET` and `CLOUDFRONT_DIST` at the top of the [Makefile](Makefile).
+```sh
+make stream-publish   # build → upload → delete per artifact
+make invalidate       # CloudFront invalidation for index files
+```
+
+To publish to your own bucket, override the configuration via environment or command-line — no need to edit the Makefile:
+
+```sh
+S3_BUCKET=mybucket S3_PREFIX=corpus CLOUDFRONT_DIST=EXXXXX make stream-publish
+```
 
 ## Contributing
 
