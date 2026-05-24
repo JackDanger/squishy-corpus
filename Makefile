@@ -11,12 +11,15 @@
 # Published to: s3://jackdanger.com/squishy/  (served via CloudFront).
 #
 # Usage:
-#   make doctor           # check toolchain
-#   make all              # build everything locally
-#   make verify           # sha256sum -c
-#   make plan-publish     # dry-run S3 diff
-#   make publish          # idempotent upload (skips files where sha matches)
-#   make invalidate       # CloudFront invalidation of index files only
+#   make doctor               # check toolchain
+#   make all                  # build everything locally
+#   make verify               # sha256sum -c
+#   make plan-publish         # dry-run S3 diff
+#   make publish              # idempotent upload (skips files where sha matches)
+#   make invalidate           # CloudFront invalidation of index files only
+#   make stream-publish       # low-disk build → upload → delete loop
+#   make negative-publish     # build+publish negative fixtures, dict, and meta
+#   make storage-reduce       # fix S3 metadata/storage-class on existing objects
 
 SHELL        := /usr/bin/env bash
 .ONESHELL:
@@ -179,6 +182,11 @@ help:
 	@echo "  plan-publish   — dry-run diff of local build vs S3"
 	@echo "  publish        — idempotent upload to s3://$(S3_BUCKET)/$(S3_PREFIX)/"
 	@echo "  invalidate     — CloudFront invalidation for index files"
+	@echo "  stream-plan    — enumerate streaming publish plan to build/meta/plan.tsv"
+	@echo "  stream-publish — low-disk build → upload → delete loop (use instead of publish when disk is tight)"
+	@echo "  stream-publish-dryrun — dry-run of stream-publish (first 30 lines)"
+	@echo "  negative-publish — build+publish negative fixtures, dict, and meta"
+	@echo "  storage-reduce — rewrite S3 objects with correct metadata/storage-class"
 	@echo "  all            — sources → ... → manifest (full local build)"
 	@echo "  squishy        — all + verify + publish + invalidate (the full bake)"
 	@echo "  clean          — rm -rf $(BUILD)/"
