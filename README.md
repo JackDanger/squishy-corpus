@@ -65,17 +65,6 @@ dict/                                          # zstd dictionary fixtures
 negative/                                      # intentionally malformed — see warning
 ```
 
-## Publishing
-
-The published corpus at https://jackdanger.com/squishy/ is built and pushed from the maintainer's laptop:
-
-```sh
-make stream-publish   # build → upload → delete per artifact
-make invalidate       # CloudFront invalidation for index files
-```
-
-To publish to your own bucket, override the configuration via environment or command-line — no need to edit the Makefile:
-
 ```sh
 S3_BUCKET=mybucket S3_PREFIX=corpus CLOUDFRONT_DIST=EXXXXX make stream-publish
 ```
