@@ -410,10 +410,9 @@ curl -s https://{bucket}/{prefix}/<a href="{base_url(bucket, prefix, 'listing.ht
 <header class="hero">
   <div class="inner">
     <h1>The Squishy Corpus</h1>
-    <p class="lede">A corpus of real, weird, and intentionally broken files for testing
-    compression and decompression libraries — the bytes that actually move through
-    production systems, the bytes that land on awkward decoder boundaries, and the
-    bytes you hope never to see. Built reproducibly. Hosted immutably.</p>
+    <p class="lede">A corpus of heterogonous compressed content, optimized for authors of compression/decompression algorithms.</p>
+    <p class="lede">This began as a mirror of [the Silesia corpus](https://sun.aei.polsl.pl/~sdeor/index.php?page=silesia) combined with the [Squash Corpus](https://github.com/nemequ/squash-corpus), I expanded it to include pathological files (entropy extremes, files aligned to compression windows, already-compressed input, etc.) as well as malformed content, then encoded every file in every popular compression format. It's served through a CDN so you can use it in CI and scripts for testing your edge cases.
+    </p>
     <p class="lede">Squishy pulls together the canonical <a href="{SOURCE_LINKS['silesia']}">Silesia corpus</a> (Sebastian Deorowicz, 2003),
     a small set of modern web and data files, deterministically-generated pathological inputs
     on every interesting decoder boundary, and a museum of malformed fixtures shaped to look
