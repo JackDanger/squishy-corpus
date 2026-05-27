@@ -15,6 +15,7 @@ PALETTE = {
     "silesia":      ("#3b82f6", "#dbeafe", "Silesia"),
     "modern":       ("#10b981", "#d1fae5", "Modern"),
     "pathological": ("#f59e0b", "#fef3c7", "Pathological"),
+    "squash":       ("#ec4899", "#fce7f3", "Squash"),
     "negative":     ("#ef4444", "#fee2e2", "Negative"),
     "dict":         ("#8b5cf6", "#ede9fe", "Dictionary"),
     "bundles":      ("#14b8a6", "#ccfbf1", "Bundles"),
@@ -83,23 +84,29 @@ CVE_LINKS = {
     "CVE-2018-25032": "https://nvd.nist.gov/vuln/detail/CVE-2018-25032",
     "CVE-2020-8927":  "https://nvd.nist.gov/vuln/detail/CVE-2020-8927",
     "CVE-2019-12900": "https://nvd.nist.gov/vuln/detail/CVE-2019-12900",
+    "CVE-2022-37434": "https://nvd.nist.gov/vuln/detail/CVE-2022-37434",
 }
 
 # Source attributions (used in provenance section)
 SOURCE_LINKS = {
-    "silesia":   "https://sun.aei.polsl.pl/~sdeor/index.php?page=silesia",
-    "wanos":     "https://wanos.co/assets/silesia.tar",
-    "jquery":    "https://jquery.com/",
-    "bootstrap": "https://getbootstrap.com/",
-    "eff":       "https://www.eff.org/",
-    "cc0":       "https://creativecommons.org/publicdomain/zero/1.0/",
-    "mit":       "https://opensource.org/license/mit/",
-    "zstd_spec": "https://datatracker.ietf.org/doc/html/rfc8878",
-    "gzip_spec": "https://datatracker.ietf.org/doc/html/rfc1952",
-    "brotli_spec": "https://datatracker.ietf.org/doc/html/rfc7932",
+    "silesia":      "https://sun.aei.polsl.pl/~sdeor/index.php?page=silesia",
+    "wanos":        "https://wanos.co/assets/silesia.tar",
+    "jquery":       "https://jquery.com/",
+    "bootstrap":    "https://getbootstrap.com/",
+    "eff":          "https://www.eff.org/",
+    "cc0":          "https://creativecommons.org/publicdomain/zero/1.0/",
+    "mit":          "https://opensource.org/license/mit/",
+    "zstd_spec":    "https://datatracker.ietf.org/doc/html/rfc8878",
+    "gzip_spec":    "https://datatracker.ietf.org/doc/html/rfc1952",
+    "brotli_spec":  "https://datatracker.ietf.org/doc/html/rfc7932",
     "deflate_spec": "https://datatracker.ietf.org/doc/html/rfc1951",
-    "jack":      "https://jackdanger.com",
-    "squash":    "https://github.com/nemequ/squash-corpus",
+    "jack":         "https://jackdanger.com",
+    "squash":       "https://github.com/nemequ/squash-corpus",
+    "squash_corpus": "https://github.com/nemequ/squash-corpus",
+    "inter":        "https://rsms.me/inter/",
+    "react":        "https://react.dev/",
+    "msgpack":      "https://msgpack.org/",
+    "arrow":        "https://arrow.apache.org/",
 }
 
 # ─── CSS ──────────────────────────────────────────────────────────────────
@@ -203,7 +210,7 @@ table.files {
 table.files th, table.files td {
   text-align: left; padding: 8px 10px; border-bottom: 1px solid #f1f5f9;
 }
-table.files th { color: #475569; font-weight: 600; background: #f8fafc; position: sticky; top: 56px; }
+table.files th { color: #475569; font-weight: 600; background: #f8fafc; position: sticky; top: 0; }
 table.files td.size, table.files td.tier { color: #64748b; font-variant-numeric: tabular-nums; white-space: nowrap; }
 table.files td.sha { font-family: 'SF Mono','JetBrains Mono','Menlo',monospace; font-size: 11px; color: #94a3b8; }
 table.files td.path a { font-family: 'SF Mono','JetBrains Mono','Menlo',monospace; font-size: 12px; border: none; }
@@ -352,7 +359,7 @@ def render_index(manifest: dict, versions_text: str) -> str:
     )
 
     raw_tables = ""
-    for cat in ("silesia", "modern", "pathological"):
+    for cat in ("silesia", "squash", "modern", "pathological"):
         if not by_cat[cat]:
             continue
         color, soft, label = PALETTE[cat]
@@ -412,14 +419,11 @@ curl -s https://{bucket}/{prefix}/<a href="{base_url(bucket, prefix, 'listing.ht
   <div class="inner">
     <h1>The Squishy Corpus</h1>
         <p class="lede">
-            I built this while working on <a href="https://github.com/JackDanger/gzippy">a compression library</a>
-            where I needed test fixtures to cover all kinds of edge cases.
-            <a href="https://jackdanger.com/squishy">Squishy</a>
-            starts from the classic <a href="{SOURCE_LINKS['silesia']}">Silesia corpus</a>, adds modern files from <a href="{SOURCE_LINKS['squash']}">Squash</a>,
-            then adds synthetically-generated inputs designed to land on specific decoder edge cases. This
-            includes a collection of intentionally malformed fixtures shaped after real CVE classes. Everything
-            is pre-compressed in every common format and served from a CDN with stable, immutable URLs — usable
-            from CI without vendoring anything.
+            Test fixtures for compression and decompression libraries.
+            <a href="https://jackdanger.com/squishy">Squishy</a> combines <a href="{SOURCE_LINKS['silesia']}">Silesia</a> (2003), <a href="{SOURCE_LINKS['squash']}">Squash</a> (~2015), modern web formats, and pathological edge cases — pre-compressed in every common format and served from a CDN with stable, immutable URLs.
+        </p>
+        <p class=lede>
+            Usable from CI without vendoring anything.
         </p>
     <div class="chips">
       <span class="chip">{total_count} artifacts</span>
@@ -434,11 +438,11 @@ curl -s https://{bucket}/{prefix}/<a href="{base_url(bucket, prefix, 'listing.ht
 <nav class="sticky">
   <div class="inner">
     <a href="#quick-start">Quick start</a>
+    <a href="#raw">What's in it</a>
     <a href="#provenance">Provenance</a>
     <a href="#algorithms">Algorithms</a>
     <a href="#bundles-info">Bundle formats</a>
     <a href="#tiers">Tiers</a>
-    <a href="#raw">Raw inputs</a>
     <a href="#individual">Individual</a>
     <a href="#bundles">Bundles</a>
     <a href="#dict">Dictionary</a>
@@ -458,8 +462,20 @@ curl -s https://{bucket}/{prefix}/<a href="{base_url(bucket, prefix, 'listing.ht
   {quick_start}
 </section>
 
+<section id="raw">
+  <h2><span class="dot" style="background:#3b82f6"></span> Raw inputs</h2>
+  <p>The unmodified source files. The uncompressed bytes are <em>not</em> published to S3 — the
+  canonical &ldquo;raw&rdquo; delivery is the <code>.gz</code> version at
+  <code>individual/&lt;set&gt;/&lt;file&gt;.gz</code> (gzip <code>-9</code>, deterministic). Click a path to
+  go to its gzipped form.</p>
+  {raw_tables}
+</section>
+
 <section id="provenance">
   <h2><span class="dot" style="background:#10b981"></span> Provenance &amp; licensing</h2>
+
+  <p>I built this when I needed real test fixtures for <a href="https://github.com/JackDanger/gzippy">gzippy</a>.
+  Sources and licenses for each dataset are below.</p>
 
   <h3>Silesia</h3>
   <p>The twelve original Silesia files (Charles Dickens text, a Mozilla executable tar, a 3D MRI image,
@@ -470,23 +486,38 @@ curl -s https://{bucket}/{prefix}/<a href="{base_url(bucket, prefix, 'listing.ht
   canonical mirror at <a href="{SOURCE_LINKS['wanos']}">wanos.co/assets/silesia.tar</a>. Use under
   the same terms as the upstream distribution.</p>
 
+  <h3>Squash</h3>
+  <p>Six files from <a href="{SOURCE_LINKS['squash_corpus']}">Evan Nemerson's Squash
+  corpus</a> (2015–2016): a PDF document (MathGuide), Bootstrap 3.3.6 CSS, the EFF
+  homepage snapshot, jQuery 2.1.4, a 1 MiB random-bytes file, and <code>zlib.wasm</code>
+  — a WebAssembly build of the zlib library. These represent contemporary web and binary
+  workloads from the mid-2010s. Files with redistribution concerns (Raspberry Pi system
+  image, Linux vmlinux, Blender binary) were excluded.</p>
+
   <h3>Modern</h3>
-  <p>The three fetched files — <a href="{SOURCE_LINKS['jquery']}">jQuery 2.1.4</a>
-  (<a href="{SOURCE_LINKS['mit']}">MIT</a>), <a href="{SOURCE_LINKS['bootstrap']}">Bootstrap 3.3.6</a>
-  (<a href="{SOURCE_LINKS['mit']}">MIT</a>), and a snapshot of the <a href="{SOURCE_LINKS['eff']}">EFF</a>
-  homepage — are the license-clean items carried over from <a href="{SOURCE_LINKS['squash']}">Evan
-  Nemerson's Squash corpus</a>. Items in the Squash corpus with redistribution concerns (system
-  binaries, firmware images) were replaced with the synthetics below. Alongside: a JSON record
-  collection, an NDJSON log dump, a SQLite database, a parquet-shaped fixture, protobuf wire bytes,
-  syslog-style lines, and deterministic random bytes — all generated locally from a fixed PRNG seed.
-  Synthetic content is <a href="{SOURCE_LINKS['cc0']}">CC0</a>.</p>
+  <p>Generated locally from a fixed PRNG seed, plus three fetched files:
+  <a href="{SOURCE_LINKS['react']}">React 18.3.1</a> production bundle
+  (<a href="{SOURCE_LINKS['mit']}">MIT</a>),
+  and the <a href="{SOURCE_LINKS['inter']}">Inter typeface</a> Regular
+  (<a href="https://scripts.sil.org/OFL">SIL OFL</a>). Generated files include:
+  JSON records, NDJSON log dumps, syslog lines, SQLite, real
+  <a href="{SOURCE_LINKS['arrow']}">Apache Arrow IPC</a> and Parquet files,
+  <a href="{SOURCE_LINKS['msgpack']}">MessagePack</a>, protobuf wire encoding,
+  a synthetic WebAssembly module, CSV, and UTF-8 text in Chinese, Japanese, and Arabic
+  (exercising brotli's English-tuned static dictionary). Synthetic content is
+  <a href="{SOURCE_LINKS['cc0']}">CC0</a>.</p>
 
   <h3>Pathological</h3>
   <p>Generated locally from a fixed seed. Sub-window-size inputs (0, 1, 13, 256, 4095, 65535 bytes —
   the sizes where stored-block fallback paths live). Window-boundary triples for the major codecs:
   zstd at 128 MiB ± 1, brotli at 16 MiB ± 1, deflate at 32 KiB ± 1. Entropy extremes: zeros, urandom,
   single-byte-repeating, alternating bits, ASCII rotating, one-byte-per-page, a phrase repeated to
-  10 MiB, pi digits as ASCII, sparse-geometric, and an already-gzipped blob. All
+  10 MiB, pi digits as ASCII, sparse-geometric, and an already-gzipped blob. New inputs target
+  specific codec internals: zstd window-log-23 (8 MiB, the common default) boundaries, LZ4 64 KiB
+  block-size boundaries, deflate MAX_MATCH boundaries (257–259 bytes), mixed-entropy blocks
+  (alternating compressible and incompressible 512 KiB regions), the Thue-Morse aperiodic sequence
+  (defeats LZ77 match-finding), a De Bruijn order-3 sequence (every 3-byte substring appears exactly
+  once), and a near-duplicate pair (95% identical files for testing long-range match finders). All
   <a href="{SOURCE_LINKS['cc0']}">CC0</a>.</p>
 
   <h3>Negative</h3>
@@ -529,16 +560,6 @@ curl -s https://{bucket}/{prefix}/<a href="{base_url(bucket, prefix, 'listing.ht
   <div class="grid-3">{tier_cards}</div>
 </section>
 
-<section id="raw">
-  <h2><span class="dot" style="background:#3b82f6"></span> Raw inputs</h2>
-  <p>The unmodified source files. Note: the uncompressed bytes are <em>not</em> published to S3 — the
-  canonical &ldquo;raw&rdquo; delivery on the wire is the <code>.gz</code> version at
-  <code>individual/&lt;set&gt;/&lt;file&gt;.gz</code> (gzip <code>-9</code>, deterministic). Decompress
-  client-side if you need the raw bytes. The tables below describe the files; click a path to
-  go to its gzipped form.</p>
-  {raw_tables}
-</section>
-
 <section id="individual">
   <h2><span class="dot" style="background:#64748b"></span> Individual compressions</h2>
   <p>Each raw input compressed by each codec at multiple levels. Click a file to expand its variants.</p>
@@ -573,12 +594,16 @@ curl -s https://{bucket}/{prefix}/<a href="{base_url(bucket, prefix, 'listing.ht
   those are properties worth measuring. Shapes include truncation at decoder-sensitive offsets,
   single-byte flips at magic/header/body/checksum, declared-length attacks (header lies about
   uncompressed size), valid-empty streams (positive sanity), good-then-corrupt concatenations,
-  zstd-skippable-only streams, decompression bombs, and shapes modeled on known CVE classes:</p>
+  zstd-skippable-only streams, decompression bombs, nested 4-level zip bombs, ZIP
+  local/central-directory name mismatches, bzip2 and xz multi-stream concatenations, gzip trailing
+  garbage bytes, ZIP overlapping entries, RC4-like encrypted-look data (incompressible,
+  deterministic), and shapes modeled on known CVE classes:</p>
   <ul>
     <li><a href="{CVE_LINKS['CVE-2022-4899']}">CVE-2022-4899</a> — zstd out-of-bounds read on crafted dictionary</li>
     <li><a href="{CVE_LINKS['CVE-2018-25032']}">CVE-2018-25032</a> — zlib memory corruption on specific deflate input</li>
     <li><a href="{CVE_LINKS['CVE-2020-8927']}">CVE-2020-8927</a> — brotli buffer overflow on crafted ring-buffer size</li>
     <li><a href="{CVE_LINKS['CVE-2019-12900']}">CVE-2019-12900</a> — bzip2 OOB write on crafted N_SELECTORS</li>
+    <li><a href="{CVE_LINKS['CVE-2022-37434']}">CVE-2022-37434</a> — zlib heap buffer overflow on gzip header with FHCRC flag and truncated extra field</li>
     <li><a href="https://snyk.io/research/zip-slip-vulnerability">Zip Slip</a> — path traversal via crafted zip entry names</li>
   </ul>
   {neg_collapsibles}

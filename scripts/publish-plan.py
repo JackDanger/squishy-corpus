@@ -10,15 +10,18 @@ Output format (TSV, sorted by predicted size DESCENDING — biggest first):
 The local paths match the targets produced by the Makefile rules.
 """
 from __future__ import annotations
-import argparse, sys
+import argparse, os, sys
 from pathlib import Path
 
 # ─── Configuration (mirrors the Makefile's lists) ─────────────────────────
 SILESIA_NAMES = ["dickens", "mozilla", "mr", "nci", "ooffice", "osdb",
                  "reymont", "samba", "sao", "webster", "x-ray", "xml"]
-MODERN_FETCH  = ["jquery-2.1.4.min.js", "bootstrap-3.3.6.min.css", "eff.html"]
+MODERN_FETCH  = ["jquery-2.1.4.min.js", "bootstrap-3.3.6.min.css", "eff.html",
+                 "react-18.3.1.min.js"]
 MODERN_GEN    = ["sample.json", "sample.ndjson", "sample.sqlite",
-                 "sample.parquet", "sample.protobuf", "sample.log", "random-1M"]
+                 "sample.parquet", "sample.protobuf", "sample.log", "random-1M",
+                 "sample.csv", "sample.arrow", "sample.wasm", "sample.msgpack",
+                 "inter-regular.woff2"]
 MODERN_NAMES  = MODERN_FETCH + MODERN_GEN
 PATHO_TINY    = ["empty-0B","one-1B","tiny-13B","small-256B","page-4095B","short-65535B"]
 PATHO_ENTROPY = ["zeros-1M","zeros-10M","zeros-100M","urandom-1M","urandom-10M","urandom-100M",
@@ -26,13 +29,26 @@ PATHO_ENTROPY = ["zeros-1M","zeros-10M","zeros-100M","urandom-1M","urandom-10M",
                  "phrase-repeated-10M","pi-digits-10M","sparse-geometric-10M","already-compressed-blob"]
 PATHO_WINDOW  = ["window-zstd-128M-minus1","window-zstd-128M","window-zstd-128M-plus1",
                  "window-brotli-16M-minus1","window-brotli-16M","window-brotli-16M-plus1",
-                 "window-deflate-32K-minus1","window-deflate-32K","window-deflate-32K-plus1"]
-PATHO_NAMES   = PATHO_TINY + PATHO_ENTROPY + PATHO_WINDOW
+                 "window-deflate-32K-minus1","window-deflate-32K","window-deflate-32K-plus1",
+                 "window-zstd-8M-minus1","window-zstd-8M","window-zstd-8M-plus1",
+                 "lz4-block-64K-minus1","lz4-block-64K","lz4-block-64K-plus1"]
+PATHO_MATCH   = ["max-match-257B","max-match-258B","max-match-259B"]
+PATHO_MISC    = ["mixed-entropy-blocks-2M","thue-morse-10M","debruijn-order3",
+                 "near-dup-base","near-dup-variant"]
+PATHO_NAMES   = PATHO_TINY + PATHO_ENTROPY + PATHO_WINDOW + PATHO_MATCH + PATHO_MISC
+
+# Canterbury corpus fallback filenames (used when build/raw/squash/ does not exist)
+SQUASH_FALLBACK = [
+    "alice29.txt", "asyoulik.txt", "cp.html", "fields.c", "grammar.lsp",
+    "kennedy.xls", "lcet10.txt", "plrabn12.txt", "ptt5", "sum", "xargs.1",
+]
 
 SETS = {
     "silesia":      SILESIA_NAMES,
     "modern":       MODERN_NAMES,
     "pathological": PATHO_NAMES,
+    # squash is resolved dynamically in build_plan() via SQUASH_FALLBACK / disk scan
+    "squash":       None,
 }
 
 CODECS_DEFAULT = ["gz", "bz2", "xz", "zst", "lz4", "br", "lzma", "lz", "lzo", "zpaq"]
@@ -92,7 +108,6 @@ def is_uncompressed_publish_target(path: str) -> bool:
 # Rough size estimates so we sort biggest-first.
 # Real sizes will vary; this just orders the plan sensibly.
 def estimate_size(local_path: str) -> int:
-    if "everything.alpha.tar" in local_path: return 900_000_000
     if "/pathological/" in local_path:
         if ".tar.zst" in local_path or ".tar.gz" in local_path: return 600_000_000
         if ".tar" in local_path: return 700_000_000
@@ -115,17 +130,31 @@ def emit(plan: list[tuple[str, str, str, str]], local: str, s3_key: str, ct: str
 def build_plan(build_dir: str, prefix: str) -> list[tuple[str, str, str, str]]:
     plan: list[tuple[str, str, str, str]] = []
 
+    # Resolve squash file list dynamically
+    squash_raw = Path(build_dir) / "raw" / "squash"
+    if squash_raw.exists():
+        squash_files = sorted(f.name for f in squash_raw.iterdir() if f.is_file())
+    else:
+        squash_files = SQUASH_FALLBACK
+
+    # Build resolved sets dict (replacing None placeholder for squash)
+    resolved_sets: dict[str, list[str]] = {
+        k: (squash_files if v is None else v) for k, v in SETS.items()
+    }
+
     # ─── individual: per-codec per-file ───────────────────────────────
-    for set_name, files in SETS.items():
+    LEVELED_SETS = {"silesia", "modern", "squash"}  # pathological has no per-level variants
+    for set_name, files in resolved_sets.items():
         for f in files:
             for codec in CODECS_DEFAULT:
                 local = f"{build_dir}/individual/{set_name}/{f}.{codec}"
                 emit(plan, local, f"{prefix}/individual/{set_name}/{f}.{codec}")
-            # per-level variants
-            for codec, levels in LEVELS.items():
-                for lvl in levels:
-                    local = f"{build_dir}/individual/{set_name}/{f}.{codec}.l{lvl}"
-                    emit(plan, local, f"{prefix}/individual/{set_name}/{f}.{codec}.l{lvl}")
+            # per-level variants (silesia + modern only)
+            if set_name in LEVELED_SETS:
+                for codec, levels in LEVELS.items():
+                    for lvl in levels:
+                        local = f"{build_dir}/individual/{set_name}/{f}.{codec}.l{lvl}"
+                        emit(plan, local, f"{prefix}/individual/{set_name}/{f}.{codec}.l{lvl}")
             # 7z + zip + zip variants
             emit(plan, f"{build_dir}/individual/{set_name}/{f}.7z",  f"{prefix}/individual/{set_name}/{f}.7z")
             emit(plan, f"{build_dir}/individual/{set_name}/{f}.zip", f"{prefix}/individual/{set_name}/{f}.zip")
@@ -134,7 +163,7 @@ def build_plan(build_dir: str, prefix: str) -> list[tuple[str, str, str, str]]:
                             f"{prefix}/individual/{set_name}/{f}.zip.{v}")
 
     # ─── per-set bundles ──────────────────────────────────────────────
-    for set_name in SETS:
+    for set_name in resolved_sets:
         for ordering in ORDERINGS:
             emit(plan, f"{build_dir}/bundles/{set_name}/{set_name}.{ordering}.tar",
                         f"{prefix}/bundles/{set_name}/{set_name}.{ordering}.tar")
@@ -160,12 +189,7 @@ def build_plan(build_dir: str, prefix: str) -> list[tuple[str, str, str, str]]:
         emit(plan, f"{build_dir}/bundles/{set_name}/{set_name}.alpha.concat-zst-skipframes",
                     f"{prefix}/bundles/{set_name}/{set_name}.alpha.concat-zst-skipframes")
 
-    # ─── combined "everything" bundles ────────────────────────────────
-    emit(plan, f"{build_dir}/bundles/combined/everything.alpha.tar",
-                f"{prefix}/bundles/combined/everything.alpha.tar")
-    for codec in TAR_CODECS:
-        emit(plan, f"{build_dir}/bundles/combined/everything.alpha.tar.{codec}",
-                    f"{prefix}/bundles/combined/everything.alpha.tar.{codec}")
+    # combined/everything bundle retired — per-set bundles are the unit of caching
 
     # ─── mixed-member + dict ──────────────────────────────────────────
     emit(plan, f"{build_dir}/bundles/mixed-member/silesia-mixed.bin",

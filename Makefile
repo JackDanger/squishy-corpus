@@ -164,7 +164,7 @@ EFF_HTML_URL    := https://www.eff.org/
 .PHONY: all squishy sources raw pathological modern individual bundles dict \
         negative manifest verify publish invalidate plan-publish doctor clean \
         help stream-plan stream-publish stream-publish-dryrun negative-publish \
-        storage-reduce
+        storage-reduce agent-docs
 
 help:
 	@echo "Targets:"
@@ -187,7 +187,8 @@ help:
 	@echo "  stream-publish-dryrun — dry-run of stream-publish (first 30 lines)"
 	@echo "  negative-publish — build+publish negative fixtures, dict, and meta"
 	@echo "  storage-reduce — rewrite S3 objects with correct metadata/storage-class"
-	@echo "  all            — sources → ... → manifest (full local build)"
+	@echo "  agent-docs     — regenerate AGENTS.md, agent.json, smoke.zip, _INDEX files"
+	@echo "  all            — sources → ... → manifest (full local build, includes agent docs)"
 	@echo "  squishy        — all + verify + publish + invalidate (the full bake)"
 	@echo "  clean          — rm -rf $(BUILD)/"
 
@@ -566,10 +567,13 @@ $(META)/README.txt: scripts/render-readme.sh
 	@mkdir -p $(META) && scripts/render-readme.sh > $@
 
 $(META)/index.txt $(META)/manifest.json $(META)/CHECKSUMS.sha256 $(META)/expected-ratio.json: \
-        scripts/build-manifest.py $(ALL_RAW) $(ALL_INDIV) $(BUNDLES_LIST) $(DICT_LIST) $(BUILD)/.negative.stamp
+        scripts/build-manifest.py scripts/gen-agent-docs.py \
+        $(ALL_RAW) $(ALL_INDIV) $(BUNDLES_LIST) $(DICT_LIST) $(BUILD)/.negative.stamp
 	@mkdir -p $(META)
 	@$(PYTHON) scripts/build-manifest.py \
 	  --build $(BUILD) --meta $(META) --bucket $(S3_BUCKET) --prefix $(S3_PREFIX)
+	@$(PYTHON) scripts/gen-agent-docs.py \
+	  --meta $(META) --build $(BUILD) --bucket $(S3_BUCKET) --prefix $(S3_PREFIX)
 
 # ─── verify ────────────────────────────────────────────────────────────────
 verify: $(META)/CHECKSUMS.sha256
@@ -614,6 +618,10 @@ stream-publish-dryrun: stream-plan
 negative-publish: dict negative manifest
 	@$(AWS_VAULT) bash scripts/publish.sh $(S3_BUCKET) < $(META)/publish.tsv
 
+agent-docs: $(META)/manifest.json
+	@$(PYTHON) scripts/gen-agent-docs.py \
+	  --meta $(META) --build $(BUILD) --bucket $(S3_BUCKET) --prefix $(S3_PREFIX)
+
 # One-shot: walk every existing object under /squishy/ and rewrite it in
 # place with correct content-type + cache-control + ONEZONE_IA + ACL.
 # Idempotent (skips objects already in the target state). Use after editing
@@ -637,4 +645,12 @@ invalidate:
 	    /$(S3_PREFIX)/CHECKSUMS.sha256 \
 	    /$(S3_PREFIX)/versions.txt \
 	    /$(S3_PREFIX)/expected-ratio.json \
-	    /$(S3_PREFIX)/README.txt
+	    /$(S3_PREFIX)/README.txt \
+	    /$(S3_PREFIX)/AGENTS.md \
+	    /$(S3_PREFIX)/agent.json \
+	    /$(S3_PREFIX)/manifest.safe.json \
+	    /$(S3_PREFIX)/manifest.safe.txt \
+	    /$(S3_PREFIX)/decode-expectations.json \
+	    /$(S3_PREFIX)/smoke.zip \
+	    /$(S3_PREFIX)/robots.txt \
+	    /$(S3_PREFIX)/llms.txt

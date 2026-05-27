@@ -1,2 +1,14 @@
 build/
 *.tmp
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+dist/
+*.egg
+
+# Claude Code project memory
+.claude/

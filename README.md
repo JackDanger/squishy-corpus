@@ -40,6 +40,73 @@ make all             # full local build (sources → raw → individual → bund
 make stream-publish  # build → upload → delete per artifact (peak local disk: ~2 GB)
 ```
 
+## Calibrated H×M corpus — codec microscope
+
+The `raw/calibrated/` sub-corpus is a measurement instrument for compression researchers
+and codec developers. It generates synthetic files with two independently controlled axes:
+
+| Axis | Values | What it controls |
+|------|--------|-----------------|
+| **H** — marginal byte entropy | 1, 2, 3, 4, 5, 6, 7, 8 bits/byte | "How random are the bytes?" |
+| **M** — LZ match density | 0.00, 0.25, 0.50, 0.75 | "What fraction came from copy-paste?" |
+| **L̄** — mean match length | 3, 8, 32, 128 bytes | "How long are the copies?" (L-sweep, fixed M=0.5) |
+
+Natural benchmarks (Silesia, enwik8, Calgary) confound these axes — you can't vary M
+while holding H fixed in a real text file. The calibrated corpus can, which makes
+codec-family differences visible that are invisible in natural benchmarks.
+
+### What it reveals
+
+Running zstd, xz/LZMA, bzip2, gzip, and lz4 across the H×M grid at 4M file size:
+
+```
+            bzip2-9   zstd-19   xz-6     R_ref*
+H=4, M=0:    4.49      4.05     4.32     4.00
+H=4, M=0.75: 3.18      2.27     2.29     2.40
+gap:         -29%      -44%     -47%
+```
+
+**zstd and xz improve 44–47% in absolute bpb as M goes from 0 to 0.75; bzip2 only 29%.**
+At H=4, M=0.75, zstd-19 (2.27 bpb) beats bzip2 (3.18 bpb) by 40% in absolute compressed
+size — the codec-family gap is real, large, and not visible on Silesia.
+
+*R_ref = cost of encoding via the exact construction parse under ideal arithmetic coding.
+It is a reference rate, not a lower bound — strong codecs can and do beat it.*
+
+### Using it
+
+```sh
+# Generate files and run benchmark
+python scripts/run-bench.py                  # 256K + 4M sizes, 3 seeds
+python scripts/run-bench.py --seeds 10       # tighter confidence intervals
+
+# Measure natural corpus H and M for comparison
+python scripts/measure-natural-corpus.py     # requires build/raw/silesia/
+```
+
+Output: `build/bench/calibrated-bench.csv` — one row per file × codec with absolute bpb,
+compressed size, and rate_ratio (compressed / R_ref). Values < 1 mean the codec found
+structure the construction parse missed.
+
+### Ground truth
+
+Each file has a corresponding record in `build/raw/calibrated/ground-truth.json`:
+```json
+{
+  "filename": "4M-H4p0-M0p50-s0.bin",
+  "size_bytes": 4194304,
+  "H_marginal": 4.0,
+  "M_fraction": 0.5,
+  "realized_M": 0.498,
+  "R_ref": 3.1818,
+  "reference_bytes": 1666560,
+  "copy_mean_length": 8.0,
+  "generator": "calibrated_v3"
+}
+```
+
+---
+
 ## Design
 
 - **No uncompressed bytes on S3.** The official "raw" delivery for each input is the gzip `-9` version at `individual/<set>/<file>.gz`. Decompress client-side for the original.

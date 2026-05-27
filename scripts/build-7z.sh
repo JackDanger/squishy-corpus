@@ -10,12 +10,23 @@ tmp="$(cd "$(dirname "$out")" && pwd)/$(basename "$out").tmp.7z"
 rm -f "$tmp"
 P7Z=$(command -v 7z 2>/dev/null || command -v 7zz 2>/dev/null || true)
 
+# Detect large input (>200 MiB) to avoid OOM on PPMD/LZMA2 with incompressible data.
+LARGE_THRESHOLD=$((200 * 1024 * 1024))
+total_bytes=$(du -sb "$src" 2>/dev/null | cut -f1 || \
+              du -sk "$src" 2>/dev/null | awk '{print $1 * 1024}')
+large=0
+[[ "${total_bytes:-0}" -gt $LARGE_THRESHOLD ]] && large=1
+
 method_arg=""
 case "$method" in
-  lzma2)   method_arg="-m0=lzma2 -mx=9 -ms=on -md=128m" ;;
-  ppmd)    method_arg="-m0=ppmd  -mx=9 -ms=on" ;;
-  bzip2)   method_arg="-m0=bzip2 -mx=9 -ms=on" ;;
-  deflate) method_arg="-m0=deflate -mx=9 -ms=on" ;;
+  lzma2)   [[ $large -eq 1 ]] && method_arg="-m0=lzma2 -mx=1 -ms=on -md=32m" \
+                               || method_arg="-m0=lzma2 -mx=9 -ms=on -md=128m" ;;
+  ppmd)    [[ $large -eq 1 ]] && method_arg="-m0=ppmd  -mx=1 -ms=on" \
+                               || method_arg="-m0=ppmd  -mx=9 -ms=on" ;;
+  bzip2)   [[ $large -eq 1 ]] && method_arg="-m0=bzip2 -mx=1 -ms=on" \
+                               || method_arg="-m0=bzip2 -mx=9 -ms=on" ;;
+  deflate) [[ $large -eq 1 ]] && method_arg="-m0=deflate -mx=1 -ms=on" \
+                               || method_arg="-m0=deflate -mx=9 -ms=on" ;;
   *) echo "unknown 7z method: $method" >&2; exit 2 ;;
 esac
 
