@@ -38,6 +38,7 @@ MEASUREMENT_CSVS = [
     ROOT / "build" / "bench" / "corpus-measurements.csv",
     ROOT / "build" / "bench" / "candidates-measurements.csv",
     ROOT / "build" / "bench" / "calibrated-measurements.csv",
+    ROOT / "build" / "bench" / "natural-measurements.csv",
 ]
 SCORE_PY_SRC = ROOT / "scripts" / "score.py"
 
