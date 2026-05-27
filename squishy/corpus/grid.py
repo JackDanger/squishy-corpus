@@ -130,6 +130,15 @@ KNOWN_EMPTY_HML: set[tuple[int, int, int]] = {
     (0, 5, 1),
     # H0.5-1.5 / M0.80+ / L-short: same — single-symbol dominance → L-short impossible
     (1, 5, 0),
+    # H0.5-1.5 / M0.80+ / L-medium: H0.5-1.5 requires 2-symbol dominance (2-letter
+    # alphabet, e.g. AT-only DNA or binary sensor stream).  LZ77 on such data finds
+    # either one giant match spanning the file (→ L-long) or sub-10-byte noise matches
+    # between the rare third/fourth symbol (→ L-short).  Regular 10-60 byte spacing of
+    # minority symbols does not arise in natural 2-symbol-dominant data.  The VCF
+    # genotype string (H=1.54, L_p90=304) demonstrates the reachable region is L-long,
+    # not L-medium.  Confirmed across 6 different attempts in Rounds 7-8: all satellite
+    # DNA giving H<1.86 produced L_p90=5-9.  Construction-only.
+    (1, 5, 1),
     # H1.5-1.86 / M0.80+ / L-short: EMPIRICALLY REACHABLE.
     # T2T-CHM13 chrY alpha-sat 256K measured H=1.799, M=1.000, L_p90=9 → (2,5,0).
     # The diverged 171bp monomers give short exact-match stretches (≈9bp) even at
