@@ -128,6 +128,11 @@ KNOWN_EMPTY_HML: set[tuple[int, int, int]] = {
     # also has H between 0.5 and 1.0.  Empirical: closest natural file (ptt5 fax) lands
     # at H=1.21, L_p90=65 (L-long, different M band).  Construction-only.
     (0, 5, 1),
+    # H<0.5 / M0.80+ / L-long: near-constant data is the expected landing zone for H<0.5
+    # (one giant LZ77 match → L-long), but natural datasets with H<0.5 do not exist in
+    # any corpus we can source.  Achieving ≥92% single-byte dominance requires near-
+    # constant content that only arises as a construction artefact.  Construction-only.
+    (0, 5, 2),
     # H0.5-1.5 / M0.80+ / L-short: same — single-symbol dominance → L-short impossible
     (1, 5, 0),
     # H0.5-1.5 / M0.80+ / L-medium: H0.5-1.5 requires 2-symbol dominance (2-letter
@@ -139,13 +144,41 @@ KNOWN_EMPTY_HML: set[tuple[int, int, int]] = {
     # not L-medium.  Confirmed across 6 different attempts in Rounds 7-8: all satellite
     # DNA giving H<1.86 produced L_p90=5-9.  Construction-only.
     (1, 5, 1),
+    # H0.5-1.5 / M0.80+ / L-long: 2-symbol dominant data at H<1.5 gives either L-short
+    # (geometric run distribution, L_p90≈3-9 for typical 20-30% divergence) or would
+    # require ≥60-byte exact copies within the 32KB LZ77 window.  In natural AT-only
+    # or similar 2-symbol sequences, exact runs are geometrically bounded to ≈ 1/div
+    # bases (mean), far below 60 at any biologically realistic divergence rate.  The
+    # VCF example achieves L-long only at H=1.54 (bin 2, not bin 1).  Construction-only.
+    (1, 5, 2),
     # H1.5-1.86 / M0.80+ / L-short: EMPIRICALLY REACHABLE.
     # T2T-CHM13 chrY alpha-sat 256K measured H=1.799, M=1.000, L_p90=9 → (2,5,0).
     # The diverged 171bp monomers give short exact-match stretches (≈9bp) even at
     # near-random entropy.  Removed from physics-empty: natural file exists.
     # (2, 5, 0),  ← REMOVED: see t2t_alphasat 256K measurement
+    # H1.5-1.86 / M0.80+ / L-medium: geometric-runs trap.  Tandem repeat arrays at
+    # 10-30% divergence give L_p90=5-9 (geometric law: p90=log(0.1)/log(1-div)≈9 at
+    # 22% divergence).  Record-structured data (VCF) jumps directly to L_p90=66-304
+    # (L-long).  The L-medium window [10,60) requires divergence exactly 3-10% in a
+    # natural tandem array, which does not arise — confirmed across 6 attempts.
+    (2, 5, 1),
+    # H1.86-3.0 / M0.80+ / L-medium: same geometric-runs trap as (2,5,1) but at higher H.
+    # All tested sources at H1.86-3.0 with M≥0.80 give L_p90=5-9 (L-short): HSat2
+    # (H=1.97, L_p90=9), GSAT (H=1.99, L_p90=6), plasmodium (H=1.69, L_p90=6),
+    # cere-straddle (H=2.23, L_p90=5), influenza (H=1.97, L_p90=5), E. coli K-12
+    # (H=2.00, L_p90=5).  No natural dataset at H1.86-3.0 / M0.80+ has L_p90 in
+    # [10,60).  Construction-only.
+    (3, 5, 1),
     # H1.86-3.0 / M0.60-0.80 / all L: M-axis dynamic range collapses; band unreachable
     (3, 4, 0), (3, 4, 1), (3, 4, 2),
+    # H3.0-4.5 / M0.05-0.20 / L-short and L-medium: natural data at H3.0-4.5 cannot
+    # achieve M_greedy_norm < 0.20.  The IID floor ranges from ≈0.94 (H=3.0) to ≈0.75
+    # (H=4.5); M_norm < 0.20 requires M_raw < floor + 0.20*(1-floor), i.e. less than
+    # 1/5th of the way above the IID floor.  Any natural dataset with genuine structure
+    # at H≈3-4.5 has M_raw well above this threshold — natural signals with M_norm≈0
+    # (neural weights, encrypted data) all land at H>7.  L-long is also empty for
+    # independent reasons (see next entry).  Construction-only for all three L bins.
+    (4, 1, 0), (4, 1, 1),
     # H3.0-4.5 / M 0.05-0.60 / L-long: long matches require record alignment → M rises
     (4, 1, 2), (4, 2, 2), (4, 3, 2), (4, 4, 2),
     # H4.5-6.0 / M 0.05-0.60 / L-long: same physics

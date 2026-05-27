@@ -46,6 +46,10 @@ Files produced in build/raw/natural/<key>/
   repcorpus_influenza/ H≈2.0-2.5, M0.99, L-long — influenza concatenation (near-identical strains)
   pdb_nmr/       H≈3.5-4.0, M0.99, L-medium — NMR ensemble mmCIF (2K2E, 20 models, L_p90≈17)
   ecoli_k12/     H≈2.0, M0.99, L-long — E. coli K-12 chr (7 rRNA operons, close together)
+  dblp_xml/      H≈4.3-4.5, M≈0.90-0.95, L-long — DBLP bibliography XML; repeated tag structure + diverse author/title text
+  ncbi_taxonomy/ H≈3.8-4.2, M≈0.65-0.75, L-short — NCBI Taxonomy names.dmp; repeated name_class field + diverse taxon names
+  opensubtitles/  H≈4.7-5.1, M≈0.35-0.55, L-short — OpenSubtitles English movie dialogue; diverse + short lines
+  pfam_a/        H≈4.0-4.3, M≈0.60-0.75, L-short — Pfam-A domain FASTA; sequences grouped by family → conserved motifs
 
 After running this script, measure with:
     uv run scripts/measure-corpus.py \\
@@ -1455,6 +1459,92 @@ SOURCES: list[Source] = [
         slices=[
             ("pdb-nmr-2k2e-4M.bin",   0, _4M),
             ("pdb-nmr-2k2e-256K.bin",  0, _256K),
+        ],
+    ),
+    # ── Round 9: DBLP bibliography XML for H3.0-4.5/M0.80+/L-long ────────────
+    # DBLP computer-science bibliography in XML.  Record structure:
+    # <article>, <author>, <title>, <year>, <journal> tags repeat verbatim for
+    # every publication entry (>7M entries total).  The fixed tag names provide
+    # long exact matches (e.g. "<inproceedings mdate=" = 22 chars) within every
+    # record → L_p90 >> 60 → L-long.  High-diversity author/title text keeps
+    # H ≈ 4.3-4.5 (ASCII, 26-char alphabet with numbers and punctuation).
+    # Expected: H≈4.3, M≈0.90-0.95, L_p90≈80-200 → cell (4,5,2).
+    StreamingGzLineSource(
+        key="dblp_xml",
+        license="ODC-BY (DBLP Computer Science Bibliography, dblp.org)",
+        note="H≈4.3-4.5, M≈0.90-0.95, L_p90≈80-200 — DBLP bibliography XML; repeated tag structure + diverse author/title text",
+        url="https://dblp.org/xml/dblp.xml.gz",
+        partial_name="dblp.partial.xml.gz",
+        partial_bytes=50 * 1024 * 1024,
+        line_fn=_xml_keep_line,
+        slices=[
+            ("dblp-4M.bin",   0, _4M),
+            ("dblp-256K.bin",  0, _256K),
+        ],
+    ),
+    # ── Round 9: NCBI Taxonomy names.dmp for H3.0-4.5/M0.60-0.80/L-short ────
+    # NCBI Taxonomy dump names.dmp: tab-delimited lines with fields
+    # tax_id | name | unique_name | name_class.
+    # The name_class field has ~15 distinct long values ("scientific name",
+    # "common name", "authority", "blast name", etc.) that repeat for millions
+    # of taxa → very high match density.  Diverse taxon names keep H ≈ 3.8-4.2.
+    # L_p90 ≈ 6-14 (length of name_class strings) → L-short.
+    # Expected: H≈3.8-4.2, M≈0.65-0.75, L_p90≈6-14 → cell (4,4,0).
+    TarConcatSource(
+        key="ncbi_taxonomy",
+        license="Public domain (NCBI Taxonomy, ncbi.nlm.nih.gov/taxonomy)",
+        note="H≈3.8-4.2, M≈0.65-0.75, L_p90≈6-14 — NCBI Taxonomy names.dmp; repeated name_class field + diverse taxon names",
+        url="https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz",
+        archive_mode="gz",
+        # names.dmp is the 7th file in the archive; earlier files total ~33 MB
+        # uncompressed (citations.dmp alone is 19 MB).  Use full download (74.5 MB)
+        # to guarantee reaching names.dmp regardless of per-file compression ratio.
+        partial_bytes=0,
+        file_suffix="names.dmp",
+        transform_fn=None,
+        slices=[
+            ("ncbi-taxonomy-4M.bin",   0, _4M),
+            ("ncbi-taxonomy-256K.bin",  0, _256K),
+        ],
+    ),
+    # ── Round 9: OpenSubtitles English for H4.5-6.0/M0.20-0.60 ──────────────
+    # OPUS OpenSubtitles 2018: plain English dialogue, one sentence per line,
+    # from thousands of films across many decades and genres.  Cross-film diversity
+    # suppresses phrase repetition compared to single-author text → lower M than
+    # Gutenberg or GHArchive.  Short declarative sentences keep L_p90 small.
+    # Expected: H≈4.7-5.1, M≈0.35-0.55, L_p90≈5-9 → cell (5,3,0) or (5,2,0).
+    StreamingGzLineSource(
+        key="opensubtitles",
+        license="CC-BY-SA (OpenSubtitles.org via OPUS, opus.nlpl.eu/OpenSubtitles)",
+        note="H≈4.7-5.1, M≈0.35-0.55, L_p90≈5-9 — English movie dialogue; cross-film diversity suppresses repetition",
+        url="https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2018/mono/en.txt.gz",
+        partial_name="opensubtitles-en.partial.txt.gz",
+        partial_bytes=30 * 1024 * 1024,
+        line_fn=_xml_keep_line,  # passes all non-empty lines (plain text, no tags)
+        slices=[
+            ("opensubtitles-4M.bin",   0, _4M),
+            ("opensubtitles-256K.bin",  0, _256K),
+        ],
+    ),
+    # ── Round 9: Pfam-A domain FASTA for H3.0-4.5/M0.60-0.80 ────────────────
+    # Pfam-A organises all known protein domains into families, with sequences
+    # grouped by family → many near-identical homologous sequences concatenated.
+    # The conserved domain core (typically 50-200 residues) in each family drives
+    # high M_norm at H≈4.1 (20-letter amino-acid alphabet).  Compared to UniRef50
+    # (M_norm=0.23), the family clustering produces denser exact-match coverage.
+    # Expected: H≈4.0-4.3, M≈0.60-0.75, L_p90≈5-10 → cell (4,4,0) or (4,4,1).
+    StreamingGzLineSource(
+        key="pfam_a",
+        license="CC0 (Pfam, ebi.ac.uk/interpro/entry/pfam/)",
+        note="H≈4.0-4.3, M≈0.60-0.75, L_p90≈5-10 — Pfam-A domain FASTA; family-grouped sequences → conserved domain motifs",
+        url="https://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.fasta.gz",
+        partial_name="pfam-a.partial.fasta.gz",
+        partial_bytes=100 * 1024 * 1024,  # ~100 MB → many protein family clusters
+        line_fn=_fasta_seq_line,
+        add_newline=False,
+        slices=[
+            ("pfam-a-4M.bin",   0, _4M),
+            ("pfam-a-256K.bin",  0, _256K),
         ],
     ),
 ]
