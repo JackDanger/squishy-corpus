@@ -225,7 +225,6 @@ def main() -> None:
                     try:
                         os.link(sibling, dest)  # hardlink; avoids symlink-resolution issues on S3 sync
                     except OSError:
-                        import shutil
                         shutil.copy2(sibling, dest)
 
     if not args.dry_run:
