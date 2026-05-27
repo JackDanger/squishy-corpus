@@ -45,6 +45,8 @@ def main() -> None:
                         help="Comma-separated extensions to include (default: all)")
     parser.add_argument("--no-bootstrap", action="store_true",
                         help="Skip bootstrap CIs, sigma_H, and NCD (fast mode)")
+    parser.add_argument("--recursive", action="store_true", default=True,
+                        help="Recurse into subdirectories (default: on)")
     args = parser.parse_args()
 
     exts = set(args.extensions.split(",")) - {""} if args.extensions else None
@@ -59,7 +61,8 @@ def main() -> None:
             print(f"  WARN: {p} does not exist, skipping", file=sys.stderr)
             continue
         scan_dirs.append(p)
-        for f in sorted(p.iterdir()):
+        candidates = sorted(p.rglob("*") if args.recursive else p.iterdir())
+        for f in candidates:
             if not f.is_file():
                 continue
             if f.suffix in {".json", ".md"}:

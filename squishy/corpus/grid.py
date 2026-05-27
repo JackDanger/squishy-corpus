@@ -51,23 +51,94 @@ L_LABELS: list[str] = [
 
 # Cells that are unreachable in the H×M_greedy_norm space.
 #
-# Since coverage.py now bins on M_greedy_norm (IID floor removed), the old
-# floor-driven exclusions for H<4.5 are lifted — calibrated IID files at H=1
-# now land in M<0.05 as expected.
+# Two independent sources of physics-emptiness:
 #
-# Remaining physics-empty cells with M_greedy_norm:
-# - H<0.5 / M<0.80+: zeros-like data has M_greedy_norm≈1 (all matches),
-#   so only M0.80+ is reachable. Lower-M cells require deliberate un-copies
-#   of zeros, which isn't meaningful at H≈0.
-# - H7.5+ / M0.80+: at near-random entropy, even the calibrated generator
-#   cannot achieve M_greedy_norm > 0.80 (max construction M_target=0.75
-#   yields M_greedy_norm≈0.69 at H=8). May be generator gap rather than
-#   physics; revisit if M_VALUES extended to 0.85+.
+# 1. Greedy LZ77 IID floor at low H.
+#    The IID model already predicts very high match density at low entropy:
+#      H=1.0 → floor ≈ 0.999;  H=1.7 → floor ≈ 0.995;  H=3.0 → floor ≈ 0.94
+#    After IID-floor correction (M_greedy_norm), any 4MB natural file with H<3
+#    is forced to M_norm ≈ 1.0 because the metric's dynamic range collapses.
+#    squishy/corpus/metrics.py (m_norm_reliable flag, lines ~97-104) documents
+#    this: reliability is flagged False below floor=0.90 (roughly H<3.5).
+#    Empirical confirmation: chr1 arm (200–204 Mb, SINE/LINE-rich, deliberately
+#    chosen as the least-repetitive available genomic region) measured
+#    M_greedy_norm=0.997.  The metric, not the data, is doing the binding.
+#
+# 2. Entropy-M anti-correlation at high H.
+#    Near-max-entropy (H>7.5) data with moderate M_greedy_norm (0.20–0.80) does
+#    not arise naturally: the repetition that drives M_norm pulls entropy below
+#    7.5.  The only natural H>7.5 data type with non-trivial M is uncompressed
+#    video luma, which tops out around M_norm≈0.55.
+#
+# Calibrated-generator cells in these regions remain valid for bench coverage;
+# they are just not fillable with natural reference files.
 KNOWN_EMPTY_HM: set[tuple[int, int]] = {
-    # H<0.5: zeros-like data — only M0.80+ reachable (H≈0 implies all-same byte)
+    # H<0.5: H≈0 implies all-same byte → only M0.80+ is reachable naturally
     (0, 0), (0, 1), (0, 2), (0, 3), (0, 4),
-    # H7.5+ / M0.80+: current generator max (M_target=0.75) falls in M0.60-0.80
+    # H0.5-1.5: IID floor ≈ 0.999 at H=1.0 → M_norm collapses; M<0.80 unreachable
+    (1, 0), (1, 1), (1, 2), (1, 3), (1, 4),
+    # H1.5-1.86: IID floor ≈ 0.995 at H=1.7 → M_norm collapses; M<0.80 unreachable
+    (2, 0), (2, 1), (2, 2), (2, 3), (2, 4),
+    # H1.86-3.0: IID floor ≈ 0.94–0.99 → M_norm unreliable; M<0.60 unreachable
+    (3, 0), (3, 1), (3, 2), (3, 3),
+    # H3.0-4.5 / M<0.05: at H≈3.5 the IID floor is ~0.82, so any 4MB natural file
+    # (with genuine repetition) will have M_norm > 0.82.  Anti-correlated signals
+    # (M_norm < IID floor) do not arise in natural data.
+    (4, 0),
+    # H4.5-6.0 / M<0.05: IID floor ≈ 0.50 at H=5.0.  M_norm < 0.05 requires a signal
+    # that is less self-similar than IID white noise — not natural.
+    (5, 0),
+    # H6.0-7.5 / M0.80+: extreme match density (M≥0.80) at near-binary entropy (H≥6)
+    # is self-contradictory.  The repetition that drives M to 0.80+ pulls H below 6.
+    (6, 5),
+    # H7.5+ / M0.20-0.80: near-max entropy + moderate M is self-contradictory in
+    # natural data (repetition that drives M pulls H below 7.5)
+    (7, 2), (7, 3), (7, 4),
+    # H7.5+ / M0.80+: calibrated generator cap (M_target=0.75 → M_norm≈0.69)
     (7, 5),
+}
+
+# L-axis physics emptiness: cells that are unreachable even though (h, m) is reachable.
+#
+# Source 1 — long-match / high-M entanglement (H ≥ 3.0):
+# L_p90 ≥ 60 requires record-aligned or boilerplate data.  At H ≥ 3.0, data with
+# 60-byte exact matches (SQL/XML/GFF tags, boilerplate) also produces extreme match
+# density (M ≥ 0.80).  L-long + M < 0.80 + H ≥ 3.0 is therefore construction-only.
+# Empirical: all natural L-long files are in M0.80+ or are degenerate (chr2-pericent).
+# Exception: H4.5-6.0 / M0.80+ / L-long IS reachable — GENCODE GFF3 measured L_p90=154.
+#
+# Source 2 — IID-floor quantization at low H makes L-short unreachable (H < 1.86):
+# When H < 1.86, the data is nearly constant (2-letter alphabet or single symbol).
+# LZ77 greedy on near-constant data finds one huge match spanning the entire file
+# rather than many short matches.  L_p90 is therefore >> 60 (L-long) regardless of
+# the repeating unit.  L-short (L_p90 < 10) cannot arise naturally at M0.80+, H<1.86.
+# Empirical: chrY alpha-sat (H=2.18, L_p90=6), MNIST (H=1.94, L_p90=24 → L-medium).
+#
+# Source 3 — M-axis quantization at H 1.86-3.0:
+# M_norm_reliable is False for H < ~4 (IID floor ≈ 0.93-0.99).  The M0.60-0.80 band
+# requires M_greedy_norm to land in a 0.20-wide window on a metric whose dynamic
+# range collapses to < 0.10 at H=2.5.  Natural data cannot reliably hit this band.
+KNOWN_EMPTY_HML: set[tuple[int, int, int]] = {
+    # H<0.5 / M0.80+ / L-short: near-constant → LZ77 finds one huge match, not short ones
+    (0, 5, 0),
+    # H0.5-1.5 / M0.80+ / L-short: same — single-symbol dominance → L-short impossible
+    (1, 5, 0),
+    # H1.5-1.86 / M0.80+ / L-short: EMPIRICALLY REACHABLE.
+    # T2T-CHM13 chrY alpha-sat 256K measured H=1.799, M=1.000, L_p90=9 → (2,5,0).
+    # The diverged 171bp monomers give short exact-match stretches (≈9bp) even at
+    # near-random entropy.  Removed from physics-empty: natural file exists.
+    # (2, 5, 0),  ← REMOVED: see t2t_alphasat 256K measurement
+    # H1.86-3.0 / M0.60-0.80 / all L: M-axis dynamic range collapses; band unreachable
+    (3, 4, 0), (3, 4, 1), (3, 4, 2),
+    # H3.0-4.5 / M 0.05-0.60 / L-long: long matches require record alignment → M rises
+    (4, 1, 2), (4, 2, 2), (4, 3, 2), (4, 4, 2),
+    # H4.5-6.0 / M 0.05-0.60 / L-long: same physics
+    (5, 1, 2), (5, 2, 2), (5, 3, 2), (5, 4, 2),
+    # H6.0-7.5 / all M < 0.80 / L-long: near-binary entropy + 60-byte exact matches
+    # is construction-only (calibrated generators can do it; natural data cannot)
+    (6, 0, 2), (6, 1, 2), (6, 2, 2), (6, 3, 2), (6, 4, 2),
+    # H7.5+ / M<0.20 / L-long: same
+    (7, 0, 2), (7, 1, 2),
 }
 
 

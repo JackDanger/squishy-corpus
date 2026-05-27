@@ -9,6 +9,7 @@ from pathlib import Path
 from squishy.corpus.grid import (
     H_LABELS, M_LABELS, L_LABELS,
     KNOWN_EMPTY_HM,
+    KNOWN_EMPTY_HML,
     h_bin, m_bin, l_bin,
 )
 from squishy.corpus.measure import FIELDNAMES, _COPY_COST_THRESHOLD_BPB
@@ -134,5 +135,6 @@ def empty_cells(populated: dict[tuple, list[dict]]) -> list[tuple[int, int, int]
             for li in range(len(L_LABELS)):
                 if (hi, mi, li) not in populated:
                     if (hi, mi) not in KNOWN_EMPTY_HM:
-                        result.append((hi, mi, li))
+                        if (hi, mi, li) not in KNOWN_EMPTY_HML:
+                            result.append((hi, mi, li))
     return result
