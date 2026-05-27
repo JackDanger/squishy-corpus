@@ -40,12 +40,13 @@ def byte_entropy(data: bytes) -> float:
     return -sum((c / n) * math.log2(c / n) for c in counts if c > 0)
 
 
-def _lz77_parse(data: bytes, min_len: int = 3, window: int = 32768
+def _lz77_parse(data: bytes, min_len: int = 4, window: int = 32768
                 ) -> list[tuple[int, int, int]]:
     """Return list of (pos, distance, length) for every accepted match.
 
     Greedy LZ77: always takes the longest available match ≥ min_len.
-    Uses a hash table on 3-byte keys.
+    Uses a hash table on min_len-byte keys.
+    min_len=4 matches squishy/corpus/metrics.py (LZ_MIN_LEN=4).
     """
     n = len(data)
     pos_table: dict[bytes, int] = {}
@@ -82,11 +83,11 @@ def _lz77_parse(data: bytes, min_len: int = 3, window: int = 32768
     return matches
 
 
-def lz77_match_fraction(data: bytes, min_len: int = 3, window: int = 32768) -> float:
-    """Fraction of bytes covered by greedy LZ77 matches (min_len=3, window=32768).
+def lz77_match_fraction(data: bytes, min_len: int = 4, window: int = 32768) -> float:
+    """Fraction of bytes covered by greedy LZ77 matches (min_len=4, window=32768).
 
-    Overcounts relative to cost-profitable M — use M_cost for comparisons to
-    the calibrated corpus construction parameter.
+    min_len=4 matches squishy/corpus/metrics.py (LZ_MIN_LEN=4) so results are
+    comparable to measure-corpus.py output.
     """
     n = len(data)
     if n < min_len:
@@ -96,7 +97,7 @@ def lz77_match_fraction(data: bytes, min_len: int = 3, window: int = 32768) -> f
 
 
 def lz77_cost_match_fraction(data: bytes, H: float,
-                              min_len: int = 3, window: int = 32768) -> float:
+                              min_len: int = 4, window: int = 32768) -> float:
     """Fraction of bytes covered by *cost-profitable* LZ77 matches.
 
     A match at distance D, length L is profitable only when:
