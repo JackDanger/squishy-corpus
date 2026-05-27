@@ -1,27 +1,75 @@
-# Squishy
+# Squishy Corpus
 
-**A corpus of real, weird, and intentionally broken files for testing compression and decompression libraries.**
+Two things live here:
 
-🌐 **Browse: [jackdanger.com/squishy](https://jackdanger.com/squishy/)**
-📦 **Manifest: [manifest.json](https://jackdanger.com/squishy/manifest.json) · [index.txt (TSV)](https://jackdanger.com/squishy/index.txt) · [listing.html](https://jackdanger.com/squishy/listing.html)**
-✅ **Checksums: [CHECKSUMS.sha256](https://jackdanger.com/squishy/CHECKSUMS.sha256)**
+1. **Calibrated corpus v4** — a measurement instrument for compression research: synthetic files with independently controlled entropy (H) and match density (M).
+2. **Squishy fixture set** — real, weird, and intentionally broken files for testing compression/decompression libraries.
 
-Squishy pulls together:
+---
 
-- the canonical [Silesia corpus](https://sun.aei.polsl.pl/~sdeor/index.php?page=silesia) (Sebastian Deorowicz, 2003),
-- a small set of modern web and data files (JSON, NDJSON, SQLite, parquet, protobuf, syslog, jQuery, Bootstrap, HTML),
-- deterministically-generated pathological inputs at every interesting decoder boundary (sub-window sizes; window-boundary triples for [zstd](https://github.com/facebook/zstd), [brotli](https://github.com/google/brotli), and [deflate](https://datatracker.ietf.org/doc/html/rfc1951); entropy extremes),
-- and a museum of intentionally-malformed fixtures shaped like real-world decoder CVE classes ([CVE-2022-4899](https://nvd.nist.gov/vuln/detail/CVE-2022-4899), [CVE-2018-25032](https://nvd.nist.gov/vuln/detail/CVE-2018-25032), [CVE-2020-8927](https://nvd.nist.gov/vuln/detail/CVE-2020-8927), [Zip Slip](https://snyk.io/research/zip-slip-vulnerability), and friends).
+## Calibrated corpus v4
 
-Each input is compressed with every common codec at multiple levels and packaged in every common container, then published to S3 + CloudFront with `Cache-Control: immutable` so consumers can pin against stable URLs.
+Files generated with two axes under independent control:
 
-## Quick start
+| Axis | Values | Plain English |
+|------|--------|---------------|
+| **H** — marginal byte entropy | 1.0, 1.7, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0 bpb | How unpredictable are the bytes? |
+| **M** — LZ match density | 0.00, 0.10, 0.25, 0.50, 0.75 | What fraction came from copy-paste? |
+| **L̄** — mean match length | 3, 8, 32, 128 bytes | How long are the copies? (M=0.50 sweep only) |
+
+Natural benchmarks (Silesia, enwik8, Calgary) confound H and M — you cannot vary match density while holding entropy fixed in a real text file. This corpus can, which isolates codec-family differences that are invisible on natural files.
+
+**Validation:** Kendall-τ = 0.939 between zstd-3 and bzip2-9 across 33 unclamped cells (threshold ≥ 0.9). 40/40 cells have a consistent per-cell winner across all 3 replicates.
+
+**Full documentation:** [`build/bundle/index.html`](build/bundle/index.html) (generated) — covers the glossary, scoring workflow, all manifest fields, limitations, and ground-truth schema.
+
+### Quick start
 
 ```sh
-# Browse the manifest
-curl -s https://jackdanger.com/squishy/manifest.json | jq
+# Score a codec against the calibrated bundle
+cd build/bundle
+python score.py list --manifest manifest.csv --bundle calibrated | \
+  xargs -I{} zstd -3 calibrated/{} -c -q -o results/zstd-3/{}
+python score.py score --manifest manifest.csv --results results/zstd-3 --codec zstd-3
 
-# Pull just the "pr" tier (~50 MiB) — small + critical, right for per-commit CI
+# Compare two codecs, get Kendall-τ
+python score.py compare --manifest manifest.csv \
+    --results-a results/zstd-3 --results-b results/bzip2-9 \
+    --codec-a zstd-3 --codec-b bzip2-9
+```
+
+### Build the bundle
+
+```sh
+make calibrated-bundle    # generate + bench + curate + assemble build/bundle/
+make calibrated-html      # rebuild index.html from scripts/bundle-index.html
+make calibrated-publish   # sync to S3
+```
+
+Edit website copy: `scripts/bundle-index.html` (plain HTML with `$var` placeholders).
+Run `make calibrated-html` to rebuild `build/bundle/index.html`.
+
+---
+
+## Squishy fixture set
+
+**Browse:** [jackdanger.com/squishy](https://jackdanger.com/squishy/)
+**Manifest:** [manifest.json](https://jackdanger.com/squishy/manifest.json) · [index.txt](https://jackdanger.com/squishy/index.txt)
+**Checksums:** [CHECKSUMS.sha256](https://jackdanger.com/squishy/CHECKSUMS.sha256)
+
+Includes:
+
+- The [Silesia corpus](https://sun.aei.polsl.pl/~sdeor/index.php?page=silesia) (Sebastian Deorowicz, 2003)
+- Modern web and data files (JSON, NDJSON, SQLite, Parquet, Protobuf, syslog, jQuery, Bootstrap, HTML)
+- Deterministically-generated pathological inputs at every interesting decoder boundary (sub-window sizes; window-boundary triples for zstd, brotli, deflate; entropy extremes)
+- Intentionally malformed fixtures shaped like real-world decoder CVE classes (CVE-2022-4899, CVE-2018-25032, CVE-2020-8927, Zip Slip)
+
+Each input is compressed with every common codec at multiple levels and packaged in every common container format, then published to S3 + CloudFront with `Cache-Control: immutable`.
+
+### Quick start
+
+```sh
+# Pull just the "pr" tier (~50 MiB) — right for per-commit CI
 curl -s https://jackdanger.com/squishy/manifest.json \
   | jq -r '.artifacts[] | select(.tier=="pr") | .path' \
   | xargs -I{} curl -sO https://jackdanger.com/squishy/{}
@@ -32,114 +80,37 @@ curl -s https://jackdanger.com/squishy/CHECKSUMS.sha256 \
   | grep individual/silesia/dickens.gz | sha256sum -c
 ```
 
-## Building locally
+### Build locally
 
 ```sh
-make doctor          # check toolchain (brew install gnu-tar brotli zpaq lzip lzop sevenzip squashfs on macOS)
-make all             # full local build (sources → raw → individual → bundles → dict → negative → manifest)
-make stream-publish  # build → upload → delete per artifact (peak local disk: ~2 GB)
+make doctor          # check toolchain
+make all             # full local build
+make stream-publish  # build → upload → delete (peak disk ~2 GB)
 ```
 
-## Calibrated H×M corpus — codec microscope
-
-The `raw/calibrated/` sub-corpus is a measurement instrument for compression researchers
-and codec developers. It generates synthetic files with two independently controlled axes:
-
-| Axis | Values | What it controls |
-|------|--------|-----------------|
-| **H** — marginal byte entropy | 1, 2, 3, 4, 5, 6, 7, 8 bits/byte | "How random are the bytes?" |
-| **M** — LZ match density | 0.00, 0.25, 0.50, 0.75 | "What fraction came from copy-paste?" |
-| **L̄** — mean match length | 3, 8, 32, 128 bytes | "How long are the copies?" (L-sweep, fixed M=0.5) |
-
-Natural benchmarks (Silesia, enwik8, Calgary) confound these axes — you can't vary M
-while holding H fixed in a real text file. The calibrated corpus can, which makes
-codec-family differences visible that are invisible in natural benchmarks.
-
-### What it reveals
-
-Running zstd, xz/LZMA, bzip2, gzip, and lz4 across the H×M grid at 4M file size:
+### Layout
 
 ```
-            bzip2-9   zstd-19   xz-6     R_ref*
-H=4, M=0:    4.49      4.05     4.32     4.00
-H=4, M=0.75: 3.18      2.27     2.29     2.40
-gap:         -29%      -44%     -47%
+build/raw/silesia/, build/raw/modern/, build/raw/pathological/
+individual/<set>/<file>.<codec>[.l<level>]
+bundles/<set>/<set>.<ordering>.tar.<codec>
+bundles/<set>/<set>.{alpha,size-desc}.7z.<method>
+bundles/<set>/<set>.{alpha,size-desc}.squashfs.<comp>
+bundles/<set>/<set>.alpha.concat-{gz,xz,zst}
+bundles/combined/everything.alpha.tar.<codec>
+dict/          # zstd dictionary fixtures
+negative/      # intentionally malformed fixtures
+build/bundle/  # calibrated corpus v4 bundle
 ```
 
-**zstd and xz improve 44–47% in absolute bpb as M goes from 0 to 0.75; bzip2 only 29%.**
-At H=4, M=0.75, zstd-19 (2.27 bpb) beats bzip2 (3.18 bpb) by 40% in absolute compressed
-size — the codec-family gap is real, large, and not visible on Silesia.
+### Design notes
 
-*R_ref = cost of encoding via the exact construction parse under ideal arithmetic coding.
-It is a reference rate, not a lower bound — strong codecs can and do beat it.*
-
-### Using it
-
-```sh
-# Generate files and run benchmark
-python scripts/run-bench.py                  # 256K + 4M sizes, 3 seeds
-python scripts/run-bench.py --seeds 10       # tighter confidence intervals
-
-# Measure natural corpus H and M for comparison
-python scripts/measure-natural-corpus.py     # requires build/raw/silesia/
-```
-
-Output: `build/bench/calibrated-bench.csv` — one row per file × codec with absolute bpb,
-compressed size, and rate_ratio (compressed / R_ref). Values < 1 mean the codec found
-structure the construction parse missed.
-
-### Ground truth
-
-Each file has a corresponding record in `build/raw/calibrated/ground-truth.json`:
-```json
-{
-  "filename": "4M-H4p0-M0p50-s0.bin",
-  "size_bytes": 4194304,
-  "H_marginal": 4.0,
-  "M_fraction": 0.5,
-  "realized_M": 0.498,
-  "R_ref": 3.1818,
-  "reference_bytes": 1666560,
-  "copy_mean_length": 8.0,
-  "generator": "calibrated_v3"
-}
-```
+- **No uncompressed bytes on S3.** Raw inputs are delivered as `.gz -9`; decompress client-side.
+- **Reproducible.** Every encoder is invoked with flags that suppress nondeterminism. Tool versions pinned in [versions.txt](https://jackdanger.com/squishy/versions.txt).
+- **Single-AZ storage.** S3 ONEZONE_IA — the corpus is rederivable from the Makefile, so durability trades for cost.
 
 ---
 
-## Design
-
-- **No uncompressed bytes on S3.** The official "raw" delivery for each input is the gzip `-9` version at `individual/<set>/<file>.gz`. Decompress client-side for the original.
-- **Reproducible.** Every encoder is invoked with flags that suppress nondeterminism (no embedded timestamps, single-threaded where parallelism matters). Tool versions are pinned in [versions.txt](https://jackdanger.com/squishy/versions.txt); treat that file as the cache key for any "immutable" claim.
-- **Streaming publish.** `make stream-publish` builds, uploads, and deletes one artifact at a time. Peak local disk ≈ raw inputs (~1 GB) + one in-flight artifact (~1 GB). Designed so a CI runner with limited disk can still publish the full corpus.
-- **Single-AZ storage.** Hosted on S3 ONEZONE_IA — single availability zone, ~half the cost of standard. The whole corpus is rederivable from this Makefile + pinned tool versions, so durability is intentionally traded for cost.
-
-See the [website](https://jackdanger.com/squishy/) for the full design notes, codec details, bundle formats, and tier definitions.
-
-## Layout
-
-```
-raw/silesia/, raw/modern/, raw/pathological/   # source inputs (kept locally; not published)
-individual/<set>/<file>.<codec>[.l<level>]     # every input, every codec, multiple levels
-individual/<set>/<file>.zip.{deflate,bzip2,lzma}
-bundles/<set>/<set>.<ordering>.tar.<codec>     # per-set combined archives
-bundles/<set>/<set>.{alpha,size-desc}.7z.<method>
-bundles/<set>/<set>.{alpha,size-desc}.squashfs.<comp>
-bundles/<set>/<set>.alpha.concat-{gz,xz,zst}   # multi-member streams (no tar)
-bundles/<set>/<set>.alpha.concat-zst-skipframes
-bundles/combined/everything.alpha.tar.<codec>  # silesia + modern + pathological
-dict/                                          # zstd dictionary fixtures
-negative/                                      # intentionally malformed — see warning
-```
-
-```sh
-S3_BUCKET=mybucket S3_PREFIX=corpus CLOUDFRONT_DIST=EXXXXX make stream-publish
-```
-
-## Contributing
-
-If something is wrong, missing, or you have an input you wish Squishy included, open an issue or a PR.
-
 ## License
 
-[MIT](LICENSE) for the build system (Makefile, scripts, workflows). Bundled and generated content carries its own provenance (see `LICENSE` and the published `README.txt` for details).
+[MIT](LICENSE) for the build system (Makefile, scripts). Bundled and generated content carries its own provenance — see `LICENSE` and the published `README.txt`.

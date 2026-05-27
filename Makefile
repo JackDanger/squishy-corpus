@@ -164,7 +164,8 @@ EFF_HTML_URL    := https://www.eff.org/
 .PHONY: all squishy sources raw pathological modern individual bundles dict \
         negative manifest verify publish invalidate plan-publish doctor clean \
         help stream-plan stream-publish stream-publish-dryrun negative-publish \
-        storage-reduce agent-docs
+        storage-reduce agent-docs \
+        calibrated-bundle calibrated-html calibrated-publish calibrated-invalidate
 
 help:
 	@echo "Targets:"
@@ -191,6 +192,12 @@ help:
 	@echo "  all            — sources → ... → manifest (full local build, includes agent docs)"
 	@echo "  squishy        — all + verify + publish + invalidate (the full bake)"
 	@echo "  clean          — rm -rf $(BUILD)/"
+	@echo ""
+	@echo "Calibrated corpus v4:"
+	@echo "  calibrated-bundle   — generate + bench + curate + bundle → build/bundle/"
+	@echo "  calibrated-html     — (re)build build/bundle/index.html from scripts/bundle-index.html"
+	@echo "  calibrated-publish  — sync build/bundle/ → s3://\$$(S3_BUCKET)/\$$(CALIBRATED_S3_PREFIX)/"
+	@echo "  calibrated-invalidate — CloudFront invalidation for calibrated index files"
 
 all: doctor sources raw pathological modern individual bundles dict negative manifest
 
@@ -654,3 +661,72 @@ invalidate:
 	    /$(S3_PREFIX)/smoke.zip \
 	    /$(S3_PREFIX)/robots.txt \
 	    /$(S3_PREFIX)/llms.txt
+
+# ─── Calibrated corpus v4 bundle ────────────────────────────────────────────
+# S3 destination for the calibrated bundle (separate from legacy squishy/ prefix)
+CALIBRATED_S3_PREFIX ?= squishy/calibrated
+
+# Step 1: generate + bench calibrated files (run-bench.py handles both)
+$(BUILD)/bench/calibrated-measurements.csv: scripts/run-bench.py \
+        squishy/generators/calibrated.py \
+        squishy/corpus/metrics.py squishy/corpus/measure.py
+	@mkdir -p $(BUILD)/bench $(BUILD)/raw/calibrated
+	@uv run scripts/run-bench.py
+
+# Step 2: select one representative file per cell, symlink into curated/
+$(BUILD)/.curated-selected: scripts/select-curated.py \
+        $(BUILD)/bench/calibrated-measurements.csv \
+        $(BUILD)/bench/corpus-measurements.csv
+	@uv run scripts/select-curated.py
+	@touch $@
+
+# Step 3: hardlink files into build/bundle/, write manifest.csv + ground-truth.json
+$(BUILD)/bundle/manifest.csv: scripts/build-corpus-bundle.py \
+        $(BUILD)/.curated-selected
+	@uv run scripts/build-corpus-bundle.py
+
+# Step 4: generate index.html from template + live manifest counts
+$(BUILD)/bundle/index.html: scripts/build-bundle-html.py scripts/bundle-index.html \
+        $(BUILD)/bundle/manifest.csv
+	@uv run scripts/build-bundle-html.py
+
+.PHONY: calibrated-bundle calibrated-html calibrated-publish calibrated-invalidate
+
+calibrated-bundle: $(BUILD)/bundle/manifest.csv $(BUILD)/bundle/index.html
+
+calibrated-html: $(BUILD)/bundle/index.html
+
+# Publish: binary files with immutable cache; index files with short TTL.
+# Separate cp commands for index files avoid the "include after exclude" trap.
+calibrated-publish: calibrated-bundle
+	@$(AWS) s3 sync $(BUILD)/bundle/ \
+	  s3://$(S3_BUCKET)/$(CALIBRATED_S3_PREFIX)/ \
+	  --storage-class ONEZONE_IA \
+	  --follow-symlinks \
+	  --exclude "index.html" \
+	  --exclude "manifest.csv" \
+	  --exclude "ground-truth.json" \
+	  --exclude "score.py" \
+	  --cache-control "$(CC_IMMUTABLE)"
+	@for f in index.html manifest.csv ground-truth.json score.py; do \
+	  ct=application/octet-stream; \
+	  [[ "$$f" == *.html ]] && ct="text/html; charset=utf-8"; \
+	  [[ "$$f" == *.csv  ]] && ct="text/csv; charset=utf-8"; \
+	  [[ "$$f" == *.json ]] && ct="application/json"; \
+	  [[ "$$f" == *.py   ]] && ct="text/x-python; charset=utf-8"; \
+	  $(AWS) s3 cp $(BUILD)/bundle/$$f \
+	    s3://$(S3_BUCKET)/$(CALIBRATED_S3_PREFIX)/$$f \
+	    --storage-class ONEZONE_IA \
+	    --cache-control "$(CC_INDEX)" \
+	    --content-type "$$ct"; \
+	done
+
+calibrated-invalidate:
+	@if [[ -z "$(CLOUDFRONT_DIST)" ]]; then echo "skip invalidate: CLOUDFRONT_DIST empty"; exit 0; fi
+	@$(AWS) cloudfront create-invalidation \
+	  --distribution-id $(CLOUDFRONT_DIST) \
+	  --paths \
+	    /$(CALIBRATED_S3_PREFIX)/index.html \
+	    /$(CALIBRATED_S3_PREFIX)/manifest.csv \
+	    /$(CALIBRATED_S3_PREFIX)/ground-truth.json \
+	    /$(CALIBRATED_S3_PREFIX)/score.py

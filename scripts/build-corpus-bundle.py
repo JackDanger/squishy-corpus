@@ -150,10 +150,10 @@ def main() -> None:
     if not args.dry_run:
         nat_dir.mkdir(parents=True, exist_ok=True)
         cal_dir.mkdir(parents=True, exist_ok=True)
-        # Remove stale symlinks
+        # Remove stale entries
         for d in [nat_dir, cal_dir]:
             for p in d.iterdir():
-                if p.is_symlink():
+                if p.is_symlink() or p.is_file():
                     p.unlink()
 
     manifest_rows: list[dict] = []
@@ -221,7 +221,11 @@ def main() -> None:
 
             if not args.dry_run:
                 if not dest.exists():
-                    os.symlink(sibling, dest)
+                    try:
+                        os.link(sibling, dest)  # hardlink; avoids symlink-resolution issues on S3 sync
+                    except OSError:
+                        import shutil
+                        shutil.copy2(sibling, dest)
 
     if not args.dry_run:
         # manifest.csv
