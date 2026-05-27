@@ -121,6 +121,13 @@ KNOWN_EMPTY_HM: set[tuple[int, int]] = {
 KNOWN_EMPTY_HML: set[tuple[int, int, int]] = {
     # H<0.5 / M0.80+ / L-short: near-constant → LZ77 finds one huge match, not short ones
     (0, 5, 0),
+    # H<0.5 / M0.80+ / L-medium: H<0.5 requires ≥92% single-byte dominance.  LZ77 finds
+    # either one giant match (→ L-long) or sub-10-byte noise matches between the rare
+    # non-dominant bytes (→ L-short).  Regular 10-60 byte spacing of non-dominant bytes
+    # does not arise in natural data; any sparse-bitmap source with row stride in [10,60)
+    # also has H between 0.5 and 1.0.  Empirical: closest natural file (ptt5 fax) lands
+    # at H=1.21, L_p90=65 (L-long, different M band).  Construction-only.
+    (0, 5, 1),
     # H0.5-1.5 / M0.80+ / L-short: same — single-symbol dominance → L-short impossible
     (1, 5, 0),
     # H1.5-1.86 / M0.80+ / L-short: EMPIRICALLY REACHABLE.

@@ -35,6 +35,17 @@ Files produced in build/raw/natural/<key>/
   repcorpus_einstein/ H≈3.5-4.5, M0.80+ — Pizza-Chili German Wikipedia revision history
   t2t_alphasat/ H≈1.5-2.0, M0.80+     — T2T-CHM13 chrY DYZ3 HOR alpha-satellite array
   osm_geofabrik/ H≈4.5-5.5, M≈0.20-0.40 — OpenStreetMap XML (Latvia extract)
+  repcorpus_cere_straddle/ H≈1.9-2.3, M0.80+, L-long — cere genome-boundary straddle
+  gencode_gtf/   H≈4.0-4.4, M≈0.80+, L-long — GENCODE GTF (compact attribute syntax)
+  gutenberg_multi/ H≈4.5-5.0, M≈0.40-0.60, L-short — 8 different 19th-c Gutenberg authors
+  uniref50/      H≈4.2-4.4, M≈0.60-0.80, L-short — UniRef50 protein cluster sequences
+  t2t_hsat2/     H≈1.0-1.4, M0.99, L-medium — T2T-CHM13 chr1 HSat2 array
+  t2t_gsat/      H≈1.0-1.5, M0.99, L-long — T2T-CHM13 chr13 GSAT array
+  plasmodium/    H≈1.7-2.3, M0.80+, L-short — P. falciparum chr14 var-gene repeats
+  repcorpus_ecoli/ H≈2.0, M0.99, L-long — E. coli rRNA operon repeats (5 kb, 7 copies/genome)
+  repcorpus_influenza/ H≈2.0-2.5, M0.99, L-long — influenza concatenation (near-identical strains)
+  pdb_nmr/       H≈3.5-4.0, M0.99, L-medium — NMR ensemble mmCIF (2K2E, 20 models, L_p90≈17)
+  ecoli_k12/     H≈2.0, M0.99, L-long — E. coli K-12 chr (7 rRNA operons, close together)
 
 After running this script, measure with:
     uv run scripts/measure-corpus.py \\
@@ -1210,6 +1221,240 @@ SOURCES: list[Source] = [
         slices=[
             ("osm-berlin-4M.bin",   0, _4M),
             ("osm-berlin-256K.bin",  0, _256K),
+        ],
+    ),
+    # ── Round 7: genome-boundary straddle for L-long at H1.86-3.0 ─────────────
+    # The 16 S. cerevisiae genomes in cere.gz are each ~12.1 MB.  A 4 MB slice
+    # at offset 0 stays within genome 1 (no inter-strain matches) → L-short.
+    # Slicing at offset ~11.5 MB straddles the genome 1→2 junction: identical
+    # chromosomes from two strains produce near-verbatim LZ77 matches of
+    # thousands of bytes → L_p90 >> 60 → L-long.
+    PartialGzSliceSource(
+        key="repcorpus_cere_straddle",
+        license="Research use (Pizza-Chili repetitive corpus, pizzachili.dcc.uchile.cl)",
+        note="H≈1.9-2.3, M0.80+, L_p90>>1000 — cere slice straddling genome 1→2 boundary (inter-strain matches)",
+        url="https://pizzachili.dcc.uchile.cl/repcorpus/real/cere.gz",
+        partial_name="cere-straddle.partial.gz",
+        # 11.5 MB + 4 MB = 15.5 MB decompressed needed; ratio ~3.7x → ~4.2 MB compressed minimum.
+        # Download 20 MB compressed to provide headroom.
+        partial_bytes=20 * 1024 * 1024,
+        slices=[
+            ("cere-straddle-4M.bin",   11_500_000, _4M),
+            ("cere-straddle-256K.bin", 11_500_000, _256K),
+        ],
+    ),
+    # ── Round 7: GENCODE GTF annotation for H3.0-4.5/M0.80+/L-long ───────────
+    # GTF has more compact attribute syntax than GFF3 (H≈4.0-4.4 vs 5.3).
+    # Near-verbatim repeated per-transcript attribute blocks → L_p90 ≥ 100.
+    StreamingGzLineSource(
+        key="gencode_gtf",
+        license="CC-BY 4.0 (GENCODE / Ensembl, gencodegenes.org)",
+        note="H≈4.0-4.4, M≈0.80+, L_p90≥100 — GENCODE v45 GTF; compact attributes, repeated transcript records",
+        url="https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_45/gencode.v45.annotation.gtf.gz",
+        partial_name="gencode.v45.partial.gtf.gz",
+        partial_bytes=30 * 1024 * 1024,
+        line_fn=_gff3_data_line,  # GTF data lines also start with chr name, skip '#' comments
+        slices=[
+            ("gencode-gtf-4M.bin",   0, _4M),
+            ("gencode-gtf-256K.bin",  0, _256K),
+        ],
+    ),
+    # ── Round 7: multi-author Gutenberg concat for H4.5-6.0/M0.40-0.60/L-short ─
+    # Single-author Shakespeare (existing gutenberg source) has heavy within-book
+    # repetition (character names, stage directions) → M_norm≈0.90, too high.
+    # Concatenating 8 different authors breaks the within-author repetition →
+    # M_norm drops to ~0.55 while keeping H ≈ 4.7, L_p90 ≈ 6 (L-short).
+    MultiFileSource(
+        key="gutenberg_multi",
+        license="Public domain (Project Gutenberg, gutenberg.org)",
+        note="H≈4.5-5.0, M≈0.40-0.60, L-short — 8 different 19th-c authors; cross-author diversity breaks repetition",
+        urls=[
+            "https://www.gutenberg.org/cache/epub/1342/pg1342.txt",  # Pride and Prejudice (Austen)
+            "https://www.gutenberg.org/cache/epub/84/pg84.txt",      # Frankenstein (Shelley)
+            "https://www.gutenberg.org/cache/epub/1661/pg1661.txt",  # Sherlock Holmes (Doyle)
+            "https://www.gutenberg.org/cache/epub/1400/pg1400.txt",  # Great Expectations (Dickens)
+            "https://www.gutenberg.org/cache/epub/2701/pg2701.txt",  # Moby Dick (Melville)
+            "https://www.gutenberg.org/cache/epub/98/pg98.txt",      # A Tale of Two Cities (Dickens)
+            "https://www.gutenberg.org/cache/epub/11/pg11.txt",      # Alice in Wonderland (Carroll)
+            "https://www.gutenberg.org/cache/epub/2814/pg2814.txt",  # Dubliners (Joyce)
+        ],
+        file_names=[
+            "gutenberg-pride-prejudice.txt",
+            "gutenberg-frankenstein.txt",
+            "gutenberg-sherlock-holmes.txt",
+            "gutenberg-great-expectations.txt",
+            "gutenberg-moby-dick.txt",
+            "gutenberg-tale-two-cities.txt",
+            "gutenberg-alice.txt",
+            "gutenberg-dubliners.txt",
+        ],
+        slices=[
+            ("gutenberg-multi-4M.bin",   0, _4M),
+            ("gutenberg-multi-256K.bin",  0, _256K),
+        ],
+    ),
+    # ── Round 7: UniRef50 protein clusters for H3.0-4.5/M0.60-0.80/L-short ───
+    # UniRef50 clusters all known proteins at 50% identity.  Conserved domain
+    # motifs within clusters produce higher M than full SwissProt (M_norm≈0.65
+    # vs ≈0.42) while keeping H≈4.3 (20-letter alphabet) and L_p90≈7 (L-short).
+    StreamingGzLineSource(
+        key="uniref50",
+        license="CC-BY 4.0 (UniProt Consortium, uniprot.org/help/license)",
+        note="H≈4.2-4.4, M≈0.60-0.80, L-short — UniRef50 amino-acid sequences; conserved domain motifs",
+        url="https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref50/uniref50.fasta.gz",
+        partial_name="uniref50.partial.fasta.gz",
+        partial_bytes=50 * 1024 * 1024,  # ~50 MB compressed → millions of short sequences
+        line_fn=_fasta_seq_line,
+        add_newline=False,
+        slices=[
+            ("uniref50-4M.bin",   0, _4M),
+            ("uniref50-256K.bin",  0, _256K),
+        ],
+    ),
+    # ── Round 7: T2T-CHM13 HSat2 chr1 q12 for H0.5-1.5/M0.80+/L-medium ──────
+    # Human Satellite 2 (HSat2) on T2T-CHM13 chr1 q12 has 26-bp higher-order
+    # subunits of the ATTCC pentamer.  Array at ~121-125 Mb: H≈1.0-1.4 (AT-rich),
+    # M_norm≈0.99, L_p90≈25-30 → expected to land (1,5,1) H0.5-1.5/M0.80+/L-medium.
+    FastaSource(
+        key="t2t_hsat2",
+        license="CC0 (T2T Consortium / NCBI; CHM13v2.0 assembly)",
+        note="H≈1.0-1.4, M0.99, L_p90≈25 — T2T-CHM13 chr1 q12 HSat2 array; 26-bp ATTCC higher-order subunit",
+        url=(
+            "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+            "?db=nuccore&id=CP068277.2&rettype=fasta&retmode=text"
+            "&seq_start=121000000&seq_stop=125000000"
+        ),
+        fasta_name="t2t-chr1-hsat2.fasta",
+        nt_name="t2t-chr1-hsat2.nt",
+        slices=[
+            ("t2t-chr1-hsat2-4M.bin",   0, _4M),
+            ("t2t-chr1-hsat2-256K.bin",  0, _256K),
+        ],
+    ),
+    # ── Round 7: T2T-CHM13 GSAT chr13 for H0.5-1.5/M0.80+/L-long ───────────
+    # Gamma satellite (GSAT) on T2T-CHM13 chr13 acrocentric short arm has 220-bp
+    # HOR units (not 171 like alpha-sat).  AT-richness pulls H≈1.0-1.5; very low
+    # divergence within HOR → near-verbatim 220-bp matches → L_p90 >> 60 → L-long.
+    # Requesting 8 Mb (positions 1-8000000) to ensure ≥4 MB of nucleotide output
+    # after stripping FASTA headers.
+    FastaSource(
+        key="t2t_gsat",
+        license="CC0 (T2T Consortium / NCBI; CHM13v2.0 assembly)",
+        note="H≈1.0-1.5, M0.99, L_p90≥220 — T2T-CHM13 chr13 GSAT array; 220-bp HOR → L-long",
+        url=(
+            "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+            "?db=nuccore&id=CP068267.2&rettype=fasta&retmode=text"
+            "&seq_start=1&seq_stop=8000000"
+        ),
+        fasta_name="t2t-chr13-gsat.fasta",
+        nt_name="t2t-chr13-gsat.nt",
+        slices=[
+            ("t2t-chr13-gsat-4M.bin",   0, _4M),
+            ("t2t-chr13-gsat-256K.bin",  0, _256K),
+        ],
+    ),
+    # ── Round 7: P. falciparum chr14 ─────────────────────────────────────────
+    # Plasmodium falciparum 3D7 has extreme AT-richness (~80% AT) → H≈2.0-2.3.
+    # Chr7 alone is only ~1.5 Mb; chr8 (NC_004319.2) is ~1.4 Mb.  Concatenating
+    # chr7+chr8 gives ~2.9 Mb nucleotide, still short of 4 Mb.  We request a
+    # 5 Mb window from chr14 (NC_004325.3, ~3.3 Mb, largest chromosome) instead.
+    # var-gene cassette repeats produce matches in the 15-40 bp range → L-medium.
+    FastaSource(
+        key="plasmodium",
+        license="PD-US-gov (NCBI RefSeq, GCF_000002765.6, P. falciparum 3D7)",
+        note="H≈2.0-2.3, M0.80+, L_p90≈15-40 — P. falciparum chr14 (largest, 3.3 Mb); var-gene repeats, AT-rich",
+        url=(
+            "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+            "?db=nuccore&id=NC_004317.2&rettype=fasta&retmode=text"
+            "&seq_start=1&seq_stop=5000000"
+        ),
+        fasta_name="plasmodium-chr14.fasta",
+        nt_name="plasmodium-chr14.nt",
+        slices=[
+            ("plasmodium-chr14-4M.bin",   0, _4M),
+            ("plasmodium-chr14-256K.bin",  0, _256K),
+        ],
+    ),
+    # ── Round 8: Pizza-Chili E. coli for H1.86-3.0/M0.80+/L-long ────────────
+    # E. coli K-12 has 7 rRNA operons (~5.5 kb each, >99% identical) spread
+    # across the genome.  Operons rrnD (0.44 Mb) and rrnH (0.78 Mb) are only
+    # ~340 kb apart → well within LZ77's window.  Processing rrnH, the algorithm
+    # looks back 340 kb and finds a 5.5 kb verbatim match → L_p90 >> 60 → L-long.
+    # Pizza-Chili "Escherichia_Coli" is a concatenation of multiple E. coli genome
+    # sequences; even the first 4 MB contains multiple rRNA operon copies.
+    PartialGzSliceSource(
+        key="repcorpus_ecoli",
+        license="Research use (Pizza-Chili repetitive corpus, pizzachili.dcc.uchile.cl)",
+        note="H≈2.0, M0.99, L_p90>>60 — E. coli rRNA operon repeats (7×5.5kb per genome, >99% identical)",
+        url="https://pizzachili.dcc.uchile.cl/repcorpus/real/Escherichia_Coli.gz",
+        partial_name="ecoli.partial.gz",
+        # E. coli.gz is 31.5 MB compressed.  First 5 MB decompresses to ~15-20 MB,
+        # covering the rrnD and rrnH regions (0.44–0.78 Mb) and several more.
+        partial_bytes=5 * 1024 * 1024,
+        slices=[
+            ("ecoli-4M.bin",   0, _4M),
+            ("ecoli-256K.bin", 0, _256K),
+        ],
+    ),
+    # ── Round 8: Pizza-Chili influenza for H1.86-3.0/M0.80+/L-long ──────────
+    # The influenza corpus is a concatenation of many influenza genome sequences
+    # (8 segments × N strains, total ~10 MB compressed → ~40 MB uncompressed).
+    # Near-identical influenza strains (same H/N type, different years) have
+    # >98% sequence identity per segment → LZ77 finds 1000-2300 bp exact matches
+    # across strains when multiple copies are in the window → L_p90 >> 60 → L-long.
+    PartialGzSliceSource(
+        key="repcorpus_influenza",
+        license="Research use (Pizza-Chili repetitive corpus, pizzachili.dcc.uchile.cl)",
+        note="H≈2.0-2.3, M0.99, L_p90>>60 — influenza genome concatenation; near-identical H/N strain copies",
+        url="https://pizzachili.dcc.uchile.cl/repcorpus/real/influenza.gz",
+        partial_name="influenza.partial.gz",
+        # influenza.gz is 10.6 MB compressed.  Download full file to get complete dataset.
+        partial_bytes=12 * 1024 * 1024,
+        slices=[
+            ("influenza-4M.bin",   0, _4M),
+            ("influenza-256K.bin", 0, _256K),
+        ],
+    ),
+    # ── Round 8: E. coli K-12 chromosome for H1.86-3.0/M0.80+/L-long ────────
+    # E. coli K-12 MG1655 chromosome (NC_000913.3) has 7 rRNA operons.  The
+    # rrnH and rrnD operons are only ~340 kb apart at positions ~223 kb and
+    # ~442 kb.  A 4 MB slice starting at position 1 captures BOTH operons
+    # within the LZ77 window → 5.5 kb exact match → L_p90 >> 60 → L-long.
+    # Unlike the Pizza-Chili E. coli collection (109 individual sequences),
+    # this is a single contiguous chromosome with the rRNA operon structure intact.
+    FastaSource(
+        key="ecoli_k12",
+        license="PD-US-gov (NCBI RefSeq, E. coli K-12 MG1655 NC_000913.3)",
+        note="H≈2.0, M0.99, L_p90>>1000 — E. coli K-12 chr1 4 Mb; rrnH/rrnD operons 340 kb apart → L-long",
+        url=(
+            "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+            "?db=nuccore&id=NC_000913.3&rettype=fasta&retmode=text"
+            "&seq_start=1&seq_stop=4000000"
+        ),
+        fasta_name="ecoli-k12-chr.fasta",
+        nt_name="ecoli-k12-chr.nt",
+        slices=[
+            ("ecoli-k12-4M.bin",   0, _4M),
+            ("ecoli-k12-256K.bin",  0, _256K),
+        ],
+    ),
+    # ── Round 8: NMR ensemble mmCIF for H3.0-4.5/M0.80+/L-long ─────────────
+    # NMR structure 2K2E (human ubiquitin, 8 models).  Each model outputs
+    # identical ATOM record topology with different coordinates.  With 8 models,
+    # LZ77 processing model 8 can match back to model 7 → full-model-length
+    # exact match (76 residues × ~80 bytes = ~6 kbp per model) → L_p90 >> 1000.
+    # Same H as other mmCIF (H≈3.5, 20-char atom label alphabet) → cell (4,5,2).
+    StreamingGzLineSource(
+        key="pdb_nmr",
+        license="CC0 (RCSB PDB / wwPDB, rcsb.org/pages/policies)",
+        note="H≈3.5-4.0, M0.99, L_p90>>1000 — 2K2E NMR ensemble (8 models, ubiquitin); verbatim per-model repeats",
+        url="https://files.rcsb.org/download/2K2E.cif.gz",
+        partial_name="2k2e.partial.cif.gz",
+        partial_bytes=5 * 1024 * 1024,
+        line_fn=_mmcif_atom_line,
+        slices=[
+            ("pdb-nmr-2k2e-4M.bin",   0, _4M),
+            ("pdb-nmr-2k2e-256K.bin",  0, _256K),
         ],
     ),
 ]
