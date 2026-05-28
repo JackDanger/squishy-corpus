@@ -137,6 +137,21 @@ def main() -> None:
         print(f"ERROR: no .bin files found in {input_dir}", file=sys.stderr)
         sys.exit(1)
 
+    # Load cached H/S measurements from gen-synthetic.py if available.
+    # This avoids re-running the 3-codec S measurement (zpaq ~20s/file × 84 files).
+    _cal_json = input_dir.parent / "calibration-results.json"
+    _hs_cache: dict[str, dict] = {}
+    if _cal_json.exists():
+        import json as _json
+        for rec in _json.loads(_cal_json.read_text()):
+            if rec.get("filename"):
+                _hs_cache[rec["filename"]] = {
+                    "H": rec["H"], "S": rec["S"],
+                    "H_bin": rec["H_label"], "S_bin": rec["S_label"],
+                }
+        if _hs_cache:
+            print(f"Loaded cached H/S for {len(_hs_cache)} files from {_cal_json.name}")
+
     print(f"Benchmarking {len(bin_files)} files × {len(codec_names)} codecs…")
 
     bench_path = out_dir / "v4-bench.csv"
@@ -148,23 +163,28 @@ def main() -> None:
 
     for i, path in enumerate(bin_files):
         data = path.read_bytes()
-        H = byte_entropy(data)
-        s_result = measure_s(path)
-        S = s_result.S
-        hl = h_label(H)
-        sl = s_label(S)
+        size_bytes = len(data)
+        if path.name in _hs_cache:
+            cached = _hs_cache[path.name]
+            H, S, hl, sl = cached["H"], cached["S"], cached["H_bin"], cached["S_bin"]
+        else:
+            H = byte_entropy(data)
+            s_result = measure_s(path)
+            S = s_result.S
+            hl = h_label(H)
+            sl = s_label(S)
         file_meta[path.name] = {
             "H": H, "S": S, "H_bin": hl, "S_bin": sl,
-            "size_bytes": len(data),
+            "size_bytes": size_bytes,
         }
         print(f"  [{i+1}/{len(bin_files)}] {path.name} → {hl}/{sl} (H={H:.3f} S={S:.3f})")
 
         for codec in codec_names:
             nbytes, elapsed = compress_file(path, codec)
-            bpb = nbytes * 8.0 / len(data) if nbytes > 0 else None
+            bpb = nbytes * 8.0 / size_bytes if nbytes > 0 else None
             rows.append({
                 "filename":        path.name,
-                "size_bytes":      len(data),
+                "size_bytes":      size_bytes,
                 "H":               round(H, 4),
                 "H_bin":           hl,
                 "S":               round(S, 4),

@@ -43,7 +43,7 @@ def main() -> None:
 
     cal_path = out_dir / "calibration-results.json"
     cal_path.write_text(json.dumps(
-        [{"generator": r.generator, "params": r.params,
+        [{"filename": r.filename, "generator": r.generator, "params": r.params,
           "H": round(r.H, 4), "S": round(r.S, 4),
           "H_label": r.H_label, "S_label": r.S_label}
          for r in results],

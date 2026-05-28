@@ -157,6 +157,7 @@ class CalibrationPoint:
     S: float
     H_label: str
     S_label: str
+    filename: str = ""
 
 
 def _gen_worker(args: tuple) -> str:
@@ -252,6 +253,7 @@ def calibration_sweep(out_dir: Path, workers: int = 4) -> list[CalibrationPoint]
             generator=generator,
             params=params,
             H=m.H, S=m.S, H_label=m.H_label, S_label=m.S_label,
+            filename=path.name,
         )
         results.append(cp)
         print(f"  {tag}: {m.H_label}/{m.S_label} (H={m.H:.3f} S={m.S:.3f})")
