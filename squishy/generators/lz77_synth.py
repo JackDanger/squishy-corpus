@@ -152,33 +152,42 @@ Token = dict  # {"t": "L", "b": int} or {"t": "C", "d": int, "l": int}
 
 
 def synthesize(size: int, M: float, dist_model: str, mean_L: int,
-               lit_H: float, seed: int) -> tuple[bytes, list[Token]]:
+               lit_H: float, seed: int) -> tuple[bytes, list[Token], int]:
     """Generate 'size' bytes with the target LZ77 parse statistics.
 
-    Returns (data_bytes, parse_tokens).
+    Returns (data_bytes, parse_tokens, n_rejected_copies).
+    n_rejected_copies counts copies whose source range overlapped a prior copy
+    (second-order artifact mitigation); these fall back to literals.
+
     The parse tokens exactly describe how data_bytes was built — every byte
     is accounted for. Researchers can replay the parse to reproduce the file.
     """
     rng = random.Random(seed)
     lit_pmf = tilted_pmf(lit_H)
-    lit_alphabet = list(range(256))  # unshuffled for lz77 (entropy only)
+    lit_alphabet = list(range(256))
 
     # Probability of starting a copy run so copy fraction ≈ M
     p_start = M / (mean_L - M * (mean_L - 1)) if M > 0 else 0.0
     log_q = math.log(1.0 - p_start) if 0 < p_start < 1 else -1e300
 
     buf: bytearray = bytearray(size)
+    # Bitset tracking which positions were filled by copy tokens (for rejection)
+    is_copy = bytearray(size)  # 1 = filled by copy, 0 = filled by literal
     parse: list[Token] = []
-    recent4: list[int] = [1, 2, 4, 8]  # LZMA-style recent-distance cache
+    recent4: list[int] = [1, 2, 4, 8]
+    n_rejected = 0
     pos = 0
+
+    def emit_literal() -> None:
+        nonlocal pos
+        b = rng.choices(lit_alphabet, weights=lit_pmf)[0]
+        buf[pos] = b
+        parse.append({"t": "L", "b": b})
+        pos += 1
 
     while pos < size:
         if pos == 0 or p_start <= 0:
-            # Always emit a literal at pos=0 (no copy history)
-            b = rng.choices(lit_alphabet, weights=lit_pmf)[0]
-            buf[pos] = b
-            parse.append({"t": "L", "b": b})
-            pos += 1
+            emit_literal()
             continue
 
         # Geometric waiting time until next copy
@@ -187,31 +196,34 @@ def synthesize(size: int, M: float, dist_model: str, mean_L: int,
             u = 1e-300
         wait = int(math.log(u) / log_q)
 
-        # Emit 'wait' literal bytes
         for _ in range(min(wait, size - pos)):
-            b = rng.choices(lit_alphabet, weights=lit_pmf)[0]
-            buf[pos] = b
-            parse.append({"t": "L", "b": b})
-            pos += 1
+            emit_literal()
         if pos >= size:
             break
 
-        # Emit one copy run
         D = _sample_distance(rng, dist_model, pos, recent4)
         L = max(1, int(rng.expovariate(1.0 / mean_L)) + 1)
         run_len = min(L, size - pos)
         src = pos - D
 
-        # Update LZMA recent-distance cache
+        # Second-order copy rejection: skip if any source byte was itself a copy.
+        # Uses the is_copy bitset for O(run_len) check — much faster than scanning
+        # parse tokens, and correct for overlapping copies.
+        if any(is_copy[src + i] for i in range(run_len)):
+            n_rejected += 1
+            emit_literal()
+            continue
+
         if D not in recent4:
             recent4 = ([D] + recent4)[:4]
 
         for i in range(run_len):
-            buf[pos + i] = buf[src + i]  # overlapping copy: LZ-standard
+            buf[pos + i] = buf[src + i]
+            is_copy[pos + i] = 1
         parse.append({"t": "C", "d": D, "l": run_len})
         pos += run_len
 
-    return bytes(buf), parse
+    return bytes(buf), parse, n_rejected
 
 
 def _parse_cost(parse: list[Token], lit_H: float) -> float:
@@ -244,7 +256,7 @@ def _parse_stats(parse: list[Token], size: int) -> dict:
 
 def ground_truth_record(size_label: str, size: int, cfg: dict,
                          rep: str, fname: str, parse_stats: dict,
-                         ref_cost_bits: float) -> dict:
+                         ref_cost_bits: float, n_rejected: int = 0) -> dict:
     return {
         "filename":            fname,
         "size_bytes":          size,
@@ -257,6 +269,7 @@ def ground_truth_record(size_label: str, size: int, cfg: dict,
         "literal_H":           cfg["lit_H"],
         "ref_parse_cost_bits": round(ref_cost_bits, 1),
         "reference_bytes":     math.ceil(ref_cost_bits / 8),
+        "n_rejected_copies":   n_rejected,
         "generator":           "lz77_synth_v1",
         "data_seed":           _file_seed(cfg["M"], cfg["dist"], cfg["mean_L"],
                                           cfg["lit_H"], size, rep),
@@ -288,29 +301,27 @@ def run(cfg_build: BuildConfig) -> int:
 
                     if path.exists() and parse_path.exists():
                         print(f"  skip {fname} (exists)")
-                        # Still need parse stats for the ground-truth record;
-                        # for idempotency, recompute without writing.
-                        data, parse = synthesize(
+                        data, parse, n_rejected = synthesize(
                             size, file_cfg["M"], file_cfg["dist"],
                             file_cfg["mean_L"], file_cfg["lit_H"], seed,
                         )
                     else:
-                        data, parse = synthesize(
+                        data, parse, n_rejected = synthesize(
                             size, file_cfg["M"], file_cfg["dist"],
                             file_cfg["mean_L"], file_cfg["lit_H"], seed,
                         )
                         if not path.exists():
                             write_bytes_atomic(path, data)
                         if not parse_path.exists():
-                            # Write parse as newline-delimited JSON
                             lines = "\n".join(json.dumps(t) for t in parse)
                             write_bytes_atomic(parse_path, lines.encode())
-                        print(f"  {fname} ({len(data):,} bytes, {len(parse)} tokens)")
+                        print(f"  {fname} ({len(data):,} bytes, {len(parse)} tokens,"
+                              f" {n_rejected} rejected)")
 
                     stats = _parse_stats(parse, size)
                     ref_cost = _parse_cost(parse, file_cfg["lit_H"])
                     rec = ground_truth_record(size_label, size, file_cfg,
-                                              rep, fname, stats, ref_cost)
+                                              rep, fname, stats, ref_cost, n_rejected)
                     records.append(rec)
 
         gt_path = out / "ground-truth.json"

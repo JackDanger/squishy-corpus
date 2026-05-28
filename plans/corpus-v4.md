@@ -29,7 +29,7 @@ Total release size: ~12 GB. The tarball is content-addressed; its sha256 is the 
 
 Generated files with known construction parameters. Used to span the (entropy, structure) plane uniformly. Synthetic files carry a `construction` column and `*_target` columns that are absent on natural files. They are never aggregated with natural files for codec ranking. The benchmark report presents synthetic and natural findings side by side, clearly labeled.
 
-Synthetic file count: 240 files across 60 cells × 4 sizes.
+Synthetic file count: ~84–168 files. The exact count is determined by how many of the 35 nominal H×S cells (7 × 5) are reachable by the three generator families. Per the calibration sweep, reachable cells are populated with one or two generator constructions × 3 size tiers (4 MB, 64 MB, 1 GB).
 
 ### Natural corpus
 

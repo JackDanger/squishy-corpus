@@ -88,24 +88,42 @@ def generate_structured(size: int, period: int, profile: str, seed: int) -> byte
 
 
 def generate_shuffled(size: int, period: int, profile: str, seed: int) -> bytes:
-    """Same per-position entropy but bytes within each record are scrambled.
+    """Same per-position entropy but positional structure destroyed via column permutation.
 
-    Each record is generated using the correct per-position PMFs (preserving
-    marginal statistics) but then shuffled. This destroys positional structure
-    while keeping the per-record entropy the same.
+    Treats the N×P matrix (rows=records, columns=byte-positions-within-record)
+    and applies an independent random permutation to each column. This preserves
+    the marginal distribution of each column (per-position entropy unchanged) but
+    destroys cross-column within-row correlation (period structure).
+
+    Within-record shuffle (the naive approach) is incorrect: it mixes column
+    distributions, changing each column's marginal and defeating the controlled
+    comparison. Column-permutation keeps each column's marginal exactly intact.
     """
-    rng = random.Random(seed)
+    # First generate the structured file as a flat array
+    rng_gen = random.Random(seed)
     pmfs = _build_per_position_pmfs(period, profile)
     alphabet = list(range(256))
-    records = (size + period - 1) // period
-    buf = bytearray()
-    for _ in range(records):
-        record = [rng.choices(alphabet, weights=pmfs[i])[0] for i in range(period)]
-        rng.shuffle(record)  # destroy positional structure
-        for b in record:
-            if len(buf) >= size:
-                break
-            buf.append(b)
+    n_records = (size + period - 1) // period
+    total = n_records * period
+
+    # Build the N×P matrix column-by-column
+    matrix = [[0] * n_records for _ in range(period)]
+    for col in range(period):
+        pmf = pmfs[col]
+        for row in range(n_records):
+            matrix[col][row] = rng_gen.choices(alphabet, weights=pmf)[0]
+
+    # Apply independent random permutation to each column
+    rng_shuf = random.Random(seed ^ 0xDEADBEEF)
+    for col in range(period):
+        rng_shuf.shuffle(matrix[col])
+
+    # Reconstruct row-major order (interleave columns)
+    buf = bytearray(total)
+    for row in range(n_records):
+        for col in range(period):
+            buf[row * period + col] = matrix[col][row]
+
     return bytes(buf[:size])
 
 
