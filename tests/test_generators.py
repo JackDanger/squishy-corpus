@@ -143,6 +143,36 @@ class TestTiltedPMF:
             assert abs(pmf_entropy(pmf) - H) < 1e-6, f"H_target={H}"
 
 
+class TestLogUniform:
+    """_sample_log_uniform must stay in bounds and be approximately ∝ 1/d."""
+
+    def test_small_window_exact(self) -> None:
+        import random
+        from squishy.generators.calibrated import _sample_log_uniform, COPY_WINDOW
+        rng = random.Random(42)
+        samples = [_sample_log_uniform(rng, 1, COPY_WINDOW) for _ in range(5000)]
+        assert all(1 <= d <= COPY_WINDOW for d in samples)
+
+    def test_large_window_bounds(self) -> None:
+        import random
+        from squishy.generators.calibrated import _sample_log_uniform
+        W = 4194304
+        rng = random.Random(99)
+        samples = [_sample_log_uniform(rng, 1, W) for _ in range(5000)]
+        assert all(1 <= d <= W for d in samples)
+
+    def test_large_window_median_approx(self) -> None:
+        import random, math, statistics
+        from squishy.generators.calibrated import _sample_log_uniform
+        W = 4194304
+        rng = random.Random(7)
+        samples = sorted(_sample_log_uniform(rng, 1, W) for _ in range(10000))
+        med = samples[5000]
+        # Expected median ≈ exp((ln(W) + γ)/2 - γ) ≈ 1529 for W=4194304
+        expected = 1529
+        assert abs(med - expected) / expected < 0.10, f"median={med} expected ~{expected}"
+
+
 class TestReferenceRate:
     """reference_rate() must satisfy theoretical invariants."""
 
