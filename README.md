@@ -2,52 +2,56 @@
 
 Two things live here:
 
-1. **Calibrated corpus v4** — a measurement instrument for compression research: synthetic files with independently controlled entropy (H) and match density (M).
+1. **Calibrated corpus v4** — a measurement instrument for compression research: synthetic files designed to expose cells in the (H, S) space where codec families disagree on file ordering.
 2. **Squishy fixture set** — real, weird, and intentionally broken files for testing compression/decompression libraries.
 
 ---
 
 ## Calibrated corpus v4
 
-Files generated with two axes under independent control:
+### What it is
 
-| Axis | Values | Plain English |
-|------|--------|---------------|
-| **H** — marginal byte entropy | 1.0, 1.7, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0 bpb | How unpredictable are the bytes? |
-| **M** — LZ match density | 0.00, 0.10, 0.25, 0.50, 0.75 | What fraction came from copy-paste? |
-| **L̄** — mean match length | 3, 8, 32, 128 bytes | How long are the copies? (M=0.50 sweep only) |
+Natural benchmarks (Silesia, enwik8, Calgary) confound entropy with structure: you cannot vary match density while holding entropy fixed in a real text file. This corpus can. Each file has independently controlled axes:
 
-Natural benchmarks (Silesia, enwik8, Calgary) confound H and M — you cannot vary match density while holding entropy fixed in a real text file. This corpus can, which isolates codec-family differences that are invisible on natural files.
+| Axis | Definition | Bins |
+|------|-----------|------|
+| **H** — marginal byte entropy | Shannon entropy of the byte histogram | H0 (0–1 bpb) … H6 (7.7–8 bpb) |
+| **S** — structural compressibility | 1 − min(zstd-long27/bzip2/zpaq compressed) / raw | S0 (≤5%) … S4 (≥75%) |
 
-**Validation:** Kendall-τ = 0.939 between zstd-3 and bzip2-9 across 33 unclamped cells (threshold ≥ 0.9). 40/40 cells have a consistent per-cell winner across all 3 replicates.
+The goal: find (H, S) cells where codec families disagree on file ordering. In those cells, Kendall-τ between e.g. zstd-19 and zpaq-m5 drops below 0.8 — meaning the two codecs rank files in a different order, revealing that they exploit different structural features.
 
-**Full documentation:** [`build/bundle/index.html`](build/bundle/index.html) (generated) — covers the glossary, scoring workflow, all manifest fields, limitations, and ground-truth schema.
+### Generators
+
+Three independent generator families cover the reachable H×S space:
+
+- **Markov** — k-th order Markov chain (k ∈ {1, 2, 4}) with a SHAKE-256 transition kernel. Temperature τ controls marginal entropy; higher-order k introduces long-range structure exploited by context-mixing codecs.
+- **LZ77-synth** — directly samples an LZ77 parse. Match fraction M, mean copy length L, window size W, and literal entropy H_lit are independently controlled. Generates the ground-truth parse as a `.parse.jsonl` sidecar.
+- **Periodic** — fixed-size record streams with per-position entropy profiles. Structured vs. shuffled variants measure LZMA's pb/lp position-bit sensitivity.
+
+### Physics constraints
+
+Shannon's source-coding bound caps S from above: a file in H_bin h has max S ≤ 1 − H_lo/8. This makes 11 of the 35 H×S cells physically unreachable (e.g. H6/S1 requires compressing near-random bytes by 5–25%, violating entropy limits).
 
 ### Quick start
 
 ```sh
-# Score a codec against the calibrated bundle
-cd build/bundle
-python score.py list --manifest manifest.csv --bundle calibrated | \
-  xargs -I{} zstd -3 calibrated/{} -c -q -o results/zstd-3/{}
-python score.py score --manifest manifest.csv --results results/zstd-3 --codec zstd-3
+# Run calibration sweep (generate ~84 files at 4 MB, measure H and S)
+uv run scripts/gen-synthetic.py --calibrate-only
 
-# Compare two codecs, get Kendall-τ
-python score.py compare --manifest manifest.csv \
-    --results-a results/zstd-3 --results-b results/bzip2-9 \
-    --codec-a zstd-3 --codec-b bzip2-9
+# Benchmark codec suite over calibration files, compute Kendall-τ
+uv run scripts/bench-v4.py --input build/raw/synthetic/calibration
+
+# Results
+cat build/bench/v4-kendall-tau.csv   # τ per H×S cell × codec pair
+cat build/bench/v4-coverage.txt      # H×S coverage map
 ```
 
-### Build the bundle
+### Build pipeline
 
 ```sh
-make calibrated-bundle    # generate + bench + curate + assemble build/bundle/
-make calibrated-html      # rebuild index.html from scripts/bundle-index.html
-make calibrated-publish   # sync to S3
+uv run scripts/gen-synthetic.py --calibrate-only   # Phase 1: calibration sweep
+uv run scripts/bench-v4.py                         # Phase 2: benchmark + τ
 ```
-
-Edit website copy: `scripts/bundle-index.html` (plain HTML with `$var` placeholders).
-Run `make calibrated-html` to rebuild `build/bundle/index.html`.
 
 ---
 
@@ -73,11 +77,6 @@ Each input is compressed with every common codec at multiple levels and packaged
 curl -s https://jackdanger.com/squishy/manifest.json \
   | jq -r '.artifacts[] | select(.tier=="pr") | .path' \
   | xargs -I{} curl -sO https://jackdanger.com/squishy/{}
-
-# Verify a download
-curl -O https://jackdanger.com/squishy/individual/silesia/dickens.gz
-curl -s https://jackdanger.com/squishy/CHECKSUMS.sha256 \
-  | grep individual/silesia/dickens.gz | sha256sum -c
 ```
 
 ### Build locally
@@ -88,29 +87,8 @@ make all             # full local build
 make stream-publish  # build → upload → delete (peak disk ~2 GB)
 ```
 
-### Layout
-
-```
-build/raw/silesia/, build/raw/modern/, build/raw/pathological/
-individual/<set>/<file>.<codec>[.l<level>]
-bundles/<set>/<set>.<ordering>.tar.<codec>
-bundles/<set>/<set>.{alpha,size-desc}.7z.<method>
-bundles/<set>/<set>.{alpha,size-desc}.squashfs.<comp>
-bundles/<set>/<set>.alpha.concat-{gz,xz,zst}
-bundles/combined/everything.alpha.tar.<codec>
-dict/          # zstd dictionary fixtures
-negative/      # intentionally malformed fixtures
-build/bundle/  # calibrated corpus v4 bundle
-```
-
-### Design notes
-
-- **No uncompressed bytes on S3.** Raw inputs are delivered as `.gz -9`; decompress client-side.
-- **Reproducible.** Every encoder is invoked with flags that suppress nondeterminism. Tool versions pinned in [versions.txt](https://jackdanger.com/squishy/versions.txt).
-- **Single-AZ storage.** S3 ONEZONE_IA — the corpus is rederivable from the Makefile, so durability trades for cost.
-
 ---
 
 ## License
 
-[MIT](LICENSE) for the build system (Makefile, scripts). Bundled and generated content carries its own provenance — see `LICENSE` and the published `README.txt`.
+[MIT](LICENSE) for the build system (Makefile, scripts). Bundled and generated content carries its own provenance — see the published `README.txt`.

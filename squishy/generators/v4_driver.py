@@ -158,21 +158,18 @@ class CalibrationPoint:
     S_label: str
 
 
-def _gen_and_measure(args: tuple) -> CalibrationPoint | None:
-    """Worker: generate a calibration file if missing, then measure it."""
+def _gen_worker(args: tuple) -> str:
+    """Module-level worker: generate one calibration file, write to disk directly."""
     from squishy.core.fs import write_bytes_atomic
-
-    generator, tag, path, size, gen_fn, gen_args, params = args
-    if not path.exists():
-        seed = _make_seed(f"cal:{tag}")
-        data = gen_fn(*gen_args, seed)
-        write_bytes_atomic(path, data)
-    m = _measure(path)
-    return CalibrationPoint(
-        generator=generator,
-        params=params,
-        H=m.H, S=m.S, H_label=m.H_label, S_label=m.S_label,
-    )
+    tag, path_str, gen_name, gen_args = args
+    path = Path(path_str)
+    if path.exists():
+        return path_str
+    seed = _make_seed(f"cal:{tag}")
+    gen_fn = {"markov": gen_markov, "lz77": gen_lz77, "periodic": gen_periodic}[gen_name]
+    data = gen_fn(*gen_args, seed)
+    write_bytes_atomic(path, data)
+    return path_str
 
 
 def _build_work_items(cal_dir: Path, size: int) -> list[tuple]:
@@ -220,8 +217,8 @@ def calibration_sweep(out_dir: Path, workers: int = 4) -> list[CalibrationPoint]
     """Run generators over the curated parameter grid at 4 MB, measure (H, S).
 
     Files are written to out_dir/calibration/ and retained so the sweep can
-    be resumed. Parallelizes generation; measurement runs sequentially (codec
-    processes are already CPU-bound and contend with each other).
+    be resumed. Parallelizes file generation; measurement runs sequentially
+    (codec subprocesses contend with each other if run in parallel).
     """
     cal_dir = out_dir / "calibration"
     cal_dir.mkdir(parents=True, exist_ok=True)
@@ -229,30 +226,26 @@ def calibration_sweep(out_dir: Path, workers: int = 4) -> list[CalibrationPoint]
     size = CALIBRATION_SIZE
     items = _build_work_items(cal_dir, size)
 
-    # Generate missing files in parallel; measure sequentially to avoid
-    # codec subprocess contention (zstd/bzip2/zpaq are each multi-threaded)
-    missing = [it for it in items if not it[2].exists()]
-    if missing:
-        print(f"Calibration sweep: generating {len(missing)} new files"
+    # Build picklable worker args for missing files
+    # Format: (tag, path_str, gen_name, gen_args_without_seed)
+    GEN_NAME = {0: "markov", 1: "lz77", 2: "periodic"}
+    worker_args: list[tuple] = []
+    for it in items:
+        generator, tag, path, size_, gen_fn, gen_args, params = it
+        if not path.exists():
+            worker_args.append((tag, str(path), generator, gen_args))
+
+    if worker_args:
+        print(f"Calibration sweep: generating {len(worker_args)} new files"
               f" ({workers} workers)…")
-        from squishy.core.fs import write_bytes_atomic
-
-        def _gen_only(args: tuple) -> tuple[Path, bytes]:
-            generator, tag, path, size_, gen_fn, gen_args, params = args
-            seed = _make_seed(f"cal:{tag}")
-            data = gen_fn(*gen_args, seed)
-            return path, data
-
         with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as pool:
-            for path, data in pool.map(_gen_only, missing):
-                if not path.exists():
-                    write_bytes_atomic(path, data)
+            for path_str in pool.map(_gen_worker, worker_args):
+                pass  # workers write directly to disk
 
     print(f"Calibration sweep: measuring {len(items)} files…")
     results: list[CalibrationPoint] = []
     for it in items:
-        generator, tag, path, *rest = it
-        params = it[6]
+        generator, tag, path, size_, gen_fn, gen_args, params = it
         m = _measure(path)
         cp = CalibrationPoint(
             generator=generator,
