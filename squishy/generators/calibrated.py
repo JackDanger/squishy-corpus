@@ -241,25 +241,37 @@ def reference_rate(H_marginal: float, M_frac: float,
 
 # ── Byte stream generation ─────────────────────────────────────────────────────
 
-def _sample_log_uniform(rng: random.Random, lo: int, hi: int) -> int:
-    """Draw exactly from P(D=d) ∝ 1/d over [lo, hi].
+_EULER_GAMMA = 0.5772156649015329
 
-    For the full window [1, COPY_WINDOW] uses a precomputed CDF (O(log W)).
-    For truncated ranges (near the start of file, where copy history < COPY_WINDOW)
-    computes the CDF on-the-fly (O(hi)), which only applies to the first 32 KB.
+
+def _sample_log_uniform(rng: random.Random, lo: int, hi: int) -> int:
+    """Draw from P(D=d) ∝ 1/d over [lo, hi].
+
+    For [1, COPY_WINDOW] uses a precomputed CDF (O(log W), exact).
+    For small truncated ranges (hi ≤ 512) uses an exact on-the-fly CDF (O(hi)).
+    For large arbitrary ranges uses O(1) harmonic inverse-CDF sampling; the
+    error is sub-integer for all d ≥ 2 and bounded by the discrete/continuous
+    gap in the harmonic approximation H(d) ≈ ln(d) + γ.
     """
     if lo == 1 and hi == COPY_WINDOW:
         d = bisect.bisect_right(_LOG_UNIFORM_CDF, rng.random())
         return max(1, min(COPY_WINDOW, d))
-    # Truncated range: exact CDF on-the-fly.
-    H = sum(1.0 / d for d in range(lo, hi + 1))
-    u = rng.random() * H
-    acc = 0.0
-    for d in range(lo, hi + 1):
-        acc += 1.0 / d
-        if acc >= u:
-            return d
-    return hi
+    if hi <= 512:
+        # Small range: exact on-the-fly CDF (O(hi), harmless for hi ≤ 512).
+        H = sum(1.0 / d for d in range(lo, hi + 1))
+        u = rng.random() * H
+        acc = 0.0
+        for d in range(lo, hi + 1):
+            acc += 1.0 / d
+            if acc >= u:
+                return d
+        return hi
+    # Large arbitrary range: O(1) harmonic inverse CDF.
+    # H(d) ≈ ln(d) + γ; inverse: d ≈ exp(H(d) - γ).
+    H_lo = (math.log(lo - 1) + _EULER_GAMMA) if lo > 1 else 0.0
+    H_hi = math.log(hi) + _EULER_GAMMA
+    u = H_lo + rng.random() * (H_hi - H_lo)
+    return max(lo, min(hi, round(math.exp(u - _EULER_GAMMA))))
 
 
 def _p_start(M_frac: float, mean_L: float = COPY_MEAN_L) -> float:
