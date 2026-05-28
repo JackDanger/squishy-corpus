@@ -137,9 +137,14 @@ def main() -> None:
         print(f"ERROR: no .bin files found in {input_dir}", file=sys.stderr)
         sys.exit(1)
 
-    # Load cached measurements from gen-synthetic.py if available.
-    # Avoids re-running the 3-codec S measurement + bzip2/zpaq codecs (~30 min).
-    _cal_json = input_dir.parent / "calibration-results.json"
+    # Load cached measurements if available (avoids re-running bzip2/zpaq, ~30 min).
+    # Prefer <dir-name>-results.json (produced by gen-balanced.py or gen-synthetic.py)
+    # then fall back to calibration-results.json for backwards compatibility.
+    _candidates = [
+        input_dir.parent / f"{input_dir.name}-results.json",
+        input_dir.parent / "calibration-results.json",
+    ]
+    _cal_json = next((p for p in _candidates if p.exists()), _candidates[-1])
     _hs_cache: dict[str, dict] = {}
     if _cal_json.exists():
         import json as _json

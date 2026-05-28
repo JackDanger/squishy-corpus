@@ -46,40 +46,55 @@ cat build/bench/v4-kendall-tau.csv   # τ per H×S cell × codec pair
 cat build/bench/v4-coverage.txt      # H×S coverage map
 ```
 
-### Pilot results (84-file calibration sweep)
+### Results: balanced corpus (95-file, 5 per cell)
 
-H×S coverage (files per cell):
+H×S coverage:
 
 ```
         S0    S1    S2    S3    S4
-  H0     0     0     0     0     0
-  H1     0     0     0     0     8
-  H2     0     0     0     1     6
-  H3     0     0    17     1     3
-  H4     0     1     5     1     3
-  H5     0     0     0     0     2
-  H6     9     4    10    10     3
+  H0     0     0     0     0     5  ← new cell
+  H1     0     0     0     1     8
+  H2     0     0     0     4     2
+  H3     0     0     5     5     6
+  H4     0     5     5     5     5
+  H5     0     5     5     0     4  ← two new cells
+  H6     5     5     5     5     5
 ```
 
-Cells with Kendall-τ < 0.8 between codec families (30 disagree pairs across 7 cells):
+57 codec-disagreement pairs (τ < 0.8) across 16 cells. Full tables: [`results/v4/`](results/v4/).
+
+Sharpest disagreements:
 
 | Cell | Pair | τ | Note |
 |------|------|---|------|
-| H6/S0 | zstd-1 vs zpaq-m5 | −0.889 | Near-incompressible: zpaq completely inverts the ordering |
-| H6/S0 | zstd-19 vs zpaq-m5 | −0.444 | |
-| H6/S2 | zstd-1 vs zpaq-m5 | 0.067 | High-entropy moderate-structure: near-random ordering |
-| H6/S3 | zstd-1 vs zpaq-m5 | 0.200 | |
-| H4/S2 | zstd-1 vs bzip2-9 | 0.000 | Periodic+LZ mix: zstd family and bzip2/zpaq completely disagree |
-| H3/S2 | zstd-19 vs zpaq-m5 | 0.647 | Moderate entropy: 17 periodic files, visible codec split |
-| H6/S1 | zstd-1 vs zstd-19 | 0.667 | Marginal-structure high-entropy: even zstd levels disagree |
+| H6/S0 | zstd-1 vs zpaq-m5 | −1.000 | Near-incompressible: zpaq perfectly inverts zstd ordering |
+| H6/S0 | zstd-19 vs zpaq-m5 | −1.000 | |
+| H4/S1 | zstd-1 vs zpaq-m5 | −0.800 | Pure-literal marginal-structure: zpaq nearly inverts zstd |
+| H5/S1 | zstd-1 vs zstd-19 | 0.000 | Even zstd levels completely disagree at 7 bpb / low structure |
+| H4/S2 | zstd-1 vs bzip2-9 | 0.000 | Periodic+LZ mix: zstd vs BWT family total disagreement |
+| H5/S2 | all pairs | 1.000 | LZ-structured 7-bpb: all codecs agree perfectly |
 
-The H6/S0 cell (near-random, incompressible) shows the sharpest disagreement: zpaq-m5 inverts the ranking established by both zstd levels, presumably because its context-mixing model finds noise-floor differences that escape LZ-family distance coding.
+Three findings stand out:
+
+**H6/S0**: zpaq-m5 exactly inverts both zstd levels (τ = −1.000). Context-mixing finds ordering signals in near-random bytes that LZ-family distance coding is completely blind to.
+
+**H4/S1 and H5/S1** (pure literals, no copies): All five files in each cell have identical measured H and S — yet codecs rank them in completely different orders. The ranking divergence must arise from higher-order byte statistics (digram/trigram entropy) that zstd's FSE and zpaq's context mixing weight differently, invisible to marginal H and structural S alone.
+
+**H5/S2** (lz77 M=0.3 at 7 bpb): Perfect agreement across all codec families. Once there is visible LZ structure even at near-maximum entropy, all families converge on the same ranking.
 
 ### Build pipeline
 
 ```sh
-uv run scripts/gen-synthetic.py --calibrate-only   # Phase 1: calibration sweep
-uv run scripts/bench-v4.py                         # Phase 2: benchmark + τ
+uv run scripts/gen-synthetic.py --calibrate-only   # calibration sweep (84 files)
+uv run scripts/gen-balanced.py                     # balanced corpus (95 files, 5/cell)
+uv run scripts/bench-v4.py --input build/raw/synthetic/balanced --out-dir build/bench/balanced
+```
+
+Or via Make:
+
+```sh
+make v4          # full pipeline: calibrate → balanced → benchmark
+make v4-test     # run test suite
 ```
 
 ---

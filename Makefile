@@ -752,6 +752,22 @@ v4-bench: v4-calibrate
 	@mkdir -p $(V4_BENCH_DIR)
 	@uv run scripts/bench-v4.py --input $(V4_CAL_DIR) --out-dir $(V4_BENCH_DIR)
 
+V4_BAL_DIR := build/raw/synthetic/balanced
+V4_BAL_BENCH_DIR := build/bench/balanced
+
+# Generate balanced corpus: 5 files per reachable (H_bin, S_bin) cell
+v4-balanced: v4-calibrate
+	@mkdir -p $(V4_BAL_DIR)
+	@uv run scripts/gen-balanced.py
+
+# Benchmark balanced corpus and compute Kendall-τ
+v4-bench-balanced: v4-balanced
+	@mkdir -p $(V4_BAL_BENCH_DIR)
+	@uv run scripts/bench-v4.py --input $(V4_BAL_DIR) --out-dir $(V4_BAL_BENCH_DIR)
+
+# Full v4 pipeline: calibrate → balanced → benchmark
+v4: v4-bench-balanced
+
 # Run test suite
 v4-test:
 	@uv run pytest tests/ -q
