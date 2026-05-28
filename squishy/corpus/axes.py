@@ -40,6 +40,8 @@ def h_bin(h: float) -> int:
 
 def s_bin(s: float) -> int:
     """Return S bin index (0 = S0, 4 = S4). Clamps to valid range."""
+    if s < S_BREAKS[0]:
+        return 0  # compressors expanded the file → incompressible
     for i in range(len(S_BREAKS) - 1):
         if S_BREAKS[i] <= s < S_BREAKS[i + 1]:
             return i

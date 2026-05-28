@@ -46,6 +46,35 @@ cat build/bench/v4-kendall-tau.csv   # τ per H×S cell × codec pair
 cat build/bench/v4-coverage.txt      # H×S coverage map
 ```
 
+### Pilot results (84-file calibration sweep)
+
+H×S coverage (files per cell):
+
+```
+        S0    S1    S2    S3    S4
+  H0     0     0     0     0     0
+  H1     0     0     0     0     8
+  H2     0     0     0     1     6
+  H3     0     0    17     1     3
+  H4     0     1     5     1     3
+  H5     0     0     0     0     2
+  H6     9     4    10    10     3
+```
+
+Cells with Kendall-τ < 0.8 between codec families (30 disagree pairs across 7 cells):
+
+| Cell | Pair | τ | Note |
+|------|------|---|------|
+| H6/S0 | zstd-1 vs zpaq-m5 | −0.889 | Near-incompressible: zpaq completely inverts the ordering |
+| H6/S0 | zstd-19 vs zpaq-m5 | −0.444 | |
+| H6/S2 | zstd-1 vs zpaq-m5 | 0.067 | High-entropy moderate-structure: near-random ordering |
+| H6/S3 | zstd-1 vs zpaq-m5 | 0.200 | |
+| H4/S2 | zstd-1 vs bzip2-9 | 0.000 | Periodic+LZ mix: zstd family and bzip2/zpaq completely disagree |
+| H3/S2 | zstd-19 vs zpaq-m5 | 0.647 | Moderate entropy: 17 periodic files, visible codec split |
+| H6/S1 | zstd-1 vs zstd-19 | 0.667 | Marginal-structure high-entropy: even zstd levels disagree |
+
+The H6/S0 cell (near-random, incompressible) shows the sharpest disagreement: zpaq-m5 inverts the ranking established by both zstd levels, presumably because its context-mixing model finds noise-floor differences that escape LZ-family distance coding.
+
 ### Build pipeline
 
 ```sh
