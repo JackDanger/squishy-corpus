@@ -69,7 +69,7 @@ Where `reference_set` is a fixed ensemble of three codecs from disjoint families
 
 - `zstd --long=27 -19` (LZ77 with large window)
 - `bzip2 -9` (BWT)
-- `lpaq8 -7` (context mixing)
+- `zpaq -m5` (context mixing; lpaq8 is the thesis-target codec in the benchmark but requires source build; zpaq -m5 is in the same CM family and ships on macOS via homebrew)
 
 `min_compressed_bytes_over_reference_set` is the minimum over the three. S ∈ [0, 1]: high S means at least one of three structurally-different codecs found substantial structure.
 
@@ -150,8 +150,11 @@ Each file is paired with a shuffled variant whose per-position entropy is preser
 - `H_bin`, `S_bin` — bin labels
 
 **Per-file diagnostics** (all files, not used for binning):
-- `H8` — H(byte | 7 preceding bytes); exact for files ≤ 256 MB, block-bootstrap-estimated with CI on larger files
-- `H8_ci_lo`, `H8_ci_hi` — bootstrap CI bounds (equal to `H8` for files ≤ 256 MB)
+- `R_zstd_long27_19` — compression rate in bpb under `zstd --long=27 -19` (free from S driver)
+- `R_bzip2_9` — compression rate in bpb under `bzip2 -9`
+- `R_zpaq_m5` — compression rate in bpb under `zpaq -m5`
+- `S_zstd_bytes`, `S_bzip2_bytes`, `S_zpaq_bytes` — raw compressed sizes for each reference codec
+- `S_min_codec` — which codec achieved the minimum (determines S)
 - `Lp90_lz77_32k` — 90th-percentile greedy LZ77 match length, 32 KB window
 - `Lp90_lz77_256k` — same, 256 KB window (pair shows window sensitivity)
 - `M_lz77_32k` — greedy LZ77 match density, 32 KB window (provided for continuity; not a binning axis)

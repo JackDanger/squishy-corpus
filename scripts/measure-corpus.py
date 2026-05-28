@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
-"""Measure full (H, M, L, σ_H, NCD) coordinates for corpus files.
+"""Measure v4 corpus metrics (H, S, LZ diagnostics, NCD) for corpus files.
 
-For metric definitions see squishy/corpus/metrics.py and plans/corpus-v4.md.
+Produces a manifest.csv with columns defined in squishy/corpus/measure.py.
+The S driver runs three reference codecs (zstd --long=27 -19, bzip2 -9,
+zpaq -m5) per file; this is the slow path. Use --skip-s for a fast scan
+that omits S and per-codec rates.
 
 Usage:
     uv run scripts/measure-corpus.py
-    uv run scripts/measure-corpus.py --dirs build/raw/silesia build/raw/candidates
-    uv run scripts/measure-corpus.py --no-bootstrap   # fast: skip CIs
+    uv run scripts/measure-corpus.py --dirs build/raw/natural build/raw/synthetic
+    uv run scripts/measure-corpus.py --skip-s --skip-ncd   # fast: H and LZ only
 """
 from __future__ import annotations
 
 import argparse
 import csv
-import json
 import sys
 from pathlib import Path
 
@@ -22,58 +24,45 @@ sys.path.insert(0, str(ROOT))
 from squishy.corpus.measure import measure_file, FIELDNAMES
 
 
-def _load_ground_truth(dirs: list[Path]) -> dict[str, dict]:
-    """Load ground-truth.json from any scanned directory. Returns filename → entry."""
-    lookup: dict[str, dict] = {}
-    for d in dirs:
-        gt_path = d / "ground-truth.json"
-        if gt_path.exists():
-            entries = json.loads(gt_path.read_text())
-            for entry in entries:
-                lookup[entry["filename"]] = entry
-    return lookup
-
-
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--dirs", nargs="+", default=["build/raw/silesia"],
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("--dirs", nargs="+", default=["build/raw/natural"],
                         help="Directories to scan for corpus files")
-    parser.add_argument("--out", default="build/bench/corpus-measurements.csv",
+    parser.add_argument("--out", default="build/bench/manifest.csv",
                         help="Output CSV path")
     parser.add_argument("--extensions", default="",
                         help="Comma-separated extensions to include (default: all)")
-    parser.add_argument("--no-bootstrap", action="store_true",
-                        help="Skip bootstrap CIs, sigma_H, and NCD (fast mode)")
-    parser.add_argument("--recursive", action="store_true", default=True,
-                        help="Recurse into subdirectories (default: on)")
+    parser.add_argument("--skip-s", action="store_true",
+                        help="Skip S driver (fast mode; S columns are empty)")
+    parser.add_argument("--skip-ncd", action="store_true",
+                        help="Skip NCD halves (fast mode)")
+    parser.add_argument("--domain", default="",
+                        help="Domain label to assign to all files (e.g. text-english)")
+    parser.add_argument("--corpus", default="natural",
+                        help="Corpus type: 'natural' or 'synthetic'")
     args = parser.parse_args()
 
     exts = set(args.extensions.split(",")) - {""} if args.extensions else None
     out_path = ROOT / args.out
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    scan_dirs: list[Path] = []
     files: list[Path] = []
     for d in args.dirs:
         p = ROOT / d if not Path(d).is_absolute() else Path(d)
         if not p.exists():
             print(f"  WARN: {p} does not exist, skipping", file=sys.stderr)
             continue
-        scan_dirs.append(p)
-        candidates = sorted(p.rglob("*") if args.recursive else p.iterdir())
-        for f in candidates:
+        for f in sorted(p.rglob("*")):
             if not f.is_file():
                 continue
-            if f.suffix in {".json", ".md"}:
-                continue  # metadata files, not corpus data
+            if f.suffix in {".json", ".md", ".csv", ".txt"}:
+                continue
             if exts and f.suffix not in exts:
                 continue
             files.append(f)
-
-    ground_truth = _load_ground_truth(scan_dirs)
-    if ground_truth:
-        print(f"Loaded ground-truth.json: {len(ground_truth)} entries")
 
     if not files:
         print("No files found.", file=sys.stderr)
@@ -83,19 +72,20 @@ def main() -> None:
     rows: list[dict] = []
     for f in files:
         size_mb = f.stat().st_size / 1e6
-        print(f"  {f.parent.name}/{f.name}  ({size_mb:.1f} MB)", flush=True)
-        gt_entry = ground_truth.get(f.name)
-        row = measure_file(f, bootstrap=not args.no_bootstrap, ground_truth=gt_entry)
+        print(f"  {f.parent.name}/{f.name}  ({size_mb:.1f} MB) …", end="", flush=True)
+        row = measure_file(
+            f,
+            domain=args.domain,
+            corpus=args.corpus,
+            skip_s=args.skip_s,
+            skip_ncd=args.skip_ncd,
+        )
         rows.append(row)
 
-        ncd_s = f"{row['ncd_halves']:.4f}" if row["ncd_halves"] is not None else "--"
-        lci = row.get("L_ci_rel")
-        if lci is not None:
-            ci_s = f"  L_ci_rel={lci:.3f}{'  ✓' if lci < 0.15 else '  WARN: > 0.15'}"
-        else:
-            ci_s = ""
-        print(f"    H={row['H_marginal']:.3f}  M={row['M_greedy']:.3f}"
-              f"  L_med={row['L_median']}  ncd={ncd_s}{ci_s}")
+        h_s = f"H={row['H']:.3f}" if row["H"] is not None else "H=?"
+        s_s = f"S={row['S']:.3f}" if row["S"] is not None else "S=--"
+        lp_s = f"Lp90={row['Lp90_lz77_32k']}" if row["Lp90_lz77_32k"] is not None else ""
+        print(f"  {h_s}  {s_s}  {row['H_bin']}/{row['S_bin'] or '--'}  {lp_s}")
 
     with open(out_path, "w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=FIELDNAMES, extrasaction="ignore")
@@ -104,14 +94,13 @@ def main() -> None:
 
     print(f"\nWrote {len(rows)} rows → {out_path}")
 
-    print("\n── Corpus coordinates ──────────────────────────────────────────────────────────")
-    print(f"  {'file':30s}  H(bpb)  M_greedy  L_med  L_p90  ncd_h  L_ci_rel")
-    for row in sorted(rows, key=lambda r: (r["H_marginal"] or 0)):
-        ncd_s = f"{row['ncd_halves']:.3f}" if row["ncd_halves"] is not None else "  -- "
-        lci_s = f"{row['L_ci_rel']:.3f}" if row["L_ci_rel"] is not None else "  -- "
-        print(f"  {row['filename']:30s}  {row['H_marginal']:6.3f}  "
-              f"{row['M_greedy']:8.3f}  {str(row['L_median']):5s}  "
-              f"{str(row['L_p90']):5s}  {ncd_s:6s}  {lci_s}")
+    print("\n── Corpus coordinates ──────────────────────────────────────────────────")
+    print(f"  {'file':35s}  H(bpb)  S      H_bin  S_bin")
+    for row in sorted(rows, key=lambda r: (r["H"] or 0)):
+        fname = f"{Path(str(row['path'])).parent.name}/{Path(str(row['path'])).name}"
+        h_s = f"{row['H']:.3f}" if row["H"] is not None else "  -  "
+        s_s = f"{row['S']:.3f}" if row["S"] is not None else "  -  "
+        print(f"  {fname:35s}  {h_s}  {s_s}  {row['H_bin']}  {row['S_bin'] or '--'}")
 
 
 if __name__ == "__main__":

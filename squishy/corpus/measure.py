@@ -1,126 +1,126 @@
-"""Per-file measurement: assembles all metrics into a single row dict."""
+"""Per-file measurement: assembles all v4 metrics into a single row dict."""
 from __future__ import annotations
 
+import hashlib
 import math
 from pathlib import Path
 
-from squishy.corpus.metrics import (
-    byte_entropy, lz_stats, sigma_h, ncd_halves, subsample_cis,
-    m_greedy_norm, m_norm_reliable,
-)
+from squishy.corpus.axes import h_bin, h_label, s_bin, s_label
+from squishy.corpus.metrics import byte_entropy, lz_stats, ncd_halves, LZ_WINDOW_32K, LZ_WINDOW_256K
+from squishy.corpus.s_driver import measure_s
 
-# Bits-per-byte threshold below which copying exceeds literal coding.
-# Files with H_marginal < this threshold have R_ref clamped to H_marginal
-# regardless of M_target (see calibrated.py reference_rate()).
-_COPY_COST_THRESHOLD_BPB: float = 1.86
-
-# CSV schema — single source of truth for column order
+# CSV schema — single source of truth for column order.
+# Columns with no value for a given corpus type are written as empty strings.
 FIELDNAMES: list[str] = [
-    "corpus", "filename", "size_bytes",
-    # Construction metadata (calibrated files only; None for natural corpora)
-    "generator", "H_target", "M_target", "R_ref", "reference_bytes",
-    # Reliability and clamping flags
-    "M_norm_reliable",   # True when M_greedy_norm has adequate dynamic range (H≥4)
-    "R_ref_clamped",     # True when R_ref = H_marginal (copying not profitable at H<1.86)
-    # Measured metrics
-    "H_marginal",
-    "M_greedy", "M_greedy_norm",
-    "L_median", "L_p90", "L_geomean",
-    "sigma_H_1k", "sigma_H_16k", "sigma_H_256k",
+    # Identity
+    "path", "sha256", "size_bytes", "corpus", "domain",
+    # Measured axes
+    "H", "S", "H_bin", "S_bin",
+    # Per-codec rates (bpb) — free from S driver, replaces H8
+    "R_zstd_long27_19", "R_bzip2_9", "R_zpaq_m5",
+    # Per-codec raw sizes (for transparency and re-derivation)
+    "S_zstd_bytes", "S_bzip2_bytes", "S_zpaq_bytes", "S_min_codec",
+    # LZ77 diagnostics (two window sizes)
+    "Lp90_lz77_32k", "Lp90_lz77_256k", "M_lz77_32k",
+    # Non-stationarity indicator
     "ncd_halves",
-    "H_ci95_lo", "H_ci95_hi",
-    "M_ci95_lo", "M_ci95_hi",
-    "L_ci95_lo", "L_ci95_hi",
-    "L_ci_rel",
+    # Construction parameters (synthetic only)
+    "construction", "seed", "H_target", "construction_params_json",
+    # Provenance (natural only)
+    "source_url", "source_sha256", "source_byte_offset", "source_byte_length",
+    "license", "license_url",
 ]
 
 
 def _r(v, d: int = 4):
-    """Round a float to d decimal places; return None for NaN/None.
-
-    Raises TypeError if v is non-numeric — research code should be loud
-    about type confusion, not silently pass strings into CSV float fields.
-    """
+    """Round float to d places; return None for NaN/None."""
     if v is None:
         return None
-    f = float(v)   # raises TypeError on non-numeric
+    f = float(v)
     return None if math.isnan(f) else round(f, d)
 
 
-def measure_file(path: Path, *, bootstrap: bool = True,
-                 bootstrap_seed: int = 42,
-                 ground_truth: dict | None = None) -> dict:
+def measure_file(
+    path: Path,
+    *,
+    domain: str = "",
+    corpus: str = "",
+    skip_s: bool = False,
+    skip_ncd: bool = False,
+    ground_truth: dict | None = None,
+    provenance: dict | None = None,
+) -> dict:
     """Measure all v4 corpus metrics for one file.
 
     Args:
-        path:           File to measure.
-        bootstrap:      If False, skip subsample CIs, sigma_H, and NCD (fast mode).
-        bootstrap_seed: RNG seed for the stratified subsampler.
-        ground_truth:   Dict from ground-truth.json for this filename, or None.
-                        When provided, copies generator, H_target, M_target,
-                        R_ref, and reference_bytes into the output row.
+        path:         File to measure.
+        domain:       Domain label (e.g. 'text-english'). Empty for synthetic.
+        corpus:       'synthetic' or 'natural'.
+        skip_s:       Skip the 3-codec S driver (fast mode; S columns are None).
+        skip_ncd:     Skip NCD halves computation (fast mode).
+        ground_truth: Dict with synthetic construction parameters:
+                      construction, seed, H_target, construction_params_json.
+        provenance:   Dict with natural file provenance:
+                      source_url, source_sha256, source_byte_offset,
+                      source_byte_length, license, license_url.
 
-    Returns dict with all FIELDNAMES keys (None for missing/invalid values).
-    The CIs are stratified subsample intervals, not resampling bootstrap CIs —
-    they measure per-region variability across the file.
+    Returns dict with all FIELDNAMES keys (None for missing/inapplicable values).
     """
     data = path.read_bytes()
     n = len(data)
+    sha256 = hashlib.sha256(data).hexdigest()
 
     H = byte_entropy(data)
-    M_greedy, L_median, L_p90, L_geomean = lz_stats(data)
+
+    _, _, lp90_32k, _ = lz_stats(data, window=LZ_WINDOW_32K)
+    m_lz77_32k, _, lp90_256k, _ = lz_stats(data, window=LZ_WINDOW_256K)
+
+    if skip_s:
+        S = None
+        s_result = None
+    else:
+        s_result = measure_s(path)
+        S = s_result.S
 
     gt = ground_truth or {}
-    base = {
-        "corpus":     path.parent.name,
-        "filename":   path.name,
+    prov = provenance or {}
+
+    row: dict = {
+        "path":       str(path),
+        "sha256":     sha256,
         "size_bytes": n,
-        "generator":       gt.get("generator"),
-        "H_target":        _r(gt.get("H_marginal")),
-        "M_target":        _r(gt.get("M_fraction")),
-        "R_ref":           _r(gt.get("R_ref")),
-        "reference_bytes": gt.get("reference_bytes"),
-        "M_norm_reliable": m_norm_reliable(H, n),
-        "R_ref_clamped":   (
-            bool(gt.get("R_ref_clamped"))
-            if "R_ref_clamped" in gt
-            else (
-                H < _COPY_COST_THRESHOLD_BPB and (gt.get("M_fraction") or 0.0) > 0.0
-                if "M_fraction" in gt
-                else None
-            )
-        ),
-        "H_marginal":      _r(H),
-        "M_greedy":        _r(M_greedy),
-        "M_greedy_norm":   _r(m_greedy_norm(M_greedy, H, n)),
-        "L_median":        _r(L_median),
-        "L_p90":           _r(L_p90),
-        "L_geomean":       _r(L_geomean),
+        "corpus":     corpus or path.parent.name,
+        "domain":     domain,
+        "H":          _r(H, 6),
+        "S":          _r(S, 6) if S is not None else None,
+        "H_bin":      h_label(H),
+        "S_bin":      s_label(S) if S is not None else None,
+        # Per-codec rates
+        "R_zstd_long27_19": s_result.R_zstd_long27_19 if s_result else None,
+        "R_bzip2_9":        s_result.R_bzip2_9 if s_result else None,
+        "R_zpaq_m5":        s_result.R_zpaq_m5 if s_result else None,
+        # Per-codec raw sizes
+        "S_zstd_bytes": s_result.zstd_bytes if s_result else None,
+        "S_bzip2_bytes": s_result.bzip2_bytes if s_result else None,
+        "S_zpaq_bytes": s_result.zpaq_bytes if s_result else None,
+        "S_min_codec":  s_result.S_min_codec if s_result else None,
+        # LZ77 diagnostics
+        "Lp90_lz77_32k":  _r(lp90_32k),
+        "Lp90_lz77_256k": _r(lp90_256k),
+        "M_lz77_32k":     _r(m_lz77_32k),
+        # NCD
+        "ncd_halves": _r(ncd_halves(data)) if not skip_ncd else None,
+        # Construction parameters (synthetic only)
+        "construction":           gt.get("construction"),
+        "seed":                   gt.get("seed"),
+        "H_target":               _r(gt.get("H_target")),
+        "construction_params_json": gt.get("construction_params_json"),
+        # Provenance (natural only)
+        "source_url":         prov.get("source_url"),
+        "source_sha256":      prov.get("source_sha256"),
+        "source_byte_offset": prov.get("source_byte_offset"),
+        "source_byte_length": prov.get("source_byte_length"),
+        "license":            prov.get("license"),
+        "license_url":        prov.get("license_url"),
     }
-
-    if not bootstrap:
-        return {
-            **base,
-            "sigma_H_1k": None, "sigma_H_16k": None, "sigma_H_256k": None,
-            "ncd_halves": None,
-            "H_ci95_lo": None, "H_ci95_hi": None,
-            "M_ci95_lo": None, "M_ci95_hi": None,
-            "L_ci95_lo": None, "L_ci95_hi": None,
-            "L_ci_rel": None,
-        }
-
-    cis = subsample_cis(data, seed=bootstrap_seed)
-    return {
-        **base,
-        "sigma_H_1k":  _r(sigma_h(data, 1024)),
-        "sigma_H_16k": _r(sigma_h(data, 16384)),
-        "sigma_H_256k":_r(sigma_h(data, 262144)),
-        "ncd_halves":  _r(ncd_halves(data)),
-        "H_ci95_lo":   _r(cis["H_ci95_lo"]),
-        "H_ci95_hi":   _r(cis["H_ci95_hi"]),
-        "M_ci95_lo":   _r(cis["M_ci95_lo"]),
-        "M_ci95_hi":   _r(cis["M_ci95_hi"]),
-        "L_ci95_lo":   _r(cis["L_ci95_lo"]),
-        "L_ci95_hi":   _r(cis["L_ci95_hi"]),
-        "L_ci_rel":    _r(cis["L_ci_rel"]),
-    }
+    return row
