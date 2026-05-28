@@ -137,8 +137,8 @@ def main() -> None:
         print(f"ERROR: no .bin files found in {input_dir}", file=sys.stderr)
         sys.exit(1)
 
-    # Load cached H/S measurements from gen-synthetic.py if available.
-    # This avoids re-running the 3-codec S measurement (zpaq ~20s/file × 84 files).
+    # Load cached measurements from gen-synthetic.py if available.
+    # Avoids re-running the 3-codec S measurement + bzip2/zpaq codecs (~30 min).
     _cal_json = input_dir.parent / "calibration-results.json"
     _hs_cache: dict[str, dict] = {}
     if _cal_json.exists():
@@ -148,9 +148,12 @@ def main() -> None:
                 _hs_cache[rec["filename"]] = {
                     "H": rec["H"], "S": rec["S"],
                     "H_bin": rec["H_label"], "S_bin": rec["S_label"],
+                    "bpb_zstd_long": rec.get("bpb_zstd_long"),
+                    "bpb_bzip2_9": rec.get("bpb_bzip2_9"),
+                    "bpb_zpaq_m5": rec.get("bpb_zpaq_m5"),
                 }
         if _hs_cache:
-            print(f"Loaded cached H/S for {len(_hs_cache)} files from {_cal_json.name}")
+            print(f"Loaded cached H/S+codec bpb for {len(_hs_cache)} files from {_cal_json.name}")
 
     print(f"Benchmarking {len(bin_files)} files × {len(codec_names)} codecs…")
 
@@ -179,9 +182,19 @@ def main() -> None:
         }
         print(f"  [{i+1}/{len(bin_files)}] {path.name} → {hl}/{sl} (H={H:.3f} S={S:.3f})")
 
+        cached = _hs_cache.get(path.name, {})
+        _CACHED_CODEC = {
+            "zstd-long": cached.get("bpb_zstd_long"),
+            "bzip2-9":   cached.get("bpb_bzip2_9"),
+            "zpaq-m5":   cached.get("bpb_zpaq_m5"),
+        }
         for codec in codec_names:
-            nbytes, elapsed = compress_file(path, codec)
-            bpb = nbytes * 8.0 / size_bytes if nbytes > 0 else None
+            cached_bpb = _CACHED_CODEC.get(codec)
+            if cached_bpb is not None:
+                bpb, nbytes, elapsed = cached_bpb, round(cached_bpb * size_bytes / 8), 0.0
+            else:
+                nbytes, elapsed = compress_file(path, codec)
+                bpb = nbytes * 8.0 / size_bytes if nbytes > 0 else None
             rows.append({
                 "filename":        path.name,
                 "size_bytes":      size_bytes,

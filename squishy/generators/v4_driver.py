@@ -134,6 +134,9 @@ class FileMeasurement:
     S_bin: int
     H_label: str
     S_label: str
+    bpb_zstd_long: float = 0.0
+    bpb_bzip2_9: float = 0.0
+    bpb_zpaq_m5: float = 0.0
 
 
 def _measure(path: Path) -> FileMeasurement:
@@ -144,6 +147,9 @@ def _measure(path: Path) -> FileMeasurement:
         H=H, S=s_result.S,
         H_bin=h_bin(H), S_bin=s_bin(s_result.S),
         H_label=h_label(H), S_label=s_label(s_result.S),
+        bpb_zstd_long=s_result.R_zstd_long27_19,
+        bpb_bzip2_9=s_result.R_bzip2_9,
+        bpb_zpaq_m5=s_result.R_zpaq_m5,
     )
 
 
@@ -158,6 +164,9 @@ class CalibrationPoint:
     H_label: str
     S_label: str
     filename: str = ""
+    bpb_zstd_long: float = 0.0
+    bpb_bzip2_9: float = 0.0
+    bpb_zpaq_m5: float = 0.0
 
 
 def _gen_worker(args: tuple) -> str:
@@ -254,6 +263,9 @@ def calibration_sweep(out_dir: Path, workers: int = 4) -> list[CalibrationPoint]
             params=params,
             H=m.H, S=m.S, H_label=m.H_label, S_label=m.S_label,
             filename=path.name,
+            bpb_zstd_long=m.bpb_zstd_long,
+            bpb_bzip2_9=m.bpb_bzip2_9,
+            bpb_zpaq_m5=m.bpb_zpaq_m5,
         )
         results.append(cp)
         print(f"  {tag}: {m.H_label}/{m.S_label} (H={m.H:.3f} S={m.S:.3f})")

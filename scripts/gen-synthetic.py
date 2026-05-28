@@ -45,7 +45,10 @@ def main() -> None:
     cal_path.write_text(json.dumps(
         [{"filename": r.filename, "generator": r.generator, "params": r.params,
           "H": round(r.H, 4), "S": round(r.S, 4),
-          "H_label": r.H_label, "S_label": r.S_label}
+          "H_label": r.H_label, "S_label": r.S_label,
+          "bpb_zstd_long": round(r.bpb_zstd_long, 4),
+          "bpb_bzip2_9": round(r.bpb_bzip2_9, 4),
+          "bpb_zpaq_m5": round(r.bpb_zpaq_m5, 4)}
          for r in results],
         indent=2
     ))
