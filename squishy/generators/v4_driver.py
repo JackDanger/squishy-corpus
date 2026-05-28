@@ -1,7 +1,7 @@
 """v4 synthetic corpus driver: calibration sweep → cell-targeted generation.
 
 Workflow:
-  1. Calibration sweep (4 MB files only): run each generator over a coarse
+  1. Calibration sweep (4 MB files only): run each generator over a curated
      parameter grid and measure (H, S) for each file. Builds an empirical map
      from params → (H_bin, S_bin).
   2. Target-cell inversion: for each (H_bin, S_bin) cell, find parameter points
@@ -23,9 +23,9 @@ Usage:
 """
 from __future__ import annotations
 
+import concurrent.futures
 import hashlib
 import json
-import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -57,13 +57,43 @@ def _make_seed(tag: str) -> int:
 
 # markov: k ∈ {1, 2, 4}, tau values sweep entropy
 MARKOV_K_VALUES = [1, 2, 4]
-MARKOV_TAU_VALUES = [0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 4.0, 8.0]
+# tau=0.35 fills the H4 gap that tau=0.5→1.0 jumps over
+MARKOV_TAU_VALUES = [0.05, 0.1, 0.2, 0.35, 0.5, 1.0, 2.0, 4.0]
 
-# lz77-synth: M, mean_L, W (window), H_target
-LZ77_M_VALUES = [0.0, 0.3, 0.6, 0.85]
-LZ77_L_VALUES = [4, 16, 64, 256]
-LZ77_W_VALUES = [4096, 32768, 262144, 4194304]
-LZ77_H_VALUES = [2.0, 4.0, 6.0, 8.0]
+# lz77-synth: curated 40-config grid covering all physics-reachable H×S cells.
+# Organized by what each parameter actually controls:
+#   lit_H → marginal H (modulated by M at high match fractions)
+#   M + window → S (match fraction + scope of reuse)
+#   mean_L → secondary S lever (longer copies compress better)
+def _lz77_configs() -> list[dict]:
+    configs: list[dict] = []
+
+    # M=0.0: no copies; window/mean_L irrelevant. Pure lit_H sweep.
+    for lit_H in [2.0, 4.0, 6.0, 8.0]:
+        configs.append({"M": 0.0, "mean_L": 8, "window": 32768, "lit_H": lit_H})
+
+    # M=0.5, M=0.8: full mean_L × window × lit_H endpoint cross.
+    for M in [0.5, 0.8]:
+        for mean_L in [8, 64, 512]:
+            for window in [32768, 4194304]:
+                for lit_H in [2.0, 8.0]:
+                    configs.append({"M": M, "mean_L": mean_L,
+                                    "window": window, "lit_H": lit_H})
+        # Mid lit_H at the default window (interpolates interior H cells)
+        for lit_H in [4.0, 6.0]:
+            configs.append({"M": M, "mean_L": 64, "window": 32768, "lit_H": lit_H})
+
+    # M=0.95: targeting S4 cells. Only large window + long mean_L can push there.
+    # Physics forbids S4 for lit_H→H5 or H6, but still generate to confirm empirically.
+    for mean_L in [64, 512]:
+        for lit_H in [2.0, 4.0, 6.0, 8.0]:
+            configs.append({"M": 0.95, "mean_L": mean_L,
+                            "window": 4194304, "lit_H": lit_H})
+
+    return configs
+
+
+LZ77_CONFIGS: list[dict] = _lz77_configs()
 
 # periodic: period, profile
 PERIODIC_P_VALUES = [4, 8, 16, 32, 256]
@@ -79,56 +109,10 @@ def gen_markov(size: int, k: int, tau: float, seed: int) -> bytes:
 
 def gen_lz77(size: int, M: float, mean_L: int, window: int,
              lit_H: float, seed: int) -> bytes:
-    from squishy.generators.lz77_synth import synthesize, _sample_log_uniform
-    import random
-
-    # Patch the window into a local synthesize call
-    rng = random.Random(seed)
-    from squishy.generators.calibrated import tilted_pmf
-    lit_pmf = tilted_pmf(lit_H)
-    lit_alphabet = list(range(256))
-
-    p_start = M / (mean_L - M * (mean_L - 1)) if M > 0 else 0.0
-    log_q = math.log(1.0 - p_start) if 0 < p_start < 1 else -1e300
-
-    buf = bytearray(size)
-    is_copy = bytearray(size)
-    pos = 0
-
-    def emit_lit() -> None:
-        nonlocal pos
-        b = rng.choices(lit_alphabet, weights=lit_pmf)[0]
-        buf[pos] = b
-        pos += 1
-
-    while pos < size:
-        if pos == 0 or p_start <= 0:
-            emit_lit()
-            continue
-        u = rng.random()
-        if u <= 0.0:
-            u = 1e-300
-        wait = int(math.log(u) / log_q)
-        for _ in range(min(wait, size - pos)):
-            emit_lit()
-        if pos >= size:
-            break
-
-        D = _sample_log_uniform(rng, 1, min(pos, window))
-        L = max(1, int(rng.expovariate(1.0 / mean_L)) + 1)
-        run_len = min(L, size - pos)
-        src = pos - D
-
-        if any(is_copy[src + i] for i in range(run_len)):
-            emit_lit()
-            continue
-
-        for i in range(run_len):
-            buf[pos + i] = buf[src + i]
-            is_copy[pos + i] = 1
-        pos += run_len
-
-    return bytes(buf)
+    data, _parse, _rejected = lz77_synthesize(
+        size, M, "log_uniform", mean_L, lit_H, seed, window=window,
+    )
+    return data
 
 
 def gen_periodic(size: int, period: int, profile: str,
@@ -174,57 +158,48 @@ class CalibrationPoint:
     S_label: str
 
 
-def calibration_sweep(out_dir: Path) -> list[CalibrationPoint]:
-    """Run generators over the full parameter grid at 4 MB, measure (H, S).
-
-    Files are written to out_dir/calibration/ and retained so the sweep can
-    be resumed. Results are returned as CalibrationPoint objects.
-    """
+def _gen_and_measure(args: tuple) -> CalibrationPoint | None:
+    """Worker: generate a calibration file if missing, then measure it."""
     from squishy.core.fs import write_bytes_atomic
 
-    cal_dir = out_dir / "calibration"
-    cal_dir.mkdir(parents=True, exist_ok=True)
+    generator, tag, path, size, gen_fn, gen_args, params = args
+    if not path.exists():
+        seed = _make_seed(f"cal:{tag}")
+        data = gen_fn(*gen_args, seed)
+        write_bytes_atomic(path, data)
+    m = _measure(path)
+    return CalibrationPoint(
+        generator=generator,
+        params=params,
+        H=m.H, S=m.S, H_label=m.H_label, S_label=m.S_label,
+    )
 
-    results: list[CalibrationPoint] = []
-    size = CALIBRATION_SIZE
 
-    print("Calibration sweep (4 MB files)…")
+def _build_work_items(cal_dir: Path, size: int) -> list[tuple]:
+    """Build the list of (generator, tag, path, size, gen_fn, gen_args, params) tuples."""
+    items: list[tuple] = []
 
     # markov
     for k in MARKOV_K_VALUES:
         for tau in MARKOV_TAU_VALUES:
             tag = f"markov-k{k}-tau{tau:.3f}"
             path = cal_dir / f"{tag}.bin"
-            if not path.exists():
-                seed = _make_seed(f"cal:{tag}")
-                data = gen_markov(size, k, tau, seed)
-                write_bytes_atomic(path, data)
-            m = _measure(path)
-            results.append(CalibrationPoint(
-                generator="markov",
-                params={"k": k, "tau": tau},
-                H=m.H, S=m.S, H_label=m.H_label, S_label=m.S_label,
+            items.append((
+                "markov", tag, path, size,
+                gen_markov, (size, k, tau),
+                {"k": k, "tau": tau},
             ))
-            print(f"  {tag}: {m.H_label}/{m.S_label} (H={m.H:.3f} S={m.S:.3f})")
 
-    # lz77-synth
-    for M in LZ77_M_VALUES:
-        for mean_L in LZ77_L_VALUES:
-            for window in LZ77_W_VALUES:
-                for lit_H in LZ77_H_VALUES:
-                    tag = f"lz77-M{M:.2f}-L{mean_L}-W{window}-H{lit_H:.1f}"
-                    path = cal_dir / f"{tag}.bin"
-                    if not path.exists():
-                        seed = _make_seed(f"cal:{tag}")
-                        data = gen_lz77(size, M, mean_L, window, lit_H, seed)
-                        write_bytes_atomic(path, data)
-                    m = _measure(path)
-                    results.append(CalibrationPoint(
-                        generator="lz77",
-                        params={"M": M, "mean_L": mean_L, "window": window, "lit_H": lit_H},
-                        H=m.H, S=m.S, H_label=m.H_label, S_label=m.S_label,
-                    ))
-                    print(f"  {tag}: {m.H_label}/{m.S_label} (H={m.H:.3f} S={m.S:.3f})")
+    # lz77-synth (curated 40-config grid)
+    for cfg in LZ77_CONFIGS:
+        M, mean_L, window, lit_H = cfg["M"], cfg["mean_L"], cfg["window"], cfg["lit_H"]
+        tag = f"lz77-M{M:.2f}-L{mean_L}-W{window}-H{lit_H:.1f}"
+        path = cal_dir / f"{tag}.bin"
+        items.append((
+            "lz77", tag, path, size,
+            gen_lz77, (size, M, mean_L, window, lit_H),
+            {"M": M, "mean_L": mean_L, "window": window, "lit_H": lit_H},
+        ))
 
     # periodic (structured and shuffled)
     for period in PERIODIC_P_VALUES:
@@ -232,17 +207,60 @@ def calibration_sweep(out_dir: Path) -> list[CalibrationPoint]:
             for variant in ["structured", "shuffled"]:
                 tag = f"periodic-P{period}-{profile}-{variant}"
                 path = cal_dir / f"{tag}.bin"
-                if not path.exists():
-                    seed = _make_seed(f"cal:{tag}")
-                    data = gen_periodic(size, period, profile, variant, seed)
-                    write_bytes_atomic(path, data)
-                m = _measure(path)
-                results.append(CalibrationPoint(
-                    generator="periodic",
-                    params={"period": period, "profile": profile, "variant": variant},
-                    H=m.H, S=m.S, H_label=m.H_label, S_label=m.S_label,
+                items.append((
+                    "periodic", tag, path, size,
+                    gen_periodic, (size, period, profile, variant),
+                    {"period": period, "profile": profile, "variant": variant},
                 ))
-                print(f"  {tag}: {m.H_label}/{m.S_label} (H={m.H:.3f} S={m.S:.3f})")
+
+    return items
+
+
+def calibration_sweep(out_dir: Path, workers: int = 4) -> list[CalibrationPoint]:
+    """Run generators over the curated parameter grid at 4 MB, measure (H, S).
+
+    Files are written to out_dir/calibration/ and retained so the sweep can
+    be resumed. Parallelizes generation; measurement runs sequentially (codec
+    processes are already CPU-bound and contend with each other).
+    """
+    cal_dir = out_dir / "calibration"
+    cal_dir.mkdir(parents=True, exist_ok=True)
+
+    size = CALIBRATION_SIZE
+    items = _build_work_items(cal_dir, size)
+
+    # Generate missing files in parallel; measure sequentially to avoid
+    # codec subprocess contention (zstd/bzip2/zpaq are each multi-threaded)
+    missing = [it for it in items if not it[2].exists()]
+    if missing:
+        print(f"Calibration sweep: generating {len(missing)} new files"
+              f" ({workers} workers)…")
+        from squishy.core.fs import write_bytes_atomic
+
+        def _gen_only(args: tuple) -> tuple[Path, bytes]:
+            generator, tag, path, size_, gen_fn, gen_args, params = args
+            seed = _make_seed(f"cal:{tag}")
+            data = gen_fn(*gen_args, seed)
+            return path, data
+
+        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as pool:
+            for path, data in pool.map(_gen_only, missing):
+                if not path.exists():
+                    write_bytes_atomic(path, data)
+
+    print(f"Calibration sweep: measuring {len(items)} files…")
+    results: list[CalibrationPoint] = []
+    for it in items:
+        generator, tag, path, *rest = it
+        params = it[6]
+        m = _measure(path)
+        cp = CalibrationPoint(
+            generator=generator,
+            params=params,
+            H=m.H, S=m.S, H_label=m.H_label, S_label=m.S_label,
+        )
+        results.append(cp)
+        print(f"  {tag}: {m.H_label}/{m.S_label} (H={m.H:.3f} S={m.S:.3f})")
 
     return results
 

@@ -64,3 +64,15 @@ def cell_label(h: float, s: float) -> str:
 def cell_tuple(h: float, s: float) -> tuple[int, int]:
     """(h_bin, s_bin) index pair."""
     return h_bin(h), s_bin(s)
+
+
+def cell_is_physics_empty(h_idx: int, s_idx: int) -> bool:
+    """Return True if the (H_bin, S_bin) cell is physically unreachable.
+
+    A file in H_bin h_idx has marginal entropy ≥ H_BREAKS[h_idx] bits/byte.
+    Shannon's source-coding bound forces min_compressed_size ≥ H_BREAKS[h_idx]/8
+    of raw size, so S ≤ 1 − H_BREAKS[h_idx]/8. Any cell requiring
+    S > 1 − H_BREAKS[h_idx]/8 is unreachable.
+    """
+    max_s = 1.0 - H_BREAKS[h_idx] / 8.0
+    return S_BREAKS[s_idx] >= max_s

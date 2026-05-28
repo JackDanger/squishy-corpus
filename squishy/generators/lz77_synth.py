@@ -67,7 +67,7 @@ SIZES: list[tuple[str, int]] = [
 ]
 REPLICATES: list[str] = ["s0", "s1", "s2"]
 
-WINDOW: int = 32768
+DEFAULT_WINDOW: int = 32768
 
 
 # ── Seed helpers ───────────────────────────────────────────────────────────────
@@ -117,11 +117,11 @@ def _sample_rep4(rng: random.Random, pos: int,
 
 
 def _sample_distance(rng: random.Random, dist_model: str, pos: int,
-                      recent4: list[int]) -> int:
+                      recent4: list[int], *, window: int = DEFAULT_WINDOW) -> int:
     if pos == 0:
         return 1
     if dist_model == "log_uniform":
-        return _sample_log_uniform(rng, 1, min(pos, WINDOW))
+        return _sample_log_uniform(rng, 1, min(pos, window))
     elif dist_model == "short":
         return _sample_short(rng, pos)
     elif dist_model == "rep4":
@@ -132,13 +132,12 @@ def _sample_distance(rng: random.Random, dist_model: str, pos: int,
 # ── Parse token cost (reference coder) ────────────────────────────────────────
 
 _REF_COPY_OVERHEAD: float = 1.0  # flag bit (literal=0, copy=1)
-_REF_DIST_BITS: float = math.log2(WINDOW)         # ≈ 15 bits
-_REF_LEN_BITS:  float = 8.0                        # 8-bit length field
+_REF_LEN_BITS:  float = 8.0      # 8-bit length field
 
 
-def _ref_copy_cost(length: int) -> float:
+def _ref_copy_cost(length: int, *, window: int = DEFAULT_WINDOW) -> float:
     """Bits to encode one copy token in the reference coder."""
-    return _REF_COPY_OVERHEAD + _REF_DIST_BITS + _REF_LEN_BITS
+    return _REF_COPY_OVERHEAD + math.log2(window) + _REF_LEN_BITS
 
 
 def _ref_lit_cost(lit_H: float) -> float:
@@ -152,7 +151,8 @@ Token = dict  # {"t": "L", "b": int} or {"t": "C", "d": int, "l": int}
 
 
 def synthesize(size: int, M: float, dist_model: str, mean_L: int,
-               lit_H: float, seed: int) -> tuple[bytes, list[Token], int]:
+               lit_H: float, seed: int, *,
+               window: int = DEFAULT_WINDOW) -> tuple[bytes, list[Token], int]:
     """Generate 'size' bytes with the target LZ77 parse statistics.
 
     Returns (data_bytes, parse_tokens, n_rejected_copies).
@@ -201,7 +201,7 @@ def synthesize(size: int, M: float, dist_model: str, mean_L: int,
         if pos >= size:
             break
 
-        D = _sample_distance(rng, dist_model, pos, recent4)
+        D = _sample_distance(rng, dist_model, pos, recent4, window=window)
         L = max(1, int(rng.expovariate(1.0 / mean_L)) + 1)
         run_len = min(L, size - pos)
         src = pos - D
@@ -226,14 +226,15 @@ def synthesize(size: int, M: float, dist_model: str, mean_L: int,
     return bytes(buf), parse, n_rejected
 
 
-def _parse_cost(parse: list[Token], lit_H: float) -> float:
+def _parse_cost(parse: list[Token], lit_H: float,
+                window: int = DEFAULT_WINDOW) -> float:
     """Total bits to encode parse under the reference coder."""
     total = 0.0
     for tok in parse:
         if tok["t"] == "L":
             total += _ref_lit_cost(lit_H)
         else:
-            total += _ref_copy_cost(tok["l"])
+            total += _ref_copy_cost(tok["l"], window=window)
     return total
 
 

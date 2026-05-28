@@ -3,6 +3,7 @@ import pytest
 
 from squishy.corpus.axes import (
     h_bin, s_bin, h_label, s_label, cell_label, cell_tuple,
+    cell_is_physics_empty,
     H_LABELS, S_LABELS, H_BREAKS, S_BREAKS,
 )
 
@@ -120,3 +121,42 @@ def test_cell_label_extremes():
     label = cell_label(7.9, 0.03)
     assert "H6" in label
     assert "S0" in label
+
+
+# ── cell_is_physics_empty ─────────────────────────────────────────────────────
+
+def test_physics_empty_high_entropy_high_s():
+    # H6 (H_lo=7.7) → max_S = 1 − 7.7/8 = 0.0375. S1=[0.05,0.25) starts above this.
+    assert cell_is_physics_empty(6, 1)  # H6/S1 is impossible
+
+
+def test_physics_empty_h6_all_s_except_s0():
+    # H6 has max_S ≈ 0.037; only S0=[0,0.05) can exist
+    for s_idx in range(1, len(S_LABELS)):
+        assert cell_is_physics_empty(6, s_idx), f"H6/S{s_idx} should be physics-empty"
+
+
+def test_physics_not_empty_h0_any_s():
+    # H0 (H_lo=0.0) → max_S = 1.0; all S bins are reachable in principle
+    for s_idx in range(len(S_LABELS)):
+        assert not cell_is_physics_empty(0, s_idx), f"H0/S{s_idx} should be reachable"
+
+
+@pytest.mark.parametrize("h_idx, s_idx, expected_empty", [
+    # H0 (H_lo=0): max_S=1.0 — all S bins reachable
+    (0, 4, False),
+    # H2 (H_lo=2): max_S=0.75 — S4 [0.75,1.01) starts exactly at boundary → empty
+    (2, 4, True),
+    # H3 (H_lo=3.5): max_S=0.5625 — S3 [0.5,0.75) starts at 0.5 < 0.5625 → reachable
+    (3, 3, False),
+    # H3/S4: S4 starts at 0.75 > 0.5625 → empty
+    (3, 4, True),
+    # H4 (H_lo=5.0): max_S=0.375 — S3 [0.5,0.75) starts at 0.5 > 0.375 → empty
+    (4, 3, True),
+    # H5 (H_lo=6.5): max_S=0.1875 — S1 [0.05,0.25) starts at 0.05 < 0.1875 → reachable
+    (5, 1, False),
+    # H5/S2: S2 [0.25,0.50) starts at 0.25 > 0.1875 → empty
+    (5, 2, True),
+])
+def test_physics_empty_spot_checks(h_idx, s_idx, expected_empty):
+    assert cell_is_physics_empty(h_idx, s_idx) == expected_empty
