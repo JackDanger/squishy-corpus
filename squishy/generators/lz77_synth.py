@@ -152,7 +152,8 @@ Token = dict  # {"t": "L", "b": int} or {"t": "C", "d": int, "l": int}
 
 def synthesize(size: int, M: float, dist_model: str, mean_L: int,
                lit_H: float, seed: int, *,
-               window: int = DEFAULT_WINDOW) -> tuple[bytes, list[Token], int]:
+               window: int = DEFAULT_WINDOW,
+               skip_parse: bool = False) -> tuple[bytes, list[Token], int]:
     """Generate 'size' bytes with the target LZ77 parse statistics.
 
     Returns (data_bytes, parse_tokens, n_rejected_copies).
@@ -161,6 +162,10 @@ def synthesize(size: int, M: float, dist_model: str, mean_L: int,
 
     The parse tokens exactly describe how data_bytes was built — every byte
     is accounted for. Researchers can replay the parse to reproduce the file.
+
+    skip_parse=True skips building the parse list (returns empty list).
+    Use when only the bytes are needed (e.g. calibration sweep) to avoid
+    allocating ~2M dict objects per 4MB file.
     """
     rng = random.Random(seed)
     lit_pmf = tilted_pmf(lit_H)
@@ -182,7 +187,8 @@ def synthesize(size: int, M: float, dist_model: str, mean_L: int,
         nonlocal pos
         b = rng.choices(lit_alphabet, weights=lit_pmf)[0]
         buf[pos] = b
-        parse.append({"t": "L", "b": b})
+        if not skip_parse:
+            parse.append({"t": "L", "b": b})
         pos += 1
 
     while pos < size:
@@ -220,7 +226,8 @@ def synthesize(size: int, M: float, dist_model: str, mean_L: int,
         for i in range(run_len):
             buf[pos + i] = buf[src + i]
             is_copy[pos + i] = 1
-        parse.append({"t": "C", "d": D, "l": run_len})
+        if not skip_parse:
+            parse.append({"t": "C", "d": D, "l": run_len})
         pos += run_len
 
     return bytes(buf), parse, n_rejected

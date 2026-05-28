@@ -111,6 +111,7 @@ def gen_lz77(size: int, M: float, mean_L: int, window: int,
              lit_H: float, seed: int) -> bytes:
     data, _parse, _rejected = lz77_synthesize(
         size, M, "log_uniform", mean_L, lit_H, seed, window=window,
+        skip_parse=True,
     )
     return data
 

@@ -165,7 +165,8 @@ EFF_HTML_URL    := https://www.eff.org/
         negative manifest verify publish invalidate plan-publish doctor clean \
         help stream-plan stream-publish stream-publish-dryrun negative-publish \
         storage-reduce agent-docs \
-        calibrated-bundle calibrated-html calibrated-publish calibrated-invalidate
+        calibrated-bundle calibrated-html calibrated-publish calibrated-invalidate \
+        v4-calibrate v4-bench v4-test
 
 help:
 	@echo "Targets:"
@@ -198,6 +199,11 @@ help:
 	@echo "  calibrated-html     — (re)build build/bundle/index.html from scripts/bundle-index.html"
 	@echo "  calibrated-publish  — sync build/bundle/ → s3://\$$(S3_BUCKET)/\$$(CALIBRATED_S3_PREFIX)/"
 	@echo "  calibrated-invalidate — CloudFront invalidation for calibrated index files"
+	@echo ""
+	@echo "v4 corpus pipeline:"
+	@echo "  v4-calibrate   — generate ~84 synthetic files at 4 MB, measure H and S"
+	@echo "  v4-bench       — benchmark calibration files, compute Kendall-τ per H×S cell"
+	@echo "  v4-test        — run test suite"
 
 all: doctor sources raw pathological modern individual bundles dict negative manifest
 
@@ -730,3 +736,22 @@ calibrated-invalidate:
 	    /$(CALIBRATED_S3_PREFIX)/manifest.csv \
 	    /$(CALIBRATED_S3_PREFIX)/ground-truth.json \
 	    /$(CALIBRATED_S3_PREFIX)/score.py
+
+# ─── v4 corpus: calibration sweep + benchmark ─────────────────────────────────
+
+V4_CAL_DIR := build/raw/synthetic/calibration
+V4_BENCH_DIR := build/bench
+
+# Run calibration sweep: generate ~84 synthetic files at 4 MB, measure H and S
+v4-calibrate:
+	@mkdir -p $(V4_CAL_DIR)
+	@uv run scripts/gen-synthetic.py --calibrate-only --out build/raw/synthetic
+
+# Run v4 benchmark: compress calibration files, compute Kendall-τ
+v4-bench: v4-calibrate
+	@mkdir -p $(V4_BENCH_DIR)
+	@uv run scripts/bench-v4.py --input $(V4_CAL_DIR) --out-dir $(V4_BENCH_DIR)
+
+# Run test suite
+v4-test:
+	@uv run pytest tests/ -q
