@@ -360,6 +360,13 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .copyb{{flex:none;cursor:pointer;border:1px solid #30363d;background:#161b22;color:#9cd2ff;
    border-radius:5px;padding:.08rem .45rem;font:inherit}}
  .copyb:hover{{background:#21262d}}
+ .deftip{{position:relative;border-bottom:1px dotted #999;cursor:help;outline:none}}
+ .deftip .pop{{visibility:hidden;opacity:0;position:absolute;left:0;bottom:1.6em;z-index:60;
+   width:24rem;max-width:84vw;background:#0d1117;color:#e6edf3;border-radius:8px;padding:.6rem .75rem;
+   font:400 .82rem/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+   box-shadow:0 8px 28px rgba(0,0,0,.28);transition:opacity .15s;pointer-events:none}}
+ .deftip .pop b{{color:#7ee787;font-weight:600}}
+ .deftip:hover .pop,.deftip:focus .pop{{visibility:visible;opacity:1}}
  @media(max-width:560px){{ .headcmd .lead-uv{{display:none}} }}
  pre.hex{{font-size:.72rem;color:#555}}
  table.data{{border-collapse:collapse;font-size:.8rem;width:100%;overflow:auto;display:block}}
@@ -399,7 +406,7 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <p class="lede">Squishy is a fixed set of real, freely-shareable files — prose, code, logs,
 genomes, tables, images, binaries — picked to cover the range of things people actually
 compress, from a few megabytes to several gigabytes. Run your tool over it and you get a
-single <b>Squishy Score</b> you can cite and compare. It includes much of the 2003 Silesia corpus.</p>
+single <b>Squishy Score</b> you can cite and compare. It's the 2026 <span class="deftip" tabindex="0">successor<span class="pop">Every file is real and <b>freely redistributable</b> — public-domain or permissively licensed — with its source URL and SHA-256 published. So you can download, ship, cite, and freeze Squishy without licensing worry. (Silesia's files were gathered decades ago without clear licenses, which makes it awkward to redistribute today.)</span></span> to the <a href="https://sun.aei.polsl.pl/~sdeor/index.php?page=silesia">Silesia</a> corpus.</p>
 
 <h2>Score your tool</h2>
 <p>One command. Hand it your compressor as a plain <code>stdin&nbsp;→&nbsp;stdout</code> command —
