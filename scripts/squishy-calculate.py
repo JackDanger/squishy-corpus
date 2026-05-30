@@ -28,7 +28,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 EDITION = "Squishy-2026"
-DEFAULT_BASE = "https://squishy-corpus.s3.us-west-2.amazonaws.com/draft"
+DEFAULT_BASE = "https://squishy.jackdanger.com"
 
 
 def load_squishy():

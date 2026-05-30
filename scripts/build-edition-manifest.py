@@ -17,7 +17,7 @@ import csv, importlib.util, json, time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-BASE = "https://squishy-corpus.s3.us-west-2.amazonaws.com/draft"
+BASE = "https://squishy.jackdanger.com"
 EDITION = "Squishy-2026-DRAFT"
 # which core category a scale kind belongs to (for the by-category roll-up)
 SCALE_CATEGORY = {"csv": "Tabular / DB", "columnar": "Tabular / DB", "parquet": "Tabular / DB",
