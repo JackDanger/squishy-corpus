@@ -349,6 +349,18 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .prev{{margin:.4rem 0}} .src{{font-size:.82rem}} a{{color:#0a5fa5}}
  pre.txt,pre.hex{{background:#f6f8fa;border:1px solid #e2e2e2;border-radius:6px;padding:.6rem;overflow:auto;font-size:.78rem;max-height:230px;margin:.2rem 0}}
  pre.run{{background:#0d1117;color:#e6edf3;border-radius:8px;padding:.85rem 1rem;font-size:.95rem;overflow:auto;margin:.4rem 0 .3rem;border:0}}
+ .sitehead{{position:sticky;top:0;z-index:50;display:flex;justify-content:space-between;align-items:center;gap:1rem;
+   margin:-1.5rem -1.5rem 1.4rem;padding:.5rem .9rem;background:#0d1117;color:#e6edf3;
+   font:500 .82rem ui-monospace,Menlo,Consolas,monospace}}
+ .sitehead a{{color:#9cd2ff;text-decoration:none;white-space:nowrap}}
+ .sitehead a:hover{{text-decoration:underline}}
+ .headcmd{{display:inline-flex;align-items:center;gap:.55rem;min-width:0;overflow:hidden}}
+ .headcmd code{{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:all;color:#e6edf3}}
+ .headcmd .codec{{color:#7ee787;transition:opacity .22s ease}}
+ .copyb{{flex:none;cursor:pointer;border:1px solid #30363d;background:#161b22;color:#9cd2ff;
+   border-radius:5px;padding:.08rem .45rem;font:inherit}}
+ .copyb:hover{{background:#21262d}}
+ @media(max-width:560px){{ .headcmd .lead-uv{{display:none}} }}
  pre.hex{{font-size:.72rem;color:#555}}
  table.data{{border-collapse:collapse;font-size:.8rem;width:100%;overflow:auto;display:block}}
  table.data th,table.data td{{border:1px solid #e2e2e2;padding:.2rem .45rem;text-align:left;white-space:nowrap}}
@@ -378,6 +390,10 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .legend i{{width:.7rem;height:.7rem;border-radius:50%;display:inline-block}}
  .hint{{color:#888;font-size:.82rem}}
 </style></head><body>
+<div class="sitehead">
+  <span class="headcmd"><code id="headcmd-text"><span class="lead-uv">uv run </span>squishy-calculate --cmd "<span class="codec" id="codec">zstd -19 -c</span>"</code><button class="copyb" id="copyb" title="copy command">copy</button></span>
+  <a href="https://github.com/JackDanger/squishy-corpus">GitHub&nbsp;↗</a>
+</div>
 <h1>Squishy</h1>
 <p class="tag">One number for how well a compressor does on real data.</p>
 <p class="lede">Squishy is a fixed set of real, freely-shareable files — prose, code, logs,
@@ -428,6 +444,34 @@ document.querySelectorAll('#lead th').forEach((th,i)=>th.onclick=()=>{{
                           : num(b.cells[i].textContent)-num(a.cells[i].textContent));
   rows.forEach(r=>tb.appendChild(r));
 }});
+// header one-liner: slowly rotate the codec; always selectable/copyable; pause on
+// hover or while the user has a selection inside it.
+(function(){{
+  const codecs=["zstd -19 -c","xz -9 -c","brotli -q 11 -c","zstd --ultra -22 -c",
+                "gzip -9 -c","bzip2 -9 -c","lz4 -9 -c","./mytool -c"];
+  const el=document.getElementById('codec'),
+        cmd=document.getElementById('headcmd-text'),
+        wrap=document.querySelector('.headcmd'),
+        btn=document.getElementById('copyb');
+  if(!el) return;
+  let i=0, hover=false;
+  function selInside(){{ const s=window.getSelection();
+    return s && !s.isCollapsed && s.anchorNode && wrap.contains(s.anchorNode); }}
+  function tick(){{
+    if(hover || selInside()) return;            // frozen while hovered/selected
+    i=(i+1)%codecs.length; el.style.opacity=0;
+    setTimeout(()=>{{ el.textContent=codecs[i]; el.style.opacity=1; }}, 220);
+  }}
+  setInterval(tick, 3000);
+  wrap.addEventListener('mouseenter',()=>hover=true);
+  wrap.addEventListener('mouseleave',()=>hover=false);
+  btn.addEventListener('click',()=>{{
+    navigator.clipboard.writeText(cmd.textContent.trim()).then(()=>{{
+      const o=btn.textContent; btn.textContent='copied ✓';
+      setTimeout(()=>btn.textContent=o, 1200);
+    }}).catch(()=>{{}});
+  }});
+}})();
 </script>
 </body></html>"""
 
