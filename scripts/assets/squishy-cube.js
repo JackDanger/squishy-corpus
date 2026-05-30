@@ -32,6 +32,13 @@
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
 
+  function esc(s) {
+    s = s == null ? "" : String(s);
+    return s.replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
   function normalize(v, ax) {
     var t = ax.log ? Math.log10(v) : v;
     var lo = ax.log ? Math.log10(ax.min) : ax.min;
@@ -62,8 +69,9 @@
                     Math.round(c1[2]+(c2[2]-c1[2])*t) + ")";
   }
 
-  var BG_NEAR = [16, 19, 26], BG_FAR = [10, 12, 17];   // floor/back gradient + fog target
-  var FLOOR = [10, 12, 17];
+  // light theme — matches the page background (#fafafa). Fog recedes toward FAR.
+  var BG_NEAR = [252, 252, 253], BG_FAR = [232, 235, 240];
+  var INK = [28, 37, 48];                               // dark ink for labels/ticks on light
 
   function shortBytes(n) {
     if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + " MB";
@@ -145,7 +153,7 @@
     // back/floor "gizmo": a floor grid at y=+1 and two back walls (z=+1, x=-1) with
     // ticks + units — far more legible than a bare wireframe cube.
     function drawGizmo() {
-      var faint = "rgba(255,255,255,0.05)", line = "rgba(255,255,255,0.12)";
+      var faint = "rgba(0,0,0,0.07)", line = "rgba(0,0,0,0.22)";
       // floor grid (coverage = 0 plane) — z lines and x lines
       TZ.forEach(function (t) {
         var nz = normalize(t.v, ax.z);
@@ -162,37 +170,32 @@
       });
       // the three framing edges nearest the data origin (back-bottom corner)
       var o = [-1, 1, 1];
-      seg(o, [1, 1, 1], line, 1.25);     // entropy edge (floor, back)
-      seg(o, [-1, -1, 1], line, 1.25);   // coverage edge (back wall, left)
-      seg(o, [-1, 1, -1], line, 1.25);   // distance edge (floor, left)
+      seg(o, [1, 1, 1], line, 1.5);      // entropy edge (floor, back)
+      seg(o, [-1, -1, 1], line, 1.5);    // coverage edge (back wall, left)
+      seg(o, [-1, 1, -1], line, 1.5);    // distance edge (floor, left)
 
-      // tick labels + axis titles
+      // tick labels — dark, legible on the light background
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.font = "11px ui-monospace,Menlo,monospace";
-      // X (entropy) along the back-bottom edge
-      TX.forEach(function (t) {
-        var p = project([normalize(t.v, ax.x), 1, 1]);
-        ctx.fillStyle = "rgba(224,232,242,0.55)"; ctx.fillText(t.label, p.x, p.y + 12);
+      ctx.font = "12px ui-monospace,Menlo,monospace";
+      ctx.fillStyle = "rgba(40,46,54,0.78)";
+      TX.forEach(function (t) {            // entropy, back-bottom edge
+        var p = project([normalize(t.v, ax.x), 1, 1]); ctx.fillText(t.label, p.x, p.y + 13);
       });
-      // Z (match distance, log) along the left-bottom edge
-      TZ.forEach(function (t) {
-        var p = project([-1, 1, normalize(t.v, ax.z)]);
-        ctx.fillStyle = "rgba(224,232,242,0.5)"; ctx.fillText(t.label, p.x - 6, p.y + 10);
+      TZ.forEach(function (t) {            // repeat distance (log), left-bottom edge
+        var p = project([-1, 1, normalize(t.v, ax.z)]); ctx.fillText(t.label, p.x - 8, p.y + 11);
       });
-      // Y (coverage) up the back-left vertical edge
       ctx.textAlign = "right";
-      TY.forEach(function (t) {
-        var p = project([-1, -normalize(t.v, ax.y), 1]);
-        ctx.fillStyle = "rgba(224,232,242,0.5)"; ctx.fillText(t.label, p.x - 8, p.y);
+      TY.forEach(function (t) {            // repetition, back-left vertical edge
+        var p = project([-1, -normalize(t.v, ax.y), 1]); ctx.fillText(t.label, p.x - 9, p.y);
       });
 
-      // axis titles, coloured to the axis
-      ctx.font = "600 12px -apple-system,Segoe UI,sans-serif";
-      var xa = project([0, 1, 1]); ctx.textAlign = "center"; ctx.fillStyle = "#e3879a";
-      ctx.fillText(ax.x.label, xa.x, xa.y + 28);
-      var za = project([-1, 1, 0]); ctx.fillStyle = "#79b0d6"; ctx.textAlign = "right";
-      ctx.fillText(ax.z.label, za.x - 4, za.y + 26);
-      var ya = project([-1, -1.18, 1]); ctx.fillStyle = "#74c79b"; ctx.textAlign = "center";
+      // axis titles — bold, axis-coloured, sized for instant reading
+      ctx.font = "700 14px -apple-system,Segoe UI,sans-serif";
+      var xa = project([0, 1, 1]); ctx.textAlign = "center"; ctx.fillStyle = "#b23a6b";
+      ctx.fillText(ax.x.label, xa.x, xa.y + 30);
+      var za = project([-1, 1, 0]); ctx.fillStyle = "#2a6f9e"; ctx.textAlign = "right";
+      ctx.fillText(ax.z.label, za.x - 6, za.y + 28);
+      var ya = project([-1, -1.2, 1]); ctx.fillStyle = "#1f8a5a"; ctx.textAlign = "center";
       ctx.fillText(ax.y.label, ya.x, ya.y);
     }
 
@@ -222,12 +225,12 @@
       ctx.beginPath(); ctx.moveTo(corners[0].x, corners[0].y);
       for (var i = 1; i < 4; i++) ctx.lineTo(corners[i].x, corners[i].y);
       ctx.closePath();
-      ctx.fillStyle = "rgba(204,121,167,0.12)"; ctx.fill();
-      ctx.strokeStyle = "rgba(204,121,167,0.5)"; ctx.lineWidth = 1.25;
+      ctx.fillStyle = "rgba(204,121,167,0.14)"; ctx.fill();
+      ctx.strokeStyle = "rgba(168,70,120,0.62)"; ctx.lineWidth = 1.4;
       ctx.setLineDash([5, 4]); ctx.stroke(); ctx.setLineDash([]);
       if (!behind) {
-        ctx.fillStyle = "rgba(220,150,185,0.95)"; ctx.textAlign = "left";
-        ctx.textBaseline = "alphabetic"; ctx.font = "11px ui-monospace,Menlo,monospace";
+        ctx.fillStyle = "rgba(150,40,95,0.95)"; ctx.textAlign = "left";
+        ctx.textBaseline = "alphabetic"; ctx.font = "600 11px ui-monospace,Menlo,monospace";
         ctx.fillText("compressibility gate K = " + pl.kmin, corners[1].x + 6, corners[1].y + 4);
       }
     }
@@ -288,19 +291,21 @@
           ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(s.x, s.y, rad * 2.4, 0, 7); ctx.fill();
           ctx.globalAlpha = 1;
           ctx.fillStyle = col; ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.fill();
-          // top-left specular for a lit-sphere read
+          // crisp edge + soft top highlight → a glossy lit-sphere read on light bg
+          ctx.lineWidth = 1; ctx.strokeStyle = "rgba(0,0,0," + (0.30 * (0.5 + 0.5 * depth)).toFixed(2) + ")";
+          ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.stroke();
           var sg = ctx.createRadialGradient(s.x - rad * 0.35, s.y - rad * 0.4, rad * 0.05, s.x, s.y, rad);
-          sg.addColorStop(0, "rgba(255,255,255," + (0.35 * depth).toFixed(2) + ")");
+          sg.addColorStop(0, "rgba(255,255,255," + (0.55 * depth).toFixed(2) + ")");
           sg.addColorStop(0.5, "rgba(255,255,255,0)");
           ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.fill();
         } else {
-          // diagnostic: hollow dashed ring, no glow (visually "not scored")
-          ctx.globalAlpha = 0.45 + 0.45 * depth;
-          ctx.fillStyle = "rgba(14,16,22,0.7)"; ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.fill();
-          ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.setLineDash([3, 2.5]);
+          // diagnostic: hollow dashed ring on a light fill (visually "not scored")
+          ctx.globalAlpha = 0.5 + 0.4 * depth;
+          ctx.fillStyle = "rgba(250,250,251,0.92)"; ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.fill();
+          ctx.strokeStyle = col; ctx.lineWidth = 1.8; ctx.setLineDash([3, 2.5]);
           ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.stroke(); ctx.setLineDash([]);
         }
-        if (isH) { ctx.globalAlpha = 1; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+        if (isH) { ctx.globalAlpha = 1; ctx.strokeStyle = "#1c2530"; ctx.lineWidth = 2;
           ctx.beginPath(); ctx.arc(s.x, s.y, rad + 3, 0, 7); ctx.stroke(); }
         s.rad = rad;
       });
@@ -321,12 +326,12 @@
       labelled.forEach(function (L) {
         var s = L.s, p = pts[s.i], depth = depthOf(s.z);
         ctx.globalAlpha = L.isH ? 1 : 0.4 + 0.55 * depth;
-        ctx.font = (L.isH ? "bold " : "") + "12px ui-monospace,Menlo,monospace";
-        var name = p.d.name.length > 22 ? p.d.name.slice(0, 21) + "…" : p.d.name;
-        // halo for legibility over busy areas
-        ctx.lineWidth = 3; ctx.strokeStyle = "rgba(8,10,14,0.85)";
-        ctx.strokeText(name, s.x + s.rad + 4, s.y + 4);
-        ctx.fillStyle = "#e8ecf2"; ctx.fillText(name, s.x + s.rad + 4, s.y + 4);
+        ctx.font = (L.isH ? "bold " : "600 ") + "12.5px -apple-system,Segoe UI,sans-serif";
+        var name = p.d.label || p.d.name;        // short, friendly name
+        // light halo for legibility over busy areas, dark ink text
+        ctx.lineWidth = 3.5; ctx.strokeStyle = "rgba(250,250,250,0.95)";
+        ctx.strokeText(name, s.x + s.rad + 5, s.y + 4);
+        ctx.fillStyle = "#1c2530"; ctx.fillText(name, s.x + s.rad + 5, s.y + 4);
       });
       ctx.globalAlpha = 1;
 
@@ -335,14 +340,23 @@
     }
 
     function tooltipHTML(d) {
+      var sw = '<i style="display:inline-block;width:.6rem;height:.6rem;border-radius:50%;vertical-align:middle;' +
+               'background:' + (cats[d.cat] || "#9aa") + '"></i>';
       var gate = (d.scored !== false)
-        ? "<span style='color:#7fd8a6'>scored</span>"
-        : "<span style='color:#e3879a'>diagnostic — behind the K gate, not scored</span>";
-      return "<b>" + d.name + "</b> &middot; " + d.cat + " &middot; " + gate + "<br>" +
-        "entropy <b>" + d.entropy.toFixed(2) + "</b> bits/byte &middot; repeat coverage <b>" +
-        (d.coverage * 100).toFixed(0) + "%</b> &middot; match distance <b>" + shortBytes(d.dist) + "</b><br>" +
-        "size <b>" + shortSize(d.sizeMB) + "</b> &middot; compressibility K <b>" +
-        (d.K != null ? d.K.toFixed(2) : "—") + "</b>";
+        ? "<span style='color:#1a9e63;font-weight:600'>scored</span>"
+        : "<span style='color:#b23a6b;font-weight:600'>diagnostic · not scored</span>";
+      var links = [];
+      if (d.source_url) links.push('<a href="' + esc(d.source_url) + '" target="_blank" rel="noopener">source ↗</a>');
+      if (d.url) links.push('<a href="' + esc(d.url) + '" target="_blank" rel="noopener">download ↗</a>');
+      if (d.license) links.push('<span style="color:#888">' + esc(d.license) + '</span>');
+      return "<b>" + esc(d.label || d.name) + "</b> &nbsp;" + sw +
+        " <span style='color:#888'>" + esc(d.cat) + " · " + gate + "</span>" +
+        (d.desc ? "<div class='tdesc'>" + esc(d.desc) + "</div>" : "") +
+        "<div class='tnums'>entropy <b>" + d.entropy.toFixed(2) + "</b> · repeats <b>" +
+        (d.coverage * 100).toFixed(0) + "%</b> · repeat distance <b>" + shortBytes(d.dist) +
+        "</b> · size <b>" + shortSize(d.sizeMB) + "</b> · K <b>" +
+        (d.K != null ? d.K.toFixed(2) : "—") + "</b></div>" +
+        (links.length ? "<div class='tlinks'>" + links.join("") + "</div>" : "");
     }
 
     function pick(mx, my) {
@@ -354,14 +368,27 @@
       return null;
     }
 
+    var hideTimer = null;
+    function hideTip() {
+      if (opts.tooltipEl) opts.tooltipEl.style.display = "none";
+      if (hover) { hover = null; draw(); }
+    }
     function showTip(p, mx, my) {
       var t = opts.tooltipEl; if (!t) return;
+      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
       if (p) {
         t.innerHTML = tooltipHTML(p.d); t.style.display = "block";
-        var tw = t.offsetWidth || 220, th = t.offsetHeight || 60;
-        t.style.left = clamp(mx + 14, 4, W - tw - 4) + "px";
-        t.style.top = clamp(my + 12, 4, H - th - 4) + "px";
+        var tw = t.offsetWidth || 240, th = t.offsetHeight || 80;
+        t.style.left = clamp(mx + 16, 6, Math.max(6, W - tw - 6)) + "px";
+        t.style.top = clamp(my + 14, 6, Math.max(6, H - th - 6)) + "px";
       } else t.style.display = "none";
+    }
+    // keep the card open while the pointer is inside it, so its links are clickable
+    if (opts.tooltipEl) {
+      opts.tooltipEl.addEventListener("pointerenter", function () {
+        if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+      });
+      opts.tooltipEl.addEventListener("pointerleave", hideTip);
     }
 
     // ── interaction: drag rotate, wheel zoom, hover tip ──
@@ -386,7 +413,8 @@
       }
     });
     canvas.addEventListener("pointerleave", function () {
-      if (!drag) { hover = null; showTip(null); draw(); }
+      // delay hide so the pointer can travel into the card to use its links
+      if (!drag) { if (hideTimer) clearTimeout(hideTimer); hideTimer = setTimeout(hideTip, 260); }
     });
     canvas.addEventListener("wheel", function (e) {
       e.preventDefault(); auto = false;

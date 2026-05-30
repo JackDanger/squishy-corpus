@@ -116,12 +116,41 @@ CUBE_COLORS = {
 }
 
 
+# Short, friendly on-canvas labels (the full filename ellipsizes uselessly when the
+# dots sit together). Keyed by the cube point name (core display, or stripped scale name).
+SHORT = {
+    "dickens": "Dickens", "aozora": "Aozora", "monorepo": "LLVM", "minjs": "Plotly.js",
+    "markup": "Shakespeare", "json": "Earthquakes", "log": "NASA log", "genome": "E. coli",
+    "csv": "Weather", "parquet": "Airline", "sqlite": "USDA foods", "exe": "Hugo",
+    "photo": "Blue Marble", "movie": "Big Buck Bunny", "weights": "MiniLM",
+    "noaa-ghcn-daily-2024-full.csv": "Weather ’24", "noaa-ghcn-daily-2021-2023.csv": "Weather ’21–23",
+    "big-buck-bunny-1080p.mov": "Big Buck Bunny HD", "ecoli-DRR002013-full.fastq": "E. coli (full)",
+    "enwik9.txt": "enwik9", "llvm-project-19.1.0.src.tar": "LLVM (full)",
+    "nasa-http-jul-aug-1995.log": "NASA log (full)", "clang-releases-16-17-18-19.tar": "clang ×4",
+    "bts-ontime-2022-2024": "Airline (3 yr)",
+}
+# friendly descriptions for files whose kind-description would be wrong/absent
+SCALE_DESC = {
+    "enwik9.txt": "The first billion bytes of an English Wikipedia XML dump (the Hutter-Prize text).",
+    "clang-releases-16-17-18-19.tar": "Four LLVM/Clang release source trees concatenated — a real software archive.",
+    "big-buck-bunny-1080p.mov": "The full open film Big Buck Bunny in 1080p H.264 video.",
+}
+
+
 def cube_data(sq, props, scale=None) -> dict:
-    """Build the 3D scatter from INTRINSIC byte properties (file-properties.json
-    for the core, scale-properties.json for the scale tier): x=entropy (bits/byte),
-    y=repeat coverage, z=match distance (bytes, log). Size is the dot radius. No
-    compressor is referenced — the axes are properties of the bytes themselves."""
+    """Build the 3D scatter from INTRINSIC byte properties (file-properties.json for the
+    core, scale-properties.json for the scale tier): x=entropy, y=repeat coverage,
+    z=repeat distance (bytes, log). Size is the dot area. No compressor is referenced —
+    the axes are properties of the bytes themselves. Per-point provenance (short name,
+    plain-English description, license, source + download links) is merged from
+    edition.json so the hover card can be friendly and link out."""
     import math
+    ed = {}
+    edp = REPO / "build/meta/edition.json"
+    if edp.exists():
+        for f in json.loads(edp.read_text()).get("files", []):
+            k = (f.get("display") or f.get("name") or "").replace(".parquet", "").replace(".safetensors", "")
+            ed[k] = f
     K = props["block_bytes"]
     entries = dict(props["files"])                      # core (measured)
     if scale:
@@ -132,8 +161,13 @@ def cube_data(sq, props, scale=None) -> dict:
     lo, hi = math.log10(min(sizes)), math.log10(max(sizes))
     pts = []
     for d, m in entries.items():
+        e = ed.get(d, {})
+        kind = e.get("kind", d)
+        desc = SCALE_DESC.get(d) or WHATIS.get(d) or WHATIS.get(kind) or ""
         pts.append({
-            "name": d, "cat": m.get("category", "Scale tier"),
+            "name": d, "label": SHORT.get(d, d), "cat": m.get("category", "Scale tier"),
+            "kind": kind, "desc": re.sub("<[^>]+>", "", desc),
+            "license": e.get("license"), "source_url": e.get("source_url"), "url": e.get("url"),
             "x": m["entropy"], "y": m["coverage"], "z": max(m["match_distance"], K),
             "r": round((math.log10(m["size"]) - lo) / (hi - lo), 3),
             "sizeMB": m["size"] / 1e6, "entropy": m["entropy"],
@@ -148,9 +182,9 @@ def cube_data(sq, props, scale=None) -> dict:
     # entropy-coded media that are measured but NOT scored.
     kmin = sq.COMPRESSIBILITY_MIN
     return {
-        "axes": {"x": {"label": "entropy (bits/byte)", "min": 0, "max": 8, "log": False},
-                 "y": {"label": "repeat coverage", "min": 0, "max": 1, "log": False},
-                 "z": {"label": "match distance (bytes)", "min": K, "max": max(dists), "log": True}},
+        "axes": {"x": {"label": "entropy", "min": 0, "max": 8, "log": False},
+                 "y": {"label": "repetition", "min": 0, "max": 1, "log": False},
+                 "z": {"label": "repeat distance", "min": K, "max": max(dists), "log": True}},
         "categories": CUBE_COLORS,
         "plane": {"label": f"compressibility K = {kmin} (scored ↔ diagnostic)",
                   "kmin": kmin, "slope_x": 1.0 / 8.0, "intercept": -(1.0 - kmin)},
@@ -410,20 +444,24 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .hero{{margin:.6rem 0 1.6rem}}
  .hero .cap{{max-width:46rem}}
  .cube-wrap{{position:relative;margin:.7rem 0 .5rem;border-radius:14px;overflow:hidden;
-   box-shadow:0 10px 48px rgba(10,12,20,.4);background:#0a0c11;border:1px solid #1a1f2b}}
- canvas#cube{{display:block;width:100%;height:min(64vh,600px);min-height:380px;cursor:grab;
-   touch-action:none;outline:none}}
+   background:#fafafa;border:1px solid #e7e7e9}}
+ canvas#cube{{display:block;width:100%;height:min(66vh,620px);min-height:380px;cursor:grab;
+   touch-action:none;outline:none;background:#fafafa}}
  canvas#cube:active{{cursor:grabbing}}
- canvas#cube:focus-visible{{box-shadow:inset 0 0 0 2px #9cd2ff}}
+ canvas#cube:focus-visible{{box-shadow:inset 0 0 0 2px #2c6e9b}}
  .cube-bar{{position:absolute;top:.55rem;right:.55rem;display:flex;gap:.35rem;z-index:6}}
- .cube-bar button{{cursor:pointer;border:1px solid #2a3140;background:rgba(18,22,30,.82);
-   color:#cfe3f5;border-radius:7px;padding:.22rem .55rem;font:500 .78rem ui-monospace,Menlo,monospace;
+ .cube-bar button{{cursor:pointer;border:1px solid #d4d7dc;background:rgba(255,255,255,.85);
+   color:#333;border-radius:7px;padding:.22rem .55rem;font:500 .78rem ui-monospace,Menlo,monospace;
    backdrop-filter:blur(4px)}}
- .cube-bar button:hover{{background:rgba(33,38,45,.92)}}
- .tip{{position:absolute;display:none;pointer-events:none;background:rgba(12,15,22,.97);color:#e8ecf2;
-   border:1px solid #2a3140;border-radius:8px;padding:.5rem .65rem;font-size:.8rem;line-height:1.5;
-   max-width:20rem;z-index:7;box-shadow:0 6px 22px rgba(0,0,0,.4)}}
- .tip b{{color:#fff;font-weight:600}}
+ .cube-bar button:hover{{background:#fff;border-color:#b9bdc4}}
+ .tip{{position:absolute;display:none;pointer-events:auto;background:#fff;color:#1c2530;
+   border:1px solid #d6d9de;border-radius:10px;padding:.6rem .75rem;font-size:.82rem;line-height:1.5;
+   max-width:23rem;z-index:7;box-shadow:0 10px 30px rgba(20,24,33,.20)}}
+ .tip b{{color:#111;font-weight:600}}
+ .tip .tdesc{{color:#333;margin:.3rem 0 .35rem}}
+ .tip .tnums{{color:#555;font-size:.78rem}}
+ .tip a{{color:#0b6bcb;text-decoration:none;font-weight:500}} .tip a:hover{{text-decoration:underline}}
+ .tip .tlinks{{margin-top:.45rem;display:flex;flex-wrap:wrap;gap:.1rem .8rem}}
  .legend{{display:flex;flex-wrap:wrap;gap:.4rem 1.1rem;margin:.5rem 0 0;font-size:.85rem;color:#444}}
  .legend .lg{{display:inline-flex;align-items:center;gap:.4rem}}
  .legend i{{width:.72rem;height:.72rem;border-radius:50%;display:inline-block}}
