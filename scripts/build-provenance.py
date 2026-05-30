@@ -157,6 +157,26 @@ def cube_data(sq, props, scale=None) -> dict:
         "points": pts}
 
 
+def coverage_table(cube: dict) -> str:
+    """Accessible, non-3D fallback for the explorer: the same points as a sortable
+    table. Mirrors the tooltip fields so screen-reader / no-WebGL users get everything."""
+    head = ["category", "file", "entropy (bpb)", "coverage", "match distance",
+            "size", "K", "status"]
+    rows = []
+    for p in sorted(cube["points"], key=lambda p: (p["cat"], -p["sizeMB"])):
+        dist = p["dist"]
+        ds = (f"{dist/1e6:.1f} MB" if dist >= 1e6 else f"{dist/1e3:.0f} KB"
+              if dist >= 1e3 else f"{dist} B")
+        sz = (f"{p['sizeMB']/1000:.1f} GB" if p["sizeMB"] >= 1000 else f"{p['sizeMB']:.1f} MB")
+        rows.append([p["cat"], p["name"], f"{p['entropy']:.2f}",
+                     f"{p['coverage']*100:.0f}%", ds, sz,
+                     f"{p['K']:.2f}" if p.get("K") is not None else "—",
+                     "scored" if p.get("scored") else "diagnostic"])
+    h = "<tr>" + "".join(f"<th>{esc(c)}</th>" for c in head) + "</tr>"
+    body = "".join("<tr>" + "".join(f"<td>{esc(c)}</td>" for c in r) + "</tr>" for r in rows)
+    return f'<table class="coverage"><thead>{h}</thead><tbody>{body}</tbody></table>'
+
+
 def scale_what(name: str) -> str:
     n = name.lower()
     if "135m" in n:
@@ -327,7 +347,8 @@ def main() -> int:
     import shutil
     shutil.copyfile(ASSETS / "squishy-cube.js", OUT / "squishy-cube.js")
 
-    page = TEMPLATE.format(lbhead=lbhead, lb=lb, cards=cards, n=n, ntools=len(tools))
+    page = TEMPLATE.format(lbhead=lbhead, lb=lb, cards=cards, n=n, ntools=len(tools),
+                           coverage_table=coverage_table(cube))
     page = page.replace("/*CUBE_DATA*/", json.dumps(cube, separators=(",", ":")))
     (OUT / "index.html").write_text(page)
     print(f"wrote {OUT/'index.html'} ({len(page):,} bytes); "
@@ -386,16 +407,37 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .flag{{color:#999;font-size:.85em}} .lbwrap{{max-height:340px;overflow:auto;border:1px solid #ddd;border-radius:8px}}
  .lede{{font-size:1.12rem;line-height:1.6;color:#333;max-width:46rem}}
  .tag{{font-size:1.15rem;color:#555;margin:.1em 0 .8em}}
- .cube-wrap{{position:relative;margin:1.2rem 0 .4rem;border-radius:14px;overflow:hidden;
-   box-shadow:0 8px 40px rgba(10,12,20,.35);background:#0a0c11}}
- canvas#cube{{display:block;width:100%;height:560px;cursor:grab;touch-action:none}}
+ .hero{{margin:.6rem 0 1.6rem}}
+ .hero .cap{{max-width:46rem}}
+ .cube-wrap{{position:relative;margin:.7rem 0 .5rem;border-radius:14px;overflow:hidden;
+   box-shadow:0 10px 48px rgba(10,12,20,.4);background:#0a0c11;border:1px solid #1a1f2b}}
+ canvas#cube{{display:block;width:100%;height:min(64vh,600px);min-height:380px;cursor:grab;
+   touch-action:none;outline:none}}
  canvas#cube:active{{cursor:grabbing}}
- .tip{{position:absolute;display:none;pointer-events:none;background:rgba(12,15,22,.96);color:#e8ecf2;
-   border:1px solid #2a3140;border-radius:8px;padding:.45rem .6rem;font-size:.8rem;max-width:18rem;z-index:5}}
- .legend{{display:flex;flex-wrap:wrap;gap:.4rem 1rem;margin:.4rem 0 0;font-size:.85rem;color:#444}}
- .legend .lg{{display:inline-flex;align-items:center;gap:.35rem}}
- .legend i{{width:.7rem;height:.7rem;border-radius:50%;display:inline-block}}
+ canvas#cube:focus-visible{{box-shadow:inset 0 0 0 2px #9cd2ff}}
+ .cube-bar{{position:absolute;top:.55rem;right:.55rem;display:flex;gap:.35rem;z-index:6}}
+ .cube-bar button{{cursor:pointer;border:1px solid #2a3140;background:rgba(18,22,30,.82);
+   color:#cfe3f5;border-radius:7px;padding:.22rem .55rem;font:500 .78rem ui-monospace,Menlo,monospace;
+   backdrop-filter:blur(4px)}}
+ .cube-bar button:hover{{background:rgba(33,38,45,.92)}}
+ .tip{{position:absolute;display:none;pointer-events:none;background:rgba(12,15,22,.97);color:#e8ecf2;
+   border:1px solid #2a3140;border-radius:8px;padding:.5rem .65rem;font-size:.8rem;line-height:1.5;
+   max-width:20rem;z-index:7;box-shadow:0 6px 22px rgba(0,0,0,.4)}}
+ .tip b{{color:#fff;font-weight:600}}
+ .legend{{display:flex;flex-wrap:wrap;gap:.4rem 1.1rem;margin:.5rem 0 0;font-size:.85rem;color:#444}}
+ .legend .lg{{display:inline-flex;align-items:center;gap:.4rem}}
+ .legend i{{width:.72rem;height:.72rem;border-radius:50%;display:inline-block}}
+ .legend i.ring{{background:transparent;border:1.5px dashed #cc79a7;box-sizing:border-box}}
  .hint{{color:#888;font-size:.82rem}}
+ .sr-only{{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+   clip:rect(0,0,0,0);white-space:nowrap;border:0}}
+ details.fallback{{margin:.6rem 0 0}} details.fallback>summary{{color:#666;font-size:.85rem;cursor:pointer}}
+ table.coverage{{border-collapse:collapse;width:100%;font-size:.8rem;margin-top:.5rem}}
+ table.coverage th,table.coverage td{{border-bottom:1px solid #e2e2e2;padding:.25rem .5rem;
+   text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}}
+ table.coverage th{{background:#f2f2f2;text-align:right}}
+ table.coverage td:first-child,table.coverage th:first-child,
+ table.coverage td:nth-child(2),table.coverage th:nth-child(2){{text-align:left}}
 </style></head><body>
 <div class="sitehead">
   <span class="headcmd"><code id="headcmd-text"><span class="lead-uv">uv run </span>squishy-calculate --cmd "<span class="codec" id="codec">zstd -19 -c</span>"</code><button class="copyb" id="copyb" title="copy command">copy</button></span>
@@ -408,6 +450,33 @@ genomes, tables, images, binaries — picked to cover the range of things people
 compress, from a few megabytes to several gigabytes. Run your tool over it and you get a
 single <b>Squishy Score</b> you can cite and compare. It's the 2026 <span class="deftip" tabindex="0">successor<span class="pop">Every file is real and <b>freely redistributable</b> — public-domain or permissively licensed — with its source URL and SHA-256 published. So you can download, ship, cite, and freeze Squishy without licensing worry. (Silesia's files were gathered decades ago without clear licenses, which makes it awkward to redistribute today.)</span></span> to the <a href="https://sun.aei.polsl.pl/~sdeor/index.php?page=silesia">Silesia</a> corpus.</p>
 
+<section class="hero" aria-labelledby="coverage-h">
+<h2 id="coverage-h">The shape of the corpus</h2>
+<div class="cube-wrap">
+  <canvas id="cube" tabindex="0" role="img"
+    aria-label="3D scatter plot of the Squishy corpus. Each file is placed by its byte properties: entropy, repeat coverage, and match distance. A full data table is below.">
+  </canvas>
+  <div class="cube-bar">
+    <button id="cube-reset" type="button" title="reset the view">reset</button>
+  </div>
+  <div class="tip" id="cubetip" role="status"></div>
+</div>
+<div class="legend" id="cubelegend"></div>
+<p class="cap"><b>Each dot is a real file, placed by the shape of its bytes — and the set
+deliberately spans the space.</b> Position comes only from properties of the bytes
+themselves, never from how any compressor performs: <b>how random</b> they look (entropy),
+<b>how much exactly repeats</b> (coverage), and <b>how far back the repeats sit</b> (match
+distance); <b>dot area = file size</b>. The translucent wall is the <b>compressibility gate</b>:
+files on the near side are <b>scored</b>; the near-random media behind it (photo, movie, model
+weights) are kept as <b>diagnostics</b>, drawn hollow. The files are sparse — not a dense grid —
+but spread across the dimensions where compressors are known to differ.
+<span class="hint">Drag to rotate · scroll to zoom · hover a dot for detail · keyboard: arrows rotate, +/- zoom, 0 resets, Enter cycles dots.</span></p>
+<p id="cube-status" class="sr-only" role="status" aria-live="polite"></p>
+<details class="fallback"><summary>View the data as a table (no 3D required)</summary>
+{coverage_table}
+</details>
+</section>
+
 <h2>Score your tool</h2>
 <p>One command. Hand it your compressor as a plain <code>stdin&nbsp;→&nbsp;stdout</code> command —
 it streams the corpus, runs your tool over every file, and prints your score:</p>
@@ -416,17 +485,6 @@ it streams the corpus, runs your tool over every file, and prints your score:</p
 or your own <code>--cmd "./mytool -c"</code>. Add <code>--verify --decompress "zstd -dc"</code> to
 prove it's lossless; use <code>--cmd "mytool -o {{out}} {{in}}"</code> for tools that read/write files
 instead of pipes. It caches as it goes, so re-runs are instant.</p>
-
-<h2>The coverage map</h2>
-<div class="cube-wrap"><canvas id="cube"></canvas><div class="tip" id="cubetip"></div></div>
-<div class="legend" id="cubelegend"></div>
-<p class="cap">Each dot is one artifact, placed by properties of its <em>bytes</em> — measured
-directly, never from how a compressor performs: <b>how random</b> (entropy), <b>how
-repetitive</b>, and <b>how far back the repeats sit</b> (local vs long-range); <b>dot size =
-file size</b>. The files are <b>sparse — not a dense grid — but representative of the whole</b>;
-these are the dimensions along which compressors are known to behave differently, so spanning
-them is a principled reason each file is here (they describe coverage, they don't predict a
-ratio). <span class="hint">Drag to rotate · scroll to zoom · hover for detail.</span></p>
 
 <h2>Reference board — draft (partial)</h2>
 <div class="lbwrap"><table class="lead" id="lead"><thead><tr>{lbhead}</tr></thead><tbody>{lb}</tbody></table></div>
@@ -442,7 +500,8 @@ rungs are pending, so this is <b>not yet a Squishy Score</b>. Click a column to 
 // mount the 3D cube from the inlined live data
 if (window.SquishyCube && window.CUBE_DATA) SquishyCube.mount(
   document.getElementById('cube'), window.CUBE_DATA,
-  {{legendEl: document.getElementById('cubelegend'), tooltipEl: document.getElementById('cubetip')}});
+  {{legendEl: document.getElementById('cubelegend'), tooltipEl: document.getElementById('cubetip'),
+    resetEl: document.getElementById('cube-reset'), statusEl: document.getElementById('cube-status')}});
 // click-to-sort leaderboard (scales to many rows/versions)
 document.querySelectorAll('#lead th').forEach((th,i)=>th.onclick=()=>{{
   const tb=document.querySelector('#lead tbody'),rows=[...tb.rows];
