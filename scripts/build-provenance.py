@@ -399,7 +399,7 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <p class="lede">Squishy is a fixed set of real, freely-shareable files — prose, code, logs,
 genomes, tables, images, binaries — picked to cover the range of things people actually
 compress, from a few megabytes to several gigabytes. Run your tool over it and you get a
-single <b>Squishy Score</b> you can cite and compare. It's the 2026 successor to Silesia.</p>
+single <b>Squishy Score</b> you can cite and compare. It includes much of the 2003 Silesia corpus.</p>
 
 <h2>Score your tool</h2>
 <p>One command. Hand it your compressor as a plain <code>stdin&nbsp;→&nbsp;stdout</code> command —
