@@ -535,6 +535,8 @@ def main() -> None:
         "manifest.safe.json", "manifest.safe.txt",
         # P8 new file
         "decode-expectations.json",
+        # Squishy Score board (draft; datasets not yet locked for 1.0.0)
+        "squishy-scores.json",
     ]
     # Optional meta files (publish only if they exist)
     optional_meta = ["AGENTS.md", "agent.json", "robots.txt", "llms.txt", "smoke.zip"]

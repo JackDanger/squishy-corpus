@@ -771,3 +771,26 @@ v4: v4-bench-balanced
 # Run test suite
 v4-test:
 	@uv run pytest tests/ -q
+
+# ─── Squishy Score (the 2026 corpus + citable score) ─────────────────────────
+.PHONY: score board site validate audit pii freeze
+score board:
+	@uv run squishy board
+site:
+	@uv run python scripts/build-site.py
+validate:
+	@uv run python scripts/validate-core.py
+audit:
+	@uv run python scripts/audit-distribution.py --prefix draft
+pii:
+	@uv run python scripts/pii-scan.py
+freeze:
+	@echo "OWNER (irreversible, after counsel sign-off):"
+	@echo "  $(AWS_VAULT) bash scripts/freeze.sh $(S3_BUCKET) --confirm"
+	@echo "  ZENODO_TOKEN=<fresh> uv run python scripts/zenodo-deposit.py"
+
+# Stream the published corpus and compute a Squishy Score for any codec:
+#   make calculate CMD="zstd -19 -c"
+#   make calculate CMD="xz -9 -c" VERIFY="--verify --decompress 'xz -dc'"
+calculate:
+	uv run python scripts/squishy-calculate.py --cmd "$(CMD)" $(VERIFY)

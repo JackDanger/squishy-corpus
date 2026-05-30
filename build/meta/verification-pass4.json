@@ -1,0 +1,257 @@
+{
+  "method": "independent stdlib re-score (zlib/bz2/lzma) vs the pinned-CLI board",
+  "tolerance_pct": 2.0,
+  "worst_delta_pct": 0.05,
+  "all_agree": true,
+  "codecs": {
+    "gzip -9": {
+      "stdlib_squishy": 3.26,
+      "cli_squishy": 3.26,
+      "worst_file_delta_pct": 0.05,
+      "agrees": true,
+      "per_file": {
+        "dickens": {
+          "stdlib_ratio": 2.6871,
+          "cli_ratio": 2.687,
+          "delta_pct": 0.0
+        },
+        "aozora": {
+          "stdlib_ratio": 3.0019,
+          "cli_ratio": 3.002,
+          "delta_pct": 0.0
+        },
+        "monorepo": {
+          "stdlib_ratio": 5.1836,
+          "cli_ratio": 5.184,
+          "delta_pct": 0.01
+        },
+        "minjs": {
+          "stdlib_ratio": 3.314,
+          "cli_ratio": 3.314,
+          "delta_pct": 0.0
+        },
+        "markup": {
+          "stdlib_ratio": 3.7115,
+          "cli_ratio": 3.711,
+          "delta_pct": 0.01
+        },
+        "json": {
+          "stdlib_ratio": 9.4878,
+          "cli_ratio": 9.488,
+          "delta_pct": 0.0
+        },
+        "log": {
+          "stdlib_ratio": 10.4024,
+          "cli_ratio": 10.402,
+          "delta_pct": 0.0
+        },
+        "genome": {
+          "stdlib_ratio": 5.9709,
+          "cli_ratio": 5.971,
+          "delta_pct": 0.0
+        },
+        "csv": {
+          "stdlib_ratio": 7.9555,
+          "cli_ratio": 7.956,
+          "delta_pct": 0.01
+        },
+        "parquet": {
+          "stdlib_ratio": 1.6758,
+          "cli_ratio": 1.676,
+          "delta_pct": 0.01
+        },
+        "sqlite": {
+          "stdlib_ratio": 3.7544,
+          "cli_ratio": 3.754,
+          "delta_pct": 0.01
+        },
+        "exe": {
+          "stdlib_ratio": 2.999,
+          "cli_ratio": 2.999,
+          "delta_pct": 0.0
+        },
+        "photo": {
+          "stdlib_ratio": 1.0033,
+          "cli_ratio": 1.003,
+          "delta_pct": 0.03
+        },
+        "movie": {
+          "stdlib_ratio": 1.0025,
+          "cli_ratio": 1.003,
+          "delta_pct": 0.05
+        },
+        "weights": {
+          "stdlib_ratio": 1.0927,
+          "cli_ratio": 1.093,
+          "delta_pct": 0.03
+        }
+      }
+    },
+    "bzip2 -9": {
+      "stdlib_squishy": 4.008,
+      "cli_squishy": 4.008,
+      "worst_file_delta_pct": 0.04,
+      "agrees": true,
+      "per_file": {
+        "dickens": {
+          "stdlib_ratio": 3.7285,
+          "cli_ratio": 3.729,
+          "delta_pct": 0.01
+        },
+        "aozora": {
+          "stdlib_ratio": 4.3364,
+          "cli_ratio": 4.336,
+          "delta_pct": 0.01
+        },
+        "monorepo": {
+          "stdlib_ratio": 6.8023,
+          "cli_ratio": 6.802,
+          "delta_pct": 0.0
+        },
+        "minjs": {
+          "stdlib_ratio": 3.811,
+          "cli_ratio": 3.811,
+          "delta_pct": 0.0
+        },
+        "markup": {
+          "stdlib_ratio": 5.3631,
+          "cli_ratio": 5.363,
+          "delta_pct": 0.0
+        },
+        "json": {
+          "stdlib_ratio": 14.8288,
+          "cli_ratio": 14.829,
+          "delta_pct": 0.0
+        },
+        "log": {
+          "stdlib_ratio": 16.9658,
+          "cli_ratio": 16.966,
+          "delta_pct": 0.0
+        },
+        "genome": {
+          "stdlib_ratio": 7.2448,
+          "cli_ratio": 7.245,
+          "delta_pct": 0.0
+        },
+        "csv": {
+          "stdlib_ratio": 9.6857,
+          "cli_ratio": 9.686,
+          "delta_pct": 0.0
+        },
+        "parquet": {
+          "stdlib_ratio": 1.6607,
+          "cli_ratio": 1.661,
+          "delta_pct": 0.02
+        },
+        "sqlite": {
+          "stdlib_ratio": 4.7283,
+          "cli_ratio": 4.728,
+          "delta_pct": 0.01
+        },
+        "exe": {
+          "stdlib_ratio": 3.2377,
+          "cli_ratio": 3.238,
+          "delta_pct": 0.01
+        },
+        "photo": {
+          "stdlib_ratio": 1.0215,
+          "cli_ratio": 1.021,
+          "delta_pct": 0.04
+        },
+        "movie": {
+          "stdlib_ratio": 1.0012,
+          "cli_ratio": 1.001,
+          "delta_pct": 0.02
+        },
+        "weights": {
+          "stdlib_ratio": 1.0712,
+          "cli_ratio": 1.071,
+          "delta_pct": 0.02
+        }
+      }
+    },
+    "xz -9": {
+      "stdlib_squishy": 4.384,
+      "cli_squishy": 4.384,
+      "worst_file_delta_pct": 0.03,
+      "agrees": true,
+      "per_file": {
+        "dickens": {
+          "stdlib_ratio": 3.6643,
+          "cli_ratio": 3.664,
+          "delta_pct": 0.01
+        },
+        "aozora": {
+          "stdlib_ratio": 4.6924,
+          "cli_ratio": 4.692,
+          "delta_pct": 0.01
+        },
+        "monorepo": {
+          "stdlib_ratio": 7.5388,
+          "cli_ratio": 7.539,
+          "delta_pct": 0.0
+        },
+        "minjs": {
+          "stdlib_ratio": 4.2572,
+          "cli_ratio": 4.257,
+          "delta_pct": 0.0
+        },
+        "markup": {
+          "stdlib_ratio": 4.828,
+          "cli_ratio": 4.828,
+          "delta_pct": 0.0
+        },
+        "json": {
+          "stdlib_ratio": 12.8247,
+          "cli_ratio": 12.825,
+          "delta_pct": 0.0
+        },
+        "log": {
+          "stdlib_ratio": 14.9999,
+          "cli_ratio": 15.0,
+          "delta_pct": 0.0
+        },
+        "genome": {
+          "stdlib_ratio": 8.775,
+          "cli_ratio": 8.775,
+          "delta_pct": 0.0
+        },
+        "csv": {
+          "stdlib_ratio": 13.543,
+          "cli_ratio": 13.543,
+          "delta_pct": 0.0
+        },
+        "parquet": {
+          "stdlib_ratio": 1.9555,
+          "cli_ratio": 1.956,
+          "delta_pct": 0.02
+        },
+        "sqlite": {
+          "stdlib_ratio": 7.5649,
+          "cli_ratio": 7.565,
+          "delta_pct": 0.0
+        },
+        "exe": {
+          "stdlib_ratio": 4.1514,
+          "cli_ratio": 4.151,
+          "delta_pct": 0.01
+        },
+        "photo": {
+          "stdlib_ratio": 1.0103,
+          "cli_ratio": 1.01,
+          "delta_pct": 0.03
+        },
+        "movie": {
+          "stdlib_ratio": 1.005,
+          "cli_ratio": 1.005,
+          "delta_pct": 0.0
+        },
+        "weights": {
+          "stdlib_ratio": 1.1178,
+          "cli_ratio": 1.118,
+          "delta_pct": 0.01
+        }
+      }
+    }
+  }
+}

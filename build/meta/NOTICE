@@ -1,0 +1,44 @@
+Squishy-2026 — attribution & license notices for the named core.
+See LICENSE-MANIFEST.csv for per-file source URLs and SHA-256, and LICENSES/ for
+full license texts. This NOTICE discharges the attribution obligations below.
+
+dickens   — Works of Charles Dickens (public domain). Derived from Project
+            Gutenberg etexts with ALL Project Gutenberg references/trademark and
+            the "Small Print" boilerplate removed (per PG policy this leaves an
+            unrestricted public-domain text). Not the Project Gutenberg edition.
+aozora    — Works of Natsume Sōseki (1867–1916), public domain. Sourced from
+            Aozora Bunko (aozora.gr.jp); ruby markup stripped to plain UTF-8.
+markup    — XML: Jon Bosak's Shakespeare (shaks200), freely distributable
+            (ibiblio.org/bosak).
+monorepo  — LLVM/clang 19.1.0 source (lib/). Apache-2.0 WITH LLVM-exception.
+            Full license: LICENSES/LLVM-LICENSE.TXT (also inside monorepo.tar).
+minjs     — Plotly.js v2.27.0 (MIT, © 2016–2024 Plotly Technologies Inc.).
+            Bundled-dependency notices: LICENSES/plotly-2.27.0.LICENSE.txt.
+log       — NASA-HTTP web log, July 1995. Lawrence Berkeley Lab Internet Traffic
+            Archive; "may be freely redistributed." Collected by Jim Dumoulin
+            (NASA KSC), contributed by M. Arlitt & C. Williamson (U. Saskatchewan).
+genome    — E. coli BW4030 resequencing reads, ENA/DDBJ run DRR002013 (study
+            DRP000589, submitter: Nankai University). INSDC free & unrestricted.
+csv       — NOAA GHCN-Daily (Global Historical Climatology Network–Daily),
+            year 2024 observations. U.S. Government work — public domain
+            (NOAA/NCEI). A header row was added; truncated at a line boundary.
+parquet   — NYC Taxi & Limousine Commission, Yellow Taxi trip records 2024-01,
+            via NYC Open Data. These are factual trip records — uncopyrightable
+            facts under Feist v. Rural Telephone; NYC asserts no copyright and we
+            redistribute the public data as-is (no rights asserted, no warranty).
+            Zone-level schema; no driver/rider PII. Re-encoded as uncompressed
+            Parquet.
+sqlite    — USDA FoodData Central, SR Legacy (2018-04). U.S. Government work —
+            public domain (USDA). Loaded into a multi-table SQLite database with
+            join-key indexes; PRAGMA integrity_check = ok.
+photo     — "The Blue Marble", NASA, Apollo 17 (AS17-148-22727). Public domain
+            (PD-USGov-NASA).
+movie     — "Big Buck Bunny" © copyright 2008, Blender Foundation /
+            www.bigbuckbunny.org. Licensed under CC-BY 3.0
+            (https://creativecommons.org/licenses/by/3.0/). This corpus includes a
+            trimmed/transcoded 120-second excerpt (modified from the original).
+weights   — sentence-transformers/all-MiniLM-L6-v2 (Apache-2.0). License text:
+            LICENSES/Apache-2.0.txt. (Weights as released; training-data
+            provenance not warranted.)
+json      — USGS earthquake catalog (M4.5+, 2010–2024), U.S. Geological Survey.
+            Public domain (U.S. Government work).

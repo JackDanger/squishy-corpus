@@ -1,0 +1,24 @@
+# squishy/tools.lock — tool versions used to produce this corpus
+# generated 2026-05-25T05:12:33Z
+gzip         /usr/bin/gzip Apple gzip 479
+bzip2        /usr/bin/bzip2 bzip2, a block-sorting file compressor.  Version 1.0.8, 13-Jul-2019.
+xz           /opt/homebrew/bin/xz xz (XZ Utils) 5.8.3
+zstd         /opt/homebrew/bin/zstd *** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***
+lz4          /opt/homebrew/bin/lz4 *** lz4 v1.10.0 64-bit multithread, by Yann Collet ***
+brotli       /opt/homebrew/bin/brotli brotli 1.2.0
+lzip         /opt/homebrew/bin/lzip lzip 1.26
+lzop         /opt/homebrew/bin/lzop lzop 1.04
+lzma         /opt/homebrew/bin/lzma xz (XZ Utils) 5.8.3
+zpaq         /opt/homebrew/bin/zpaq zpaq v7.15 journaling archiver, compiled Aug 17 2016
+7z           MISSING
+7zz          /opt/homebrew/bin/7zz 
+zip          /usr/bin/zip Copyright (c) 1990-2008 Info-ZIP - Type 'zip "-L"' for software license.
+cpio         /usr/bin/cpio bsdcpio 3.5.3 - libarchive 3.7.4 zlib/1.2.12 liblzma/5.4.3 bz2lib/1.0.8 
+ar           /opt/homebrew/opt/binutils/bin/ar GNU ar (GNU Binutils) 2.46.0.20260210
+mksquashfs   /opt/homebrew/bin/mksquashfs mksquashfs version 4.7.5 (2026/03/01)
+compress     /usr/bin/compress /usr/bin/compress: illegal option -- -
+gtar         /opt/homebrew/bin/gtar tar (GNU tar) 1.35
+tar          /usr/bin/tar bsdtar 3.5.3 - libarchive 3.7.4 zlib/1.2.12 liblzma/5.4.3 bz2lib/1.0.8 
+python3      /opt/homebrew/bin/python3 Python 3.14.4
+curl         /usr/bin/curl curl 8.7.1 (x86_64-apple-darwin25.0) libcurl/8.7.1 (SecureTransport) LibreSSL/3.3.6 zlib/1.2.12 nghttp2/1.68.0
+aws          /opt/homebrew/bin/aws aws-cli/2.34.45 Python/3.14.4 Darwin/25.4.0 source/arm64

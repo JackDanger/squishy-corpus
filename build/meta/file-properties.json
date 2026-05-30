@@ -1,0 +1,156 @@
+{
+  "block_bytes": 16,
+  "note": "intrinsic byte properties; measured from bytes only, no compressor involved",
+  "files": {
+    "dickens": {
+      "size": 12174519,
+      "entropy": 4.646,
+      "coverage": 0.0228,
+      "match_distance": 859936,
+      "match_distance_p90": 6753120,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Prose"
+    },
+    "aozora": {
+      "size": 12003648,
+      "entropy": 4.804,
+      "coverage": 0.1027,
+      "match_distance": 1089640,
+      "match_distance_p90": 5661721,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Prose"
+    },
+    "monorepo": {
+      "size": 50915328,
+      "entropy": 5.151,
+      "coverage": 0.34,
+      "match_distance": 20384,
+      "match_distance_p90": 6352657,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Code & Web"
+    },
+    "minjs": {
+      "size": 3598158,
+      "entropy": 5.47,
+      "coverage": 0.0948,
+      "match_distance": 33200,
+      "match_distance_p90": 676544,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Code & Web"
+    },
+    "markup": {
+      "size": 7974912,
+      "entropy": 5.22,
+      "coverage": 0.3414,
+      "match_distance": 14000,
+      "match_distance_p90": 1172067,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Code & Web"
+    },
+    "json": {
+      "size": 14215394,
+      "entropy": 5.053,
+      "coverage": 0.6988,
+      "match_distance": 12112,
+      "match_distance_p90": 434972,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Structured"
+    },
+    "log": {
+      "size": 26214398,
+      "entropy": 5.22,
+      "coverage": 0.7266,
+      "match_distance": 20768,
+      "match_distance_p90": 1485496,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Structured"
+    },
+    "genome": {
+      "size": 26214271,
+      "entropy": 3.281,
+      "coverage": 0.4896,
+      "match_distance": 16,
+      "match_distance_p90": 12816,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Structured"
+    },
+    "csv": {
+      "size": 26500039,
+      "entropy": 4.025,
+      "coverage": 0.5689,
+      "match_distance": 151584,
+      "match_distance_p90": 7588704,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Tabular / DB"
+    },
+    "parquet": {
+      "size": 20859349,
+      "entropy": 7.467,
+      "coverage": 0.0784,
+      "match_distance": 293120,
+      "match_distance_p90": 801120,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Tabular / DB"
+    },
+    "sqlite": {
+      "size": 48308224,
+      "entropy": 5.626,
+      "coverage": 0.0891,
+      "match_distance": 4096,
+      "match_distance_p90": 94416,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Tabular / DB"
+    },
+    "exe": {
+      "size": 62480352,
+      "entropy": 6.351,
+      "coverage": 0.2608,
+      "match_distance": 2672,
+      "match_distance_p90": 582272,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Binary & Media"
+    },
+    "photo": {
+      "size": 6511067,
+      "entropy": 7.954,
+      "coverage": 0.0007,
+      "match_distance": 16,
+      "match_distance_p90": 1616,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Binary & Media"
+    },
+    "movie": {
+      "size": 12942257,
+      "entropy": 7.976,
+      "coverage": 0.0,
+      "match_distance": 24704,
+      "match_distance_p90": 729049,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Binary & Media"
+    },
+    "weights": {
+      "size": 90868376,
+      "entropy": 7.355,
+      "coverage": 0.0001,
+      "match_distance": 224,
+      "match_distance_p90": 4331,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Binary & Media"
+    }
+  }
+}

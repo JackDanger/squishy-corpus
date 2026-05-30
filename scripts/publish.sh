@@ -87,8 +87,8 @@ while IFS=$'\t' read -r local_path s3_key content_type cache_control; do
   # for transparent multipart on large files; --checksum-algorithm is
   # supported there since AWS CLI v2.
   if ! aws s3 cp "$local_path" "s3://$bucket/$s3_key" \
-        --acl public-read \
-        --storage-class ONEZONE_IA \
+        ${S3_ACL:+--acl $S3_ACL} \
+        --storage-class "${S3_STORAGE_CLASS:-STANDARD}" \
         --metadata "sha256=$local_sha" \
         --content-type "$content_type" \
         --cache-control "$cache_control" \

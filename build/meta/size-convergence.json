@@ -1,0 +1,115 @@
+{
+  "codec": "zstd -19 -c",
+  "method": "ratio at full vs first-half size; small drift \u21d2 converged. Only valid for byte-stream formats; structured formats (parquet/sqlite/monorepo) are n/a and need row/member-boundary subsetting.",
+  "threshold_pct": 5.0,
+  "worst_drift_pct": 6.71,
+  "byte_stream_within_threshold": false,
+  "note": "Large byte-stream files converge tightly (\u2264~3.5%); the 3.6 MB minjs is the smallest and drifts most, as expected. Structured files reported n/a.",
+  "per_file": {
+    "dickens": {
+      "size": 12174519,
+      "ratio_full": 3.6293,
+      "ratio_half": 3.5186,
+      "drift_pct": 3.05,
+      "method": "byte-truncation"
+    },
+    "aozora": {
+      "size": 12003648,
+      "ratio_full": 4.5564,
+      "ratio_half": 4.492,
+      "drift_pct": 1.41,
+      "method": "byte-truncation"
+    },
+    "monorepo": {
+      "size": 50915328,
+      "ratio_full": 7.2876,
+      "ratio_half": null,
+      "drift_pct": null,
+      "method": "byte-halving n/a (structured; needs row/member-boundary subset)"
+    },
+    "minjs": {
+      "size": 3598158,
+      "ratio_full": 4.0621,
+      "ratio_half": 3.7894,
+      "drift_pct": 6.71,
+      "method": "byte-truncation"
+    },
+    "markup": {
+      "size": 7974912,
+      "ratio_full": 4.8197,
+      "ratio_half": 4.6509,
+      "drift_pct": 3.5,
+      "method": "byte-truncation"
+    },
+    "json": {
+      "size": 14215394,
+      "ratio_full": 13.2145,
+      "ratio_half": 12.8668,
+      "drift_pct": 2.63,
+      "method": "byte-truncation"
+    },
+    "log": {
+      "size": 26214398,
+      "ratio_full": 15.5624,
+      "ratio_half": 15.5116,
+      "drift_pct": 0.33,
+      "method": "byte-truncation"
+    },
+    "genome": {
+      "size": 26214271,
+      "ratio_full": 7.5203,
+      "ratio_half": 7.3202,
+      "drift_pct": 2.66,
+      "method": "byte-truncation"
+    },
+    "csv": {
+      "size": 26500039,
+      "ratio_full": 12.1974,
+      "ratio_half": 12.4416,
+      "drift_pct": 2.0,
+      "method": "byte-truncation"
+    },
+    "parquet": {
+      "size": 18492464,
+      "ratio_full": 1.7799,
+      "ratio_half": null,
+      "drift_pct": null,
+      "method": "byte-halving n/a (structured; needs row/member-boundary subset)"
+    },
+    "sqlite": {
+      "size": 48308224,
+      "ratio_full": 5.513,
+      "ratio_half": null,
+      "drift_pct": null,
+      "method": "byte-halving n/a (structured; needs row/member-boundary subset)"
+    },
+    "exe": {
+      "size": 62480352,
+      "ratio_full": 3.7597,
+      "ratio_half": 3.7098,
+      "drift_pct": 1.33,
+      "method": "byte-truncation"
+    },
+    "photo": {
+      "size": 6511067,
+      "ratio_full": 1.0144,
+      "ratio_half": 1.0131,
+      "drift_pct": 0.13,
+      "method": "byte-truncation"
+    },
+    "movie": {
+      "size": 12942257,
+      "ratio_full": 1.0064,
+      "ratio_half": 1.0019,
+      "drift_pct": 0.45,
+      "method": "byte-truncation"
+    },
+    "weights": {
+      "size": 90868376,
+      "ratio_full": 1.0954,
+      "ratio_half": 1.103,
+      "drift_pct": 0.69,
+      "method": "byte-truncation"
+    }
+  }
+}

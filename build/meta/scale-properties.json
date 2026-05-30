@@ -1,0 +1,112 @@
+{
+  "files": {
+    "noaa-ghcn-daily-2024-full.csv": {
+      "size": 1331439742,
+      "entropy": 4.067,
+      "coverage": 0.7848,
+      "match_distance": 1548144,
+      "match_distance_p90": 39620304,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Scale tier",
+      "key": "draft/scale/csv/noaa-ghcn-daily-2024-full.csv",
+      "sha256": "70baf8b1fe8298890469202cd5c3859047d6345258b5bc70698214541d59b2b6"
+    },
+    "big-buck-bunny-1080p.mov": {
+      "size": 725106140,
+      "entropy": 7.989,
+      "coverage": 0.0006,
+      "match_distance": 53200,
+      "match_distance_p90": 3874849,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Scale tier",
+      "key": "draft/scale/media/big-buck-bunny-1080p.mov",
+      "sha256": "dc2146a2b1172def56730143ad80cd1825b7fad15f1fc9c23a4e7d01a741ac11"
+    },
+    "ecoli-DRR002013-full.fastq": {
+      "size": 1073389140,
+      "entropy": 3.315,
+      "coverage": 0.667,
+      "match_distance": 1040,
+      "match_distance_p90": 258146816,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Scale tier",
+      "key": "draft/scale/genome/ecoli-DRR002013-full.fastq",
+      "sha256": "ff3de7024de4f45e87d12ff09de6c8d735588c53949a8e819a3685a1f9775ff5"
+    },
+    "enwik9.txt": {
+      "size": 1000000000,
+      "entropy": 5.156,
+      "coverage": 0.3031,
+      "match_distance": 1064272,
+      "match_distance_p90": 251084998,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Scale tier",
+      "key": "draft/scale/text/enwik9.txt",
+      "sha256": "159b85351e5f76e60cbe32e04c677847a9ecba3adc79addab6f4c6c7aa3744bc"
+    },
+    "llvm-project-19.1.0.src.tar": {
+      "size": 1772216320,
+      "entropy": 5.69,
+      "coverage": 0.6756,
+      "match_distance": 9776,
+      "match_distance_p90": 4673131,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Scale tier",
+      "key": "draft/scale/monorepo/llvm-project-19.1.0.src.tar",
+      "sha256": "bb4ae7add97894e6e576a17351100bbd511c886e334d48e8333e1417d2547688"
+    },
+    "nasa-http-jul-aug-1995.log": {
+      "size": 373056138,
+      "entropy": 5.235,
+      "coverage": 0.8348,
+      "match_distance": 36720,
+      "match_distance_p90": 17611148,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Scale tier",
+      "key": "draft/scale/log/nasa-http-jul-aug-1995.log",
+      "sha256": "35c38d9465a8ed277f0c52650203f41bf14afd570a66485a9941a78db236c826"
+    },
+    "noaa-ghcn-daily-2021-2023.csv": {
+      "size": 4069135443,
+      "entropy": 4.049,
+      "coverage": 0.8036,
+      "match_distance": 2939936,
+      "match_distance_p90": 52128816,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Scale tier",
+      "key": "draft/scale/csv/noaa-ghcn-daily-2021-2023.csv",
+      "sha256": "9111537b27d9ed83e55a5e03ee9d9eb7c91f0c322002e258e507aa22453195ba"
+    },
+    "clang-releases-16-17-18-19.tar": {
+      "size": 1504071680,
+      "entropy": 5.6,
+      "coverage": 0.8704,
+      "match_distance": 20832,
+      "match_distance_p90": 379105008,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Scale tier",
+      "key": "draft/scale/archive/clang-releases-16-17-18-19.tar",
+      "sha256": "e8518848a41185c71707036b03ccfae8df874f0dcc0f270324961f7e06c28f39"
+    },
+    "bts-ontime-2022-2024.parquet": {
+      "size": 772265623,
+      "entropy": 7.485,
+      "coverage": 0.0786,
+      "match_distance": 226720,
+      "match_distance_p90": 3567232,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Scale tier",
+      "key": "draft/scale/columnar/bts-ontime-2022-2024.parquet",
+      "sha256": "acb6eeb73e9c44496cb4dcfee5db7c88d0914d1a6d9687ad46df8f3612b0d8f1"
+    }
+  }
+}

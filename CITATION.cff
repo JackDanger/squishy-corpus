@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use Squishy, please cite the edition you ran against."
+title: "Squishy: a curated 2026 compression benchmark corpus and score"
+abstract: >-
+  Squishy is a successor to the Silesia corpus: one curated set of real,
+  redistributable files spanning kinds and sizes, plus a single citable headline
+  metric — the Squishy Score, a category-balanced (nested size→kind→category)
+  geometric mean of per-file compression ratios over the whole corpus, reported
+  with a byte-weighted corpus bits-per-byte. Editions are versioned and dated;
+  each is frozen and assigned a DOI.
+type: dataset
+authors:
+  - family-names: Danger
+    given-names: Jack
+version: "Squishy-2026"
+# TODO(freeze): set date-released to the actual v1.0.0 freeze date.
+date-released: 2026-01-01
+license-url: "https://github.com/JackDanger/squishy-corpus/blob/main/build/meta/LICENSE-MANIFEST.csv"
+url: "https://github.com/JackDanger/squishy-corpus"
+keywords:
+  - compression
+  - benchmark
+  - corpus
+  - data compression
+  - lossless
+# At v1.0.0 freeze, zenodo-deposit.py mints the DOI; fill BOTH lines below with the
+# concrete record so citations resolve to the immutable Zenodo deposit, not the
+# mutable repo (then drop these comments):
+# identifiers:
+#   - type: doi
+#     value: "10.5281/zenodo.XXXXXXX"        # the Squishy-2026 edition record
+#     description: "Squishy-2026 edition (frozen corpus + score)"
+# preferred-citation: use the DOI above; the repo URL is the development source.

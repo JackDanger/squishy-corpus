@@ -124,6 +124,14 @@ def _cmd_invalidate(args: argparse.Namespace, cfg: BuildConfig) -> int:
 # ── entry point ──────────────────────────────────────────────────────────────
 
 def main(argv: list[str] | None = None) -> int:
+    # `squishy bench|board|score ...` → delegate to the Squishy Score runner
+    # (separate from the corpus build pipeline below).
+    _argv = sys.argv[1:] if argv is None else argv
+    if _argv and _argv[0] in ("bench", "board", "score"):
+        from squishy import score
+        sub = "board" if _argv[0] == "score" else _argv[0]
+        return score.main([sub, *_argv[1:]])
+
     parser = _make_parser()
     args = parser.parse_args(argv)
     cfg = BuildConfig.from_args(args)

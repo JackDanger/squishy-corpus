@@ -1,0 +1,389 @@
+{
+  "score_definition": "Squishy Score = category-balanced geomean of per-file ratios (nested size\u2192kind\u2192category; dimensionless, NOT a bit rate). corpus_bpb = byte-weighted 8\u00b7total_out/total_in (operational rate).",
+  "edition": "Squishy-2026-DRAFT",
+  "core_files": 15,
+  "missing": [],
+  "status": "DRAFT \u2014 partial board over the small core members only. The large size rungs are scored in the periodic whole-corpus computation; until then this is NOT a citable Squishy Score. Each row is a property of (corpus, codec, codec_version, codec_command), reproducible for the pinned build.",
+  "panel": {
+    "gzip -9": {
+      "squishy_score": 3.988,
+      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
+      "n_files": 12,
+      "categories": {
+        "Prose": 2.84,
+        "Code & Web": 3.995,
+        "Structured": 8.384,
+        "Tabular / DB": 3.534,
+        "Binary & Media": 2.999
+      },
+      "diagnostic_non_scored": {
+        "photo": 1.003,
+        "movie": 1.003,
+        "weights": 1.093
+      },
+      "per_file": {
+        "dickens": 2.687,
+        "aozora": 3.002,
+        "monorepo": 5.184,
+        "minjs": 3.314,
+        "markup": 3.711,
+        "json": 9.488,
+        "log": 10.402,
+        "genome": 5.971,
+        "csv": 7.956,
+        "parquet": 1.478,
+        "sqlite": 3.754,
+        "exe": 2.999,
+        "photo": 1.003,
+        "movie": 1.003,
+        "weights": 1.093
+      },
+      "bounds": {
+        "modern/random-1M": 1.0
+      },
+      "missing": [],
+      "expansions": [],
+      "total_in_bytes": 422828868,
+      "total_out_bytes": 184746702,
+      "byte_weighted_ratio": 2.289,
+      "corpus_bpb": 3.495,
+      "codec_version": "Apple gzip 479",
+      "codec_command": "gzip -9 -c",
+      "tool_provenance": {
+        "tool": "gzip",
+        "argv": "gzip -9 -c",
+        "version": "Apple gzip 479",
+        "git_sha": null,
+        "release": true,
+        "arch": "Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64e:Mach-O 64-bit executable arm64e]\n/usr/bin/gzip (for architecture "
+      }
+    },
+    "bzip2 -9": {
+      "squishy_score": 5.081,
+      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
+      "n_files": 12,
+      "categories": {
+        "Prose": 4.021,
+        "Code & Web": 5.18,
+        "Structured": 12.215,
+        "Tabular / DB": 4.109,
+        "Binary & Media": 3.238
+      },
+      "diagnostic_non_scored": {
+        "photo": 1.021,
+        "movie": 1.001,
+        "weights": 1.071
+      },
+      "per_file": {
+        "dickens": 3.729,
+        "aozora": 4.336,
+        "monorepo": 6.802,
+        "minjs": 3.811,
+        "markup": 5.363,
+        "json": 14.829,
+        "log": 16.966,
+        "genome": 7.245,
+        "csv": 9.686,
+        "parquet": 1.515,
+        "sqlite": 4.728,
+        "exe": 3.238,
+        "photo": 1.021,
+        "movie": 1.001,
+        "weights": 1.071
+      },
+      "bounds": {
+        "modern/random-1M": 0.995
+      },
+      "missing": [],
+      "expansions": [],
+      "total_in_bytes": 422828868,
+      "total_out_bytes": 173280070,
+      "byte_weighted_ratio": 2.44,
+      "corpus_bpb": 3.278,
+      "codec_version": "bzip2, a block-sorting file compressor.  Version 1.0.8, 13-Jul-2019.",
+      "codec_command": "bzip2 -9 -c",
+      "tool_provenance": {
+        "tool": "bzip2",
+        "argv": "bzip2 -9 -c",
+        "version": "bzip2, a block-sorting file compressor.  Version 1.0.8, 13-Jul-2019.",
+        "git_sha": null,
+        "release": true,
+        "arch": "Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64e:Mach-O 64-bit executable arm64e]\n/usr/bin/bzip2 (for architecture"
+      }
+    },
+    "zstd -19": {
+      "squishy_score": 5.396,
+      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
+      "n_files": 12,
+      "categories": {
+        "Prose": 4.067,
+        "Code & Web": 5.225,
+        "Structured": 11.564,
+        "Tabular / DB": 4.952,
+        "Binary & Media": 3.76
+      },
+      "diagnostic_non_scored": {
+        "photo": 1.014,
+        "movie": 1.006,
+        "weights": 1.095
+      },
+      "per_file": {
+        "dickens": 3.629,
+        "aozora": 4.556,
+        "monorepo": 7.288,
+        "minjs": 4.062,
+        "markup": 4.82,
+        "json": 13.214,
+        "log": 15.562,
+        "genome": 7.52,
+        "csv": 12.197,
+        "parquet": 1.806,
+        "sqlite": 5.513,
+        "exe": 3.76,
+        "photo": 1.014,
+        "movie": 1.006,
+        "weights": 1.095
+      },
+      "bounds": {
+        "modern/random-1M": 1.0
+      },
+      "missing": [],
+      "expansions": [],
+      "total_in_bytes": 422828868,
+      "total_out_bytes": 164143477,
+      "byte_weighted_ratio": 2.576,
+      "corpus_bpb": 3.106,
+      "codec_version": "*** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***",
+      "codec_command": "zstd -19 -c",
+      "tool_provenance": {
+        "tool": "zstd",
+        "argv": "zstd -19 -c",
+        "version": "*** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***",
+        "git_sha": null,
+        "release": true,
+        "arch": "Mach-O 64-bit executable arm64"
+      }
+    },
+    "zstd -22": {
+      "squishy_score": 5.465,
+      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
+      "n_files": 12,
+      "categories": {
+        "Prose": 4.1,
+        "Code & Web": 5.269,
+        "Structured": 11.959,
+        "Tabular / DB": 4.987,
+        "Binary & Media": 3.784
+      },
+      "diagnostic_non_scored": {
+        "photo": 1.014,
+        "movie": 1.006,
+        "weights": 1.096
+      },
+      "per_file": {
+        "dickens": 3.634,
+        "aozora": 4.625,
+        "monorepo": 7.472,
+        "minjs": 4.062,
+        "markup": 4.82,
+        "json": 13.23,
+        "log": 15.713,
+        "genome": 8.228,
+        "csv": 12.448,
+        "parquet": 1.806,
+        "sqlite": 5.517,
+        "exe": 3.784,
+        "photo": 1.014,
+        "movie": 1.006,
+        "weights": 1.096
+      },
+      "bounds": {
+        "modern/random-1M": 1.0
+      },
+      "missing": [],
+      "expansions": [],
+      "total_in_bytes": 422828868,
+      "total_out_bytes": 163443692,
+      "byte_weighted_ratio": 2.587,
+      "corpus_bpb": 3.092,
+      "codec_version": "*** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***",
+      "codec_command": "zstd --ultra -22 -c",
+      "tool_provenance": {
+        "tool": "zstd",
+        "argv": "zstd --ultra -22 -c",
+        "version": "*** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***",
+        "git_sha": null,
+        "release": true,
+        "arch": "Mach-O 64-bit executable arm64"
+      }
+    },
+    "xz -9": {
+      "squishy_score": 5.756,
+      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
+      "n_files": 12,
+      "categories": {
+        "Prose": 4.147,
+        "Code & Web": 5.371,
+        "Structured": 11.907,
+        "Tabular / DB": 5.74,
+        "Binary & Media": 4.151
+      },
+      "diagnostic_non_scored": {
+        "photo": 1.01,
+        "movie": 1.005,
+        "weights": 1.118
+      },
+      "per_file": {
+        "dickens": 3.664,
+        "aozora": 4.692,
+        "monorepo": 7.539,
+        "minjs": 4.257,
+        "markup": 4.828,
+        "json": 12.825,
+        "log": 15.0,
+        "genome": 8.775,
+        "csv": 13.543,
+        "parquet": 1.846,
+        "sqlite": 7.565,
+        "exe": 4.151,
+        "photo": 1.01,
+        "movie": 1.005,
+        "weights": 1.118
+      },
+      "bounds": {
+        "modern/random-1M": 1.0
+      },
+      "missing": [],
+      "expansions": [],
+      "total_in_bytes": 422828868,
+      "total_out_bytes": 157327516,
+      "byte_weighted_ratio": 2.688,
+      "corpus_bpb": 2.977,
+      "codec_version": "xz (XZ Utils) 5.8.3",
+      "codec_command": "xz -9 -c",
+      "tool_provenance": {
+        "tool": "xz",
+        "argv": "xz -9 -c",
+        "version": "xz (XZ Utils) 5.8.3",
+        "git_sha": null,
+        "release": true,
+        "arch": "Mach-O 64-bit executable arm64"
+      }
+    },
+    "brotli -11": {
+      "squishy_score": 5.691,
+      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
+      "n_files": 12,
+      "categories": {
+        "Prose": 4.111,
+        "Code & Web": 5.397,
+        "Structured": 12.602,
+        "Tabular / DB": 5.323,
+        "Binary & Media": 4.011
+      },
+      "diagnostic_non_scored": {
+        "photo": 1.015,
+        "movie": 1.012,
+        "weights": 1.109
+      },
+      "per_file": {
+        "dickens": 3.658,
+        "aozora": 4.62,
+        "monorepo": 7.521,
+        "minjs": 4.289,
+        "markup": 4.874,
+        "json": 13.904,
+        "log": 16.095,
+        "genome": 8.943,
+        "csv": 13.327,
+        "parquet": 1.866,
+        "sqlite": 6.063,
+        "exe": 4.011,
+        "photo": 1.015,
+        "movie": 1.012,
+        "weights": 1.109
+      },
+      "bounds": {
+        "modern/random-1M": 1.0
+      },
+      "missing": [],
+      "expansions": [],
+      "total_in_bytes": 422828868,
+      "total_out_bytes": 159650996,
+      "byte_weighted_ratio": 2.648,
+      "corpus_bpb": 3.021,
+      "codec_version": "brotli 1.2.0",
+      "codec_command": "brotli -q 11 -c",
+      "tool_provenance": {
+        "tool": "brotli",
+        "argv": "brotli -q 11 -c",
+        "version": "brotli 1.2.0",
+        "git_sha": null,
+        "release": true,
+        "arch": "Mach-O 64-bit executable arm64"
+      }
+    },
+    "zpaq": {
+      "squishy_score": 7.852,
+      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
+      "n_files": 12,
+      "categories": {
+        "Prose": 5.319,
+        "Code & Web": 7.342,
+        "Structured": 19.259,
+        "Tabular / DB": 8.373,
+        "Binary & Media": 4.739
+      },
+      "diagnostic_non_scored": {
+        "photo": 1.056,
+        "movie": 1.018,
+        "weights": 1.225
+      },
+      "per_file": {
+        "dickens": 4.955,
+        "aozora": 5.709,
+        "monorepo": 10.795,
+        "minjs": 5.317,
+        "markup": 6.896,
+        "json": 24.158,
+        "log": 30.673,
+        "genome": 9.64,
+        "csv": 26.107,
+        "parquet": 1.944,
+        "sqlite": 11.567,
+        "exe": 4.739,
+        "photo": 1.056,
+        "movie": 1.018,
+        "weights": 1.225
+      },
+      "bounds": {
+        "modern/random-1M": 0.998
+      },
+      "missing": [],
+      "expansions": [],
+      "total_in_bytes": 422828868,
+      "total_out_bytes": 138490615,
+      "byte_weighted_ratio": 3.053,
+      "corpus_bpb": 2.62,
+      "codec_version": "zpaq v7.15 journaling archiver, compiled Aug 17 2016",
+      "codec_command": "zpaq add {out} {in} -method 5",
+      "tool_provenance": {
+        "tool": "zpaq",
+        "argv": "zpaq add {out} {in} -method 5",
+        "version": "zpaq v7.15 journaling archiver, compiled Aug 17 2016",
+        "git_sha": null,
+        "release": true,
+        "arch": "Mach-O 64-bit executable arm64"
+      }
+    }
+  },
+  "host_provenance": {
+    "platform": "macOS-26.5-arm64-arm-64bit-Mach-O",
+    "system": "Darwin",
+    "release": "25.5.0",
+    "machine": "arm64",
+    "processor": "arm",
+    "python": "3.14.4",
+    "recorded_utc": "2026-05-30T04:21:49Z"
+  }
+}

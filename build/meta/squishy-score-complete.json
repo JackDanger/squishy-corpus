@@ -1,0 +1,72 @@
+{
+  "edition": "Squishy-2026",
+  "note": "First complete-edition Squishy Score \u2014 nested size\u2192kind\u2192category geomean over the 20 compressibility-scored size-points (core + large rungs). Reference codec; the full panel is the periodic computation.",
+  "complete": true,
+  "codec": "zstd -19 -c",
+  "codec_version": "*** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***",
+  "tool_provenance": {
+    "tool": "zstd",
+    "argv": "zstd -19 -c",
+    "version": "*** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***",
+    "git_sha": null,
+    "release": true,
+    "arch": "Mach-O 64-bit executable arm64"
+  },
+  "host_provenance": {
+    "platform": "macOS-26.5-arm64-arm-64bit-Mach-O",
+    "system": "Darwin",
+    "release": "25.5.0",
+    "machine": "arm64",
+    "processor": "arm",
+    "python": "3.14.4",
+    "recorded_utc": "2026-05-30T04:21:49Z"
+  },
+  "squishy_score": 5.81,
+  "corpus_bpb": 1.008,
+  "total_in_bytes": 12207032678,
+  "total_out_bytes": 1537865666,
+  "categories": {
+    "Prose": 4.0666,
+    "Code & Web": 7.4467,
+    "Structured": 11.6499,
+    "Tabular / DB": 5.0038,
+    "Binary & Media": 3.7597
+  },
+  "kinds": {
+    "Prose/dickens": 3.6294,
+    "Prose/aozora": 4.5564,
+    "Code & Web/monorepo": 9.5642,
+    "Code & Web/minjs": 4.0621,
+    "Code & Web/markup": 4.5255,
+    "Code & Web/archive": 17.4899,
+    "Structured/json": 13.2145,
+    "Structured/log": 15.8202,
+    "Structured/genome": 7.5632,
+    "Tabular / DB/csv": 12.4988,
+    "Tabular / DB/parquet": 1.8182,
+    "Tabular / DB/sqlite": 5.513,
+    "Binary & Media/exe": 3.7597
+  },
+  "per_file": {
+    "dickens": 3.62935,
+    "aozora.txt": 4.556439,
+    "monorepo.tar": 7.287617,
+    "llvm-project-19.1.0.src.tar": 12.551911,
+    "minjs.min.js": 4.062071,
+    "markup.xml": 4.819656,
+    "enwik9.txt": 4.249371,
+    "clang-releases-16-17-18-19.tar": 17.489933,
+    "data.json": 13.214452,
+    "access.log": 15.562447,
+    "nasa-http-jul-aug-1995.log": 16.082205,
+    "ecoli.fastq": 7.520303,
+    "ecoli-DRR002013-full.fastq": 7.606404,
+    "data.csv": 12.19738,
+    "noaa-ghcn-daily-2024-full.csv": 12.734254,
+    "noaa-ghcn-daily-2021-2023.csv": 12.570838,
+    "data.parquet": 1.806059,
+    "bts-ontime-2022-2024.parquet": 1.830366,
+    "data.sqlite": 5.512994,
+    "tool.bin": 3.759717
+  }
+}

@@ -15,6 +15,7 @@ dev = ["pytest>=7", "pytest-cov"]
 
 [project.scripts]
 squishy = "squishy.cli:main"
+squishy-calculate = "squishy.calculate:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
