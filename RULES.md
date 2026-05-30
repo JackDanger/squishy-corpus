@@ -50,9 +50,11 @@ the rest is on your honor and is checkable by anyone who re-runs you.
      category.
 5. **The number is versioned, and the tool is provenanced like the data.** A Squishy
    Score is a property of *(codec, setting, codec-version, codec-argv, corpus-edition)*.
-   Every published score records the **exact tool that produced it** — version string,
-   resolved binary path, **binary sha256**, and **target architecture** — plus the
-   **host machine** (OS, CPU architecture). Ratios are byte-deterministic for a given
+   Every published score records the **exact tool that produced it** — its release
+   **version** (or a short **git sha** for a non-release build), the command line, and
+   the **target architecture** — plus the **host machine** (OS, CPU architecture). (The
+   install path and the binary's own sha256 are deliberately NOT recorded: both are
+   host-specific noise that says nothing about which code ran.) Ratios are byte-deterministic for a given
    (version, argv), so scores *should* match across machines; this provenance is what
    lets any future discrepancy be traced precisely, exactly as each dataset carries its
    own sha256. (Recorded automatically in `build/meta/squishy-scores.json` and

@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
-"""squishy — the Squishy Score runner.
+"""squishy — the Squishy Score runner (shared scoring core).
 
-Squishy Score (of a codec) = the geometric mean of per-file compression ratio
-(uncompressed / compressed) over the realistic core.  Reported as "x"; the
-equivalent bits-per-byte (8 / ratio) is shown beside it.  Geometric mean so the
-score is scale-invariant, undominated by the largest file, and dedup-proof.
+Squishy Score (of a codec) = the nested geometric mean (size → kind → category) of
+per-file compression ratio (uncompressed / compressed) over the compressibility-
+scored files. A file is scored iff it sits on the compressible side of the K plane
+(see `is_scored`); entropy-coded media (photo/movie/weights) are measured but kept
+out of the headline as diagnostics. Reported as a dimensionless "×" beside a
+byte-weighted `corpus_bpb` (never derive bpb from the score).
 
-Two ways to run:
+This module is the scoring + provenance library; the canonical whole-edition number
+is produced by `scripts/squishy-calculate.py` (streams core + large rungs). Local:
 
-  # Score a real codec command live (reads stdin -> writes compressed stdout):
+  # Score one codec live over the LOCAL core members (a partial, dev-time board):
   uv run python scripts/squishy.py bench --cmd "gzip -9 -c"
-  uv run python scripts/squishy.py bench --cmd "./gzippy -c"
+  # Reference panel over the local core (writes build/meta/squishy-scores.json):
+  uv run python scripts/board-live.py
 
-  # Score the built-in reference panel from already-built individual/ sizes:
-  uv run python scripts/squishy.py board [--json build/meta/squishy-scores.json]
-
-Canonical run rule: one codec, one setting, all files.  Synthetic/incompressible
-files are NOT in the headline — they appear in a separate Bounds panel.
+Canonical run rule: one codec, one setting, all files. The complete-edition score is
+the periodic computation; a run over a subset prints per-file ratios, not a headline.
 """
 from __future__ import annotations
 
@@ -78,10 +79,10 @@ BOUNDS = [("modern", "random-1M")]  # synthetic/incompressible — never in head
 #     K = coverage + (8 − entropy)/8        (repetition gain + entropy headroom)
 # a file is scored iff K ≥ COMPRESSIBILITY_MIN. Because K ignores match-distance, the
 # boundary is a single flat PLANE in the (entropy × coverage × distance) space — a
-# vertical curtain — that cleanly separates the entropy-coded media (photo, movie,
-# weights; K ≤ 0.08) from everything compressible (nearest scored point: parquet at
-# K = 0.15), with a 0.064-wide margin. Non-scored files stay in the corpus as
-# behaviour/throughput diagnostics; `exe` (K = 0.47) is compressible and IS scored.
+# vertical curtain — that cleanly separates the entropy-coded media (photo/movie/
+# weights, top K ≈ 0.081) from everything compressible (lowest scored point: parquet
+# K ≈ 0.143): the plane at 0.11 sits inside that ≈0.062-wide gap. Non-scored files
+# stay in the corpus as behaviour/throughput diagnostics; `exe` (K ≈ 0.47) is scored.
 # (Owner decision 2026-05-29: a compressibility plane, not a category, gates scoring.)
 CATEGORY_ORDER = ["Prose", "Code & Web", "Structured", "Tabular / DB", "Binary & Media"]
 COMPRESSIBILITY_MIN = 0.11
@@ -305,10 +306,11 @@ def geomean(xs: list[float]) -> float:
 def scored_corpus(edition_path: Path | None = None) -> dict[str, dict[str, list[dict]]]:
     """The scored set, edition-driven (single source of truth) and grouped for the
     nested geomean: {category: {kind: [size-point, ...]}}, size-points sorted small→
-    large. Reads build/meta/edition.json (category/kind/tier/key/url/sha256/size per
-    file) and keeps only the 4 SCORED_CATEGORIES — "Binary & Media" is dropped here so
-    it can never enter the headline. Each kind's list is its size axis (one entry for
-    single-size kinds, several for kinds with large rungs)."""
+    large. Reads build/meta/edition.json (category/kind/tier/key/url/sha256/props per
+    file). ALL five categories are kept; the per-file compressibility plane (is_scored)
+    decides membership — so entropy-coded media (photo/movie/weights) fall out one by
+    one while `exe` stays, and Binary & Media is NOT special-cased. Each kind's list is
+    its size axis (one entry for single-size kinds, several for kinds with large rungs)."""
     path = edition_path or (REPO / "build" / "meta" / "edition.json")
     data = json.loads(path.read_text())
     out: dict[str, dict[str, list[dict]]] = {c: {} for c in CATEGORY_ORDER}
@@ -327,7 +329,8 @@ def nested_score(ratio_of, edition_path: Path | None = None) -> dict:
     """Compute the Squishy Score as the true nested geomean size→kind→category over
     the scored corpus. `ratio_of(size_point)->ratio|None` supplies each file's ratio
     (the caller decides how to obtain it: local bytes, streamed bytes, cached). Equal
-    weight at every level; Binary & Media already excluded by scored_corpus()."""
+    weight at every level; non-compressible files (below the K plane) are already
+    excluded per-file by scored_corpus()."""
     sc = scored_corpus(edition_path)
     cat_scores: dict[str, float] = {}
     kind_scores: dict[str, float] = {}

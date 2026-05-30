@@ -75,7 +75,7 @@ def main() -> int:
     }
     dst = REPO / "build/meta/baseline.json"
     dst.write_text(json.dumps(baseline, indent=2) + "\n")
-    print(f"wrote {dst}: {len(files)} files pinned, edition sha {baseline['edition_json_sha256'][:12]}, "
+    print(f"wrote {dst}: {len(files)} files pinned, scored-set {scored_set_fingerprint[:12]}, "
           f"reference {ref.get('codec')} = {ref.get('squishy_score')}×")
     return 0
 

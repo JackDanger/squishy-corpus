@@ -35,7 +35,7 @@ def main() -> int:
         r.pop("compress_MBps", None); r.pop("note_speed", None)
         r["codec_version"] = versions.get(sq.PANEL_TOOL.get(codec, ""), "UNKNOWN")
         r["codec_command"] = argv
-        r["tool_provenance"] = sq.tool_provenance(argv)   # exact binary: version, path, sha256, arch
+        r["tool_provenance"] = sq.tool_provenance(argv)   # release version (or git sha) + argv + arch
         panel[codec] = r
         print(f"     Squishy {r['squishy_score']}×  corpus bpb {r['corpus_bpb']}", flush=True)
 
