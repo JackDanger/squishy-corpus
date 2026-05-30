@@ -24,7 +24,7 @@ WHATIS = {
  "log": "A NASA web server's access log from July 1995.",
  "genome": "Sequencing reads from an E. coli genome (FASTQ).",
  "csv": "Daily weather observations from NOAA's global climate network, 2024 (CSV).",
- "parquet": "New York City yellow-taxi trips, January 2024 — stored column-wise as Apache Parquet.",
+ "parquet": "U.S. airline on-time flight records (Bureau of Transportation Statistics) — stored column-wise as Apache Parquet.",
  "sqlite": "USDA's nutrition database — foods, nutrients, and portions across 17 related tables (SR Legacy).",
  "exe": "A compiled Linux executable — the Hugo static-site generator.",
  "photo": "NASA's “Blue Marble” — Earth photographed from Apollo 17.",
@@ -348,6 +348,7 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .what{{margin:.3rem 0 .6rem;font-size:1.02rem}}
  .prev{{margin:.4rem 0}} .src{{font-size:.82rem}} a{{color:#0a5fa5}}
  pre.txt,pre.hex{{background:#f6f8fa;border:1px solid #e2e2e2;border-radius:6px;padding:.6rem;overflow:auto;font-size:.78rem;max-height:230px;margin:.2rem 0}}
+ pre.run{{background:#0d1117;color:#e6edf3;border-radius:8px;padding:.85rem 1rem;font-size:.95rem;overflow:auto;margin:.4rem 0 .3rem;border:0}}
  pre.hex{{font-size:.72rem;color:#555}}
  table.data{{border-collapse:collapse;font-size:.8rem;width:100%;overflow:auto;display:block}}
  table.data th,table.data td{{border:1px solid #e2e2e2;padding:.2rem .45rem;text-align:left;white-space:nowrap}}
@@ -378,13 +379,20 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .hint{{color:#888;font-size:.82rem}}
 </style></head><body>
 <h1>Squishy</h1>
-<p class="tag">The 2026 compression corpus — the authoritative set of real data you'd want to compress, plus one citable score.</p>
-<p class="lede"><b>Squishy is a successor to Silesia:</b> a fixed set of real, redistributable
-files, chosen to <i>span</i> the range of byte structure and scale. One corpus, two jobs —
-<b>measure ratio</b> (the citable Squishy Score) and <b>test behavior</b> (a representative
-battery to catch speed/CPU/memory regressions when you harden a codec without changing its
-output). Both rest on the same thing: it's a diverse, representative set, and the map below
-is the evidence.</p>
+<p class="tag">One number for how well a compressor does on real data.</p>
+<p class="lede">Squishy is a fixed set of real, freely-shareable files — prose, code, logs,
+genomes, tables, images, binaries — picked to cover the range of things people actually
+compress, from a few megabytes to several gigabytes. Run your tool over it and you get a
+single <b>Squishy Score</b> you can cite and compare. It's the 2026 successor to Silesia.</p>
+
+<h2>Score your tool</h2>
+<p>One command. Hand it your compressor as a plain <code>stdin&nbsp;→&nbsp;stdout</code> command —
+it streams the corpus, runs your tool over every file, and prints your score:</p>
+<pre class="run">uv run squishy-calculate --cmd "zstd -19 -c"</pre>
+<p class="cap">Works with any codec the same way: <code>--cmd "xz -9 -c"</code>, <code>--cmd "brotli -q 11 -c"</code>,
+or your own <code>--cmd "./mytool -c"</code>. Add <code>--verify --decompress "zstd -dc"</code> to
+prove it's lossless; use <code>--cmd "mytool -o {{out}} {{in}}"</code> for tools that read/write files
+instead of pipes. It caches as it goes, so re-runs are instant.</p>
 
 <h2>The coverage map</h2>
 <div class="cube-wrap"><canvas id="cube"></canvas><div class="tip" id="cubetip"></div></div>
