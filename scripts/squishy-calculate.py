@@ -146,6 +146,38 @@ def compress_size(cmd: str, path: Path) -> tuple[int, float]:
     return n, time.perf_counter() - t0
 
 
+def verify_roundtrip_file(comp_cmd: str, decomp_cmd: str, path: Path) -> tuple[bool, int, float]:
+    """Lossless round-trip that STREAMS through temp files (memory-safe for multi-GB
+    rungs): compress path→.c, decompress .c→.d, compare sha256(.d)==sha256(path).
+    Returns (lossless, compressed_size, seconds) — the compressed size is reused as the
+    score's measurement so verify compresses each file ONCE, not twice. Supports
+    stdin→stdout filters and {in}/{out} file-arg codecs."""
+    t0 = time.perf_counter()
+    with tempfile.TemporaryDirectory() as d:
+        comp = os.path.join(d, "c"); dec = os.path.join(d, "d")
+        if "{in}" in comp_cmd:
+            run = comp_cmd.replace("{in}", str(path)).replace("{out}", comp)
+            r = subprocess.run(run, shell=True, stdout=(subprocess.DEVNULL if "{out}" in comp_cmd
+                               else open(comp, "wb")), stderr=subprocess.DEVNULL)
+        else:
+            with open(path, "rb") as fi, open(comp, "wb") as fo:
+                r = subprocess.run(comp_cmd, shell=True, stdin=fi, stdout=fo, stderr=subprocess.DEVNULL)
+        if r.returncode != 0 or not os.path.exists(comp):
+            return False, 0, time.perf_counter() - t0
+        csize = os.path.getsize(comp)
+        if "{in}" in decomp_cmd:
+            run = decomp_cmd.replace("{in}", comp).replace("{out}", dec)
+            r = subprocess.run(run, shell=True, stdout=(subprocess.DEVNULL if "{out}" in decomp_cmd
+                               else open(dec, "wb")), stderr=subprocess.DEVNULL)
+        else:
+            with open(comp, "rb") as fi, open(dec, "wb") as fo:
+                r = subprocess.run(decomp_cmd, shell=True, stdin=fi, stdout=fo, stderr=subprocess.DEVNULL)
+        if r.returncode != 0 or not os.path.exists(dec):
+            return False, csize, time.perf_counter() - t0
+        ok = sha256_file(Path(dec)) == sha256_file(path)
+        return ok, csize, time.perf_counter() - t0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(prog="squishy-calculate", description="Stream the Squishy corpus and compute a Squishy Score.")
     ap.add_argument("--cmd", required=True, help='compressor command; stdin→stdout, or with {in}/{out}')
@@ -195,16 +227,16 @@ def main() -> int:
             continue
         p = ensure_file(args.base, key, sha, cache)            # streams + verifies vs sha (fail closed)
         size_in = p.stat().st_size
-        size_c, secs = compress_size(args.cmd, p)              # streamed from disk (memory-safe)
+        verified = None
+        if args.verify:                                        # one compression: round-trip + size
+            verified, size_c, secs = verify_roundtrip_file(args.cmd, args.decompress, p)
+            if not verified:
+                sys.exit(f"FATAL: round-trip FAILED for {name} — codec is not lossless on this file.")
+        else:
+            size_c, secs = compress_size(args.cmd, p)          # streamed from disk (memory-safe)
         if size_c <= 0:
             sys.exit(f"FATAL: codec produced {size_c} bytes for {name}.")
         ratio = size_in / size_c
-        verified = None
-        if args.verify:
-            data = p.read_bytes()
-            verified = sq.round_trip_ok(args.cmd, args.decompress, data); del data
-            if not verified:
-                sys.exit(f"FATAL: round-trip FAILED for {name} — codec is not lossless on this file.")
         pf[name] = {"in_sha": sha, "size_in": size_in, "size_comp": size_c,
                     "ratio": round(ratio, 6), "kind": pt.get("kind"), "category": pt.get("category"),
                     "verified": bool(verified) if verified is not None else None}

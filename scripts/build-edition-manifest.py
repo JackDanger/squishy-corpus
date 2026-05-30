@@ -28,16 +28,17 @@ SCALE_CATEGORY = {"csv": "Tabular / DB", "columnar": "Tabular / DB", "parquet": 
                   "media": "Binary & Media", "weights": "Binary & Media"}
 
 
-def _props(measured: dict) -> dict:
+def _props(measured: dict, sq) -> dict:
     """Carry the intrinsic byte axes + the compressibility `scored` gate into each
-    edition entry (so the scorer and the webpage's 3-D map both read one file)."""
+    edition entry (so the scorer and the webpage's 3-D map both read one file). The
+    gate threshold is single-sourced from squishy.py (no duplicate constant)."""
     if not measured:
         return {}
     keep = {k: measured[k] for k in ("entropy", "coverage", "match_distance",
                                      "match_distance_p90", "size") if k in measured}
     if "entropy" in keep and "coverage" in keep:
-        keep["compressibility"] = round(keep["coverage"] + (8.0 - keep["entropy"]) / 8.0, 4)
-        keep["scored"] = keep["compressibility"] >= 0.11
+        keep["compressibility"] = round(sq.compressibility(keep["entropy"], keep["coverage"]), 4)
+        keep["scored"] = bool(sq.is_scored(keep))
     return keep
 
 
@@ -68,7 +69,7 @@ def main() -> int:
                 "size_bytes": p.stat().st_size if p.exists() else None,
                 "sha256": sums.get(key), "key": key, "url": f"{BASE}/{key}",
                 "license": m.get("license"), "source_url": m.get("source_url"),
-                **_props(core_props.get(display, {})),
+                **_props(core_props.get(display, {}), sq),
             })
     # scale tier — LICENSE-MANIFEST is the set-of-record (every distributed scale
     # file, incl. the weights ladder); merge measured byte props from scale-properties.
@@ -90,7 +91,7 @@ def main() -> int:
             "sha256": row.get("sha256") or v.get("sha256"),
             "key": key, "url": f"{BASE}/{key}",
             "license": row.get("license"), "source_url": row.get("source_url"),
-            **_props(v),
+            **_props(v, sq),
         })
 
     out = {

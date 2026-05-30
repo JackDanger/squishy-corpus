@@ -215,8 +215,9 @@ def tool_provenance(cmd: str) -> dict:
     path = shutil.which(tool)
     if path and os.path.exists(path):
         try:                                             # binary's TARGET arch (not its path)
-            prov["arch"] = subprocess.run(["file", "-b", path], capture_output=True,
-                                          text=True, timeout=5).stdout.strip()[:160]
+            arch = subprocess.run(["file", "-b", path], capture_output=True,
+                                  text=True, timeout=5).stdout.strip()
+            prov["arch"] = " ".join(arch.split())[:200]   # collapse multi-line (universal binaries)
         except Exception:
             pass
     return prov

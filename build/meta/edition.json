@@ -1,6 +1,6 @@
 {
   "edition": "Squishy-2026-DRAFT",
-  "generated_utc": "2026-05-30T02:22:11Z",
+  "generated_utc": "2026-05-30T04:30:00Z",
   "base_url": "https://squishy-corpus.s3.us-west-2.amazonaws.com/draft",
   "note": "Per-file addressable inventory. tier=core are the scored named files; tier=scale are large members (the scored size-rung set is finalized at freeze). Fetch any file by its url and verify against sha256.",
   "n_files": 27,
