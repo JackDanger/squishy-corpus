@@ -157,7 +157,10 @@ def cube_data(sq, props, scale=None) -> dict:
         for nm, m in scale.get("files", {}).items():    # scale tier (measured, real)
             entries[nm.replace(".parquet", "").replace(".safetensors", "")] = m
     sizes = [m["size"] for m in entries.values()]
-    dists = [max(m["match_distance"], K) for m in entries.values()]
+    # z-axis = p90 repeat distance ("how far back the farthest repeats sit") — a truer
+    # measure of long-range structure than the median, which is dominated by local repeats.
+    def p90(m): return max(m.get("match_distance_p90", m["match_distance"]), K)
+    dists = [p90(m) for m in entries.values()]
     lo, hi = math.log10(min(sizes)), math.log10(max(sizes))
     pts = []
     for d, m in entries.items():
@@ -169,10 +172,11 @@ def cube_data(sq, props, scale=None) -> dict:
             "cat": e.get("category") or m.get("category", "Binary & Media"),
             "kind": kind, "desc": re.sub("<[^>]+>", "", desc),
             "license": e.get("license"), "source_url": e.get("source_url"), "url": e.get("url"),
-            "x": m["entropy"], "y": m["coverage"], "z": max(m["match_distance"], K),
+            "x": m["entropy"], "y": m["coverage"], "z": p90(m),
             "r": round((math.log10(m["size"]) - lo) / (hi - lo), 3),
             "sizeMB": m["size"] / 1e6, "entropy": m["entropy"],
             "coverage": m["coverage"], "dist": m["match_distance"],
+            "distp90": m.get("match_distance_p90", m["match_distance"]),
             "scored": bool(sq.is_scored(m)),
             "K": round(sq.compressibility(m["entropy"], m["coverage"]), 3),
         })
@@ -521,7 +525,7 @@ single <b>Squishy Score</b> you can cite and compare. It's the 2026 <span class=
 <ul class="readkey">
   <li><b style="color:#b23a6b">→ entropy</b> — how random the bytes look</li>
   <li><b style="color:#1f8a5a">↑ repetition</b> — how much of the file repeats</li>
-  <li><b style="color:#2a6f9e">↗ repeat distance</b> — how far apart those repeats sit</li>
+  <li><b style="color:#2a6f9e">↗ repeat distance</b> — how far back the <i>farthest</i> repeats sit (long-range structure)</li>
   <li><b>colour</b> = the <i>kind</i> of data · <b>dot size</b> = how big the file is (MB → GB), so each kind shows up once small and once large, same colour</li>
   <li><b>behind the wall</b> = already-compressed media (photos, video, model weights): shown, but not scored</li>
 </ul>

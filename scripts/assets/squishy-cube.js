@@ -353,7 +353,8 @@
         " <span style='color:#888'>" + esc(d.cat) + " · " + gate + "</span>" +
         (d.desc ? "<div class='tdesc'>" + esc(d.desc) + "</div>" : "") +
         "<div class='tnums'>entropy <b>" + d.entropy.toFixed(2) + "</b> · repeats <b>" +
-        (d.coverage * 100).toFixed(0) + "%</b> · repeat distance <b>" + shortBytes(d.dist) +
+        (d.coverage * 100).toFixed(0) + "%</b> · repeat distance farthest <b>" +
+        shortBytes(d.distp90 != null ? d.distp90 : d.dist) + "</b> / typical <b>" + shortBytes(d.dist) +
         "</b> · size <b>" + shortSize(d.sizeMB) + "</b> · K <b>" +
         (d.K != null ? d.K.toFixed(2) : "—") + "</b></div>" +
         (links.length ? "<div class='tlinks'>" + links.join("") + "</div>" : "");
