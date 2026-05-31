@@ -94,7 +94,7 @@
     var pts = data.points.map(function (d) {
       return {
         d: d,
-        c: [normalize(d.x, ax.x), -normalize(d.y, ax.y), normalize(d.z, ax.z)],
+        c: [normalize(d.x, ax.x), -normalize(d.y, ax.y), -normalize(d.z, ax.z)],
         rgb: catRGB[d.cat] || [154, 160, 166],
         color: cats[d.cat] || "#9aa0a6",
       };
@@ -156,7 +156,7 @@
       var faint = "rgba(0,0,0,0.07)", line = "rgba(0,0,0,0.22)";
       // floor grid (coverage = 0 plane) — z lines and x lines
       TZ.forEach(function (t) {
-        var nz = normalize(t.v, ax.z);
+        var nz = -normalize(t.v, ax.z);
         seg([-1, 1, nz], [1, 1, nz], faint, 1);
       });
       TX.forEach(function (t) {
@@ -182,7 +182,7 @@
         var p = project([normalize(t.v, ax.x), 1, 1]); ctx.fillText(t.label, p.x, p.y + 13);
       });
       TZ.forEach(function (t) {            // repeat distance (log), left-bottom edge
-        var p = project([-1, 1, normalize(t.v, ax.z)]); ctx.fillText(t.label, p.x - 8, p.y + 11);
+        var p = project([-1, 1, -normalize(t.v, ax.z)]); ctx.fillText(t.label, p.x - 8, p.y + 11);
       });
       ctx.textAlign = "right";
       TY.forEach(function (t) {            // repetition, back-left vertical edge
@@ -218,7 +218,7 @@
       var corners = [
         [a, clamp(yAt(a), 0, 1), zN[1]], [b, clamp(yAt(b), 0, 1), zN[1]],
         [b, clamp(yAt(b), 0, 1), zN[0]], [a, clamp(yAt(a), 0, 1), zN[0]],
-      ].map(function (p) { return project([normalize(p[0], ax.x), -normalize(p[1], ax.y), normalize(p[2], ax.z)]); });
+      ].map(function (p) { return project([normalize(p[0], ax.x), -normalize(p[1], ax.y), -normalize(p[2], ax.z)]); });
       var zc = (corners[0].z + corners[2].z) / 2;
       // draw only on the requested pass (behind data, or in front)
       if ((zc < 0) !== behind) return;
