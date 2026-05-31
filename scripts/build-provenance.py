@@ -112,7 +112,7 @@ def hexdump(p, n=160):
 
 CUBE_COLORS = {
     "Prose": "#E69F00", "Code & Web": "#56B4E9", "Structured": "#009E73",
-    "Tabular / DB": "#0072B2", "Binary & Media": "#CC79A7", "Scale tier": "#9aa0a6",
+    "Tabular / DB": "#0072B2", "Binary & Media": "#CC79A7",
 }
 
 
@@ -165,7 +165,8 @@ def cube_data(sq, props, scale=None) -> dict:
         kind = e.get("kind", d)
         desc = SCALE_DESC.get(d) or WHATIS.get(d) or WHATIS.get(kind) or ""
         pts.append({
-            "name": d, "label": SHORT.get(d, d), "cat": m.get("category", "Scale tier"),
+            "name": d, "label": SHORT.get(d, d),
+            "cat": e.get("category") or m.get("category", "Binary & Media"),
             "kind": kind, "desc": re.sub("<[^>]+>", "", desc),
             "license": e.get("license"), "source_url": e.get("source_url"), "url": e.get("url"),
             "x": m["entropy"], "y": m["coverage"], "z": max(m["match_distance"], K),
@@ -470,6 +471,8 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .legend .lg{{display:inline-flex;align-items:center;gap:.4rem}}
  .legend i{{width:.72rem;height:.72rem;border-radius:50%;display:inline-block}}
  .legend i.ring{{background:transparent;border:1.5px dashed #cc79a7;box-sizing:border-box}}
+ .legend i.dotsm{{width:.4rem;height:.4rem;background:#9aa0a6}}
+ .legend i.dotbig{{width:.85rem;height:.85rem;background:#9aa0a6;margin-right:-.15rem}}
  .hint{{color:#888;font-size:.82rem}}
  .sr-only{{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
    clip:rect(0,0,0,0);white-space:nowrap;border:0}}
@@ -514,7 +517,8 @@ single <b>Squishy Score</b> you can cite and compare. It's the 2026 <span class=
 deliberately spans the space.</b> Position comes only from properties of the bytes
 themselves, never from how any compressor performs: <b>how random</b> they look (entropy),
 <b>how much exactly repeats</b> (coverage), and <b>how far back the repeats sit</b> (match
-distance); <b>dot area = file size</b>. The translucent wall is the <b>compressibility gate</b>:
+distance). <b>Colour marks the kind</b> and <b>dot area is the file size</b> — so each kind
+appears once small (tens of MB) and again large (up to several GB), same colour. The translucent wall is the <b>compressibility gate</b>:
 files on the near side are <b>scored</b>; the near-random media behind it (photo, movie, model
 weights) are kept as <b>diagnostics</b>, drawn hollow. The files are sparse — not a dense grid —
 but spread across the dimensions where compressors are known to differ.
