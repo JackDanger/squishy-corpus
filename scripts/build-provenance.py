@@ -404,16 +404,20 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .prev{{margin:.4rem 0}} .src{{font-size:.82rem}} a{{color:#0a5fa5}}
  pre.txt,pre.hex{{background:#f6f8fa;border:1px solid #e2e2e2;border-radius:6px;padding:.6rem;overflow:auto;font-size:.78rem;max-height:230px;margin:.2rem 0}}
  pre.run{{background:#0d1117;color:#e6edf3;border-radius:8px;padding:.85rem 1rem;font-size:.95rem;overflow:auto;margin:.4rem 0 .3rem;border:0}}
- .sitehead{{position:sticky;top:0;z-index:50;display:flex;justify-content:space-between;align-items:center;gap:1rem;
-   margin:-1.5rem -1.5rem 1.4rem;padding:.5rem .9rem;background:#0d1117;color:#e6edf3;
+ .topbars{{position:sticky;top:0;z-index:50;margin:-1.5rem -1.5rem 1.4rem;
    font:500 .82rem ui-monospace,Menlo,Consolas,monospace}}
+ .sitehead{{display:flex;justify-content:space-between;align-items:center;gap:1rem;
+   padding:.45rem .9rem;background:#0d1117;color:#e6edf3}}
+ .sitehead .brand{{font-weight:700;letter-spacing:.02em}}
  .sitehead a{{color:#9cd2ff;text-decoration:none;white-space:nowrap}}
  .sitehead a:hover{{text-decoration:underline}}
- .headcmd{{display:inline-flex;align-items:center;gap:.55rem;min-width:0;overflow:hidden}}
- .headcmd code{{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:all;color:#e6edf3}}
- .headcmd .codec{{color:#7ee787;transition:opacity .22s ease}}
- .copyb{{flex:none;cursor:pointer;border:1px solid #30363d;background:#161b22;color:#9cd2ff;
-   border-radius:5px;padding:.08rem .45rem;font:inherit}}
+ .cmdbar{{display:flex;align-items:center;gap:.75rem;padding:.4rem .9rem;
+   background:#161b22;border-top:1px solid #222831;color:#e6edf3}}
+ .cmdbar code{{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+   user-select:all;color:#e6edf3}}
+ .cmdbar .codec{{color:#7ee787;transition:opacity .22s ease}}
+ .copyb{{flex:none;margin-left:auto;cursor:pointer;border:1px solid #30363d;background:#0d1117;
+   color:#9cd2ff;border-radius:5px;padding:.12rem .6rem;font:inherit}}
  .copyb:hover{{background:#21262d}}
  .deftip{{position:relative;border-bottom:1px dotted #999;cursor:help;outline:none}}
  .deftip .pop{{visibility:hidden;opacity:0;position:absolute;left:0;bottom:1.6em;z-index:60;
@@ -422,7 +426,7 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
    box-shadow:0 8px 28px rgba(0,0,0,.28);transition:opacity .15s;pointer-events:none}}
  .deftip .pop b{{color:#7ee787;font-weight:600}}
  .deftip:hover .pop,.deftip:focus .pop{{visibility:visible;opacity:1}}
- @media(max-width:560px){{ .headcmd .lead-uv{{display:none}} }}
+ @media(max-width:560px){{ .cmdbar .lead-uv{{display:none}} }}
  pre.hex{{font-size:.72rem;color:#555}}
  table.data{{border-collapse:collapse;font-size:.8rem;width:100%;overflow:auto;display:block}}
  table.data th,table.data td{{border:1px solid #e2e2e2;padding:.2rem .45rem;text-align:left;white-space:nowrap}}
@@ -477,9 +481,15 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  table.coverage td:first-child,table.coverage th:first-child,
  table.coverage td:nth-child(2),table.coverage th:nth-child(2){{text-align:left}}
 </style></head><body>
-<div class="sitehead">
-  <span class="headcmd"><code id="headcmd-text"><span class="lead-uv">uv run </span>squishy-calculate --cmd "<span class="codec" id="codec">zstd -19 -c</span>"</code><button class="copyb" id="copyb" title="copy command">copy</button></span>
-  <a href="https://github.com/JackDanger/squishy-corpus">GitHub&nbsp;↗</a>
+<div class="topbars">
+  <div class="sitehead">
+    <span class="brand">Squishy</span>
+    <a href="https://github.com/JackDanger/squishy-corpus">GitHub&nbsp;↗</a>
+  </div>
+  <div class="cmdbar">
+    <code id="headcmd-text"><span class="lead-uv">uv run </span>squishy-calculate --cmd "<span class="codec" id="codec">zstd -19 -c</span>"</code>
+    <button class="copyb" id="copyb" title="copy command">copy</button>
+  </div>
 </div>
 <h1>Squishy</h1>
 <p class="tag">One number for how well a compressor does on real data.</p>
@@ -551,11 +561,11 @@ document.querySelectorAll('#lead th').forEach((th,i)=>th.onclick=()=>{{
 // header one-liner: slowly rotate the codec; always selectable/copyable; pause on
 // hover or while the user has a selection inside it.
 (function(){{
-  const codecs=["zstd -19 -c","xz -9 -c","brotli -q 11 -c","zstd --ultra -22 -c",
-                "gzip -9 -c","bzip2 -9 -c","lz4 -9 -c","./mytool -c"];
+  const codecs=["zstd -19 -c","xz -9 -c","brotli -q 11 -c","./build/zstd --ultra -22 -c",
+                "gzippy -9 -c","/path/to/hacked/bzip2 -9 -c","lz4 -9 -c","./mytool -c"];
   const el=document.getElementById('codec'),
         cmd=document.getElementById('headcmd-text'),
-        wrap=document.querySelector('.headcmd'),
+        wrap=document.querySelector('.cmdbar'),
         btn=document.getElementById('copyb');
   if(!el) return;
   let i=0, hover=false;
