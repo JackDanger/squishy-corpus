@@ -102,8 +102,8 @@
 
     // default camera: a gentle 3/4 view that reads instantly — x to the right,
     // coverage rising, z going back. tuned so the floor + both back walls are visible.
-    var HOME = { yaw: -0.62, pitch: -0.46, dist: 3.7 };
-    var VY = 1.45;                       // vertical stretch — taller cube so top/bottom dots aren't cramped
+    var HOME = { yaw: -0.62, pitch: -0.46, dist: 4.8 };
+    var VY = 1.0;                        // (no vertical stretch; headroom comes from a taller canvas)
     var yaw = HOME.yaw, pitch = HOME.pitch, dist = HOME.dist;
     var auto = !REDUCED, focusIdx = -1, hover = null;
     var W = 0, H = 0, cx = 0, cy = 0, scale = 1;
@@ -116,7 +116,9 @@
       if (!W || !H) return;
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      cx = W / 2; cy = H * 0.5; scale = Math.min(W, H * 1.25) * 0.29;
+      // size the cube to the WIDTH and leave generous empty room above and below, so a
+      // point rotated near + low (or high) stays on screen. cy centred for symmetry.
+      cx = W / 2; cy = H * 0.5; scale = Math.min(W * 0.34, H * 0.30);
     }
 
     function project(c3) {
