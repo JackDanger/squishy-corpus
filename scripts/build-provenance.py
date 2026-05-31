@@ -454,7 +454,7 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .hero .cap{{max-width:46rem}}
  .cube-wrap{{position:relative;margin:.7rem 0 .5rem;border-radius:14px;overflow:hidden;
    background:#fafafa;border:1px solid #e7e7e9}}
- canvas#cube{{display:block;width:100%;height:min(66vh,620px);min-height:380px;cursor:grab;
+ canvas#cube{{display:block;width:100%;height:min(76vh,720px);min-height:440px;cursor:grab;
    touch-action:none;outline:none;background:#fafafa}}
  canvas#cube:active{{cursor:grabbing}}
  canvas#cube:focus-visible{{box-shadow:inset 0 0 0 2px #2c6e9b}}

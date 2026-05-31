@@ -103,6 +103,7 @@
     // default camera: a gentle 3/4 view that reads instantly — x to the right,
     // coverage rising, z going back. tuned so the floor + both back walls are visible.
     var HOME = { yaw: -0.62, pitch: -0.46, dist: 3.7 };
+    var VY = 1.45;                       // vertical stretch — taller cube so top/bottom dots aren't cramped
     var yaw = HOME.yaw, pitch = HOME.pitch, dist = HOME.dist;
     var auto = !REDUCED, focusIdx = -1, hover = null;
     var W = 0, H = 0, cx = 0, cy = 0, scale = 1;
@@ -115,11 +116,11 @@
       if (!W || !H) return;
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      cx = W / 2; cy = H * 0.52; scale = Math.min(W, H * 1.15) * 0.33;
+      cx = W / 2; cy = H * 0.5; scale = Math.min(W, H * 1.25) * 0.29;
     }
 
     function project(c3) {
-      var r = rotate(c3, yaw, pitch);
+      var r = rotate([c3[0], c3[1] * VY, c3[2]], yaw, pitch);   // vertical stretch applied to every point
       var f = dist / (dist - r[2]);      // perspective foreshortening
       return { x: cx + r[0] * scale * f, y: cy + r[1] * scale * f, z: r[2], f: f };
     }
@@ -374,15 +375,19 @@
       if (opts.tooltipEl) opts.tooltipEl.style.display = "none";
       if (hover) { hover = null; draw(); }
     }
-    function showTip(p, mx, my) {
+    function showTip(p) {
       var t = opts.tooltipEl; if (!t) return;
       if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
-      if (p) {
-        t.innerHTML = tooltipHTML(p.d); t.style.display = "block";
-        var tw = t.offsetWidth || 240, th = t.offsetHeight || 80;
-        t.style.left = clamp(mx + 16, 6, Math.max(6, W - tw - 6)) + "px";
-        t.style.top = clamp(my + 14, 6, Math.max(6, H - th - 6)) + "px";
-      } else t.style.display = "none";
+      if (!p) { t.style.display = "none"; return; }
+      t.innerHTML = tooltipHTML(p.d); t.style.display = "block";
+      // anchor to the DOT, centred, and placed above it (or below if no room) so the
+      // card never covers the point you're inspecting.
+      var s = project(p.c), rad = dotRadius(p, true) * s.f, gap = 14;
+      var tw = t.offsetWidth || 240, th = t.offsetHeight || 90;
+      var left = clamp(s.x - tw / 2, 6, Math.max(6, W - tw - 6));
+      var above = s.y - rad - gap - th;
+      var top = above >= 6 ? above : Math.min(s.y + rad + gap, Math.max(6, H - th - 6));
+      t.style.left = left + "px"; t.style.top = top + "px";
     }
     // keep the card open while the pointer is inside it, so its links are clickable
     if (opts.tooltipEl) {
@@ -410,7 +415,7 @@
       } else {
         var h = pick(mx, my);
         if (h !== hover) { hover = h; canvas.style.cursor = h ? "pointer" : "grab"; draw(); }
-        showTip(h, mx, my);
+        showTip(h);
       }
     });
     canvas.addEventListener("pointerleave", function () {
@@ -434,8 +439,8 @@
       else if (k === "0") { yaw = HOME.yaw; pitch = HOME.pitch; dist = HOME.dist; }
       else if (k === "Enter" || k === " ") {
         focusIdx = (focusIdx + 1) % pts.length;
-        var p = pts[focusIdx], sc = project(p.c);
-        showTip(p, sc.x, sc.y);
+        var p = pts[focusIdx];
+        showTip(p);
         if (opts.statusEl) opts.statusEl.textContent = "Focused: " + p.d.name + ". " +
           (p.d.scored !== false ? "scored." : "diagnostic, not scored.");
       } else used = false;
