@@ -353,12 +353,12 @@ def main() -> int:
     rows = list(csv.DictReader((REPO / "build/meta/LICENSE-MANIFEST.csv").open()))
     extra = [r for r in rows if r["core_slot"] not in core_slots]
     if extra:
-        cards += ('<h2>Scale tier — the large members</h2>'
-                  '<p class="what">Large files spanning the kinds and the size axis (~0.3–3 GB). '
-                  'The GB rungs of compressible kinds (csv, columnar, genome, text) are scored members '
-                  'of the corpus; the model-weights ladder (135M → 0.5B → 1.5B params) and large media '
-                  'are near-incompressible <strong>throughput / behavior diagnostics</strong>, not scored. '
-                  '<em>This tier is still being assembled — see the readiness plan.</em></p>')
+        cards += ('<h2>The big ones</h2>'
+                  '<p class="cap">The same kinds of data, but huge (~0.3–3 GB) — where long-range '
+                  'tricks and big windows start to matter. The compressible ones (weather, airline, '
+                  'genome, text, code) are scored just like the small files. The model weights and the '
+                  'full-length video are basically pre-compressed already, so they don\'t count toward '
+                  'the score — we keep them to test speed and memory. <em>Still being assembled.</em></p>')
         for r in sorted(extra, key=lambda r: int(r["size_bytes"])):
             nm = r["name"]
             local = next((p for p in REPO.glob(f"build/raw/*/{nm}") if p.exists()), None)
@@ -474,6 +474,10 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .legend i.dotsm{{width:.4rem;height:.4rem;background:#9aa0a6}}
  .legend i.dotbig{{width:.85rem;height:.85rem;background:#9aa0a6;margin-right:-.15rem}}
  .hint{{color:#888;font-size:.82rem}}
+ .lead-q{{font-size:1.02rem;color:#222;margin:.6rem 0 .3rem}}
+ ul.readkey{{list-style:none;padding:0;margin:.3rem 0 .6rem;display:grid;gap:.32rem;max-width:46rem}}
+ ul.readkey li{{font-size:.95rem;color:#333;line-height:1.45}}
+ ul.readkey b{{color:#111}}
  .sr-only{{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
    clip:rect(0,0,0,0);white-space:nowrap;border:0}}
  details.fallback{{margin:.6rem 0 0}} details.fallback>summary{{color:#666;font-size:.85rem;cursor:pointer}}
@@ -513,16 +517,16 @@ single <b>Squishy Score</b> you can cite and compare. It's the 2026 <span class=
   <div class="tip" id="cubetip" role="status"></div>
 </div>
 <div class="legend" id="cubelegend"></div>
-<p class="cap"><b>Each dot is a real file, placed by the shape of its bytes — and the set
-deliberately spans the space.</b> Position comes only from properties of the bytes
-themselves, never from how any compressor performs: <b>how random</b> they look (entropy),
-<b>how much exactly repeats</b> (coverage), and <b>how far back the repeats sit</b> (match
-distance). <b>Colour marks the kind</b> and <b>dot area is the file size</b> — so each kind
-appears once small (tens of MB) and again large (up to several GB), same colour. The translucent wall is the <b>compressibility gate</b>:
-files on the near side are <b>scored</b>; the near-random media behind it (photo, movie, model
-weights) are kept as <b>diagnostics</b>, drawn hollow. The files are sparse — not a dense grid —
-but spread across the dimensions where compressors are known to differ.
-<span class="hint">Drag to rotate · scroll to zoom · hover a dot for detail · keyboard: arrows rotate, +/- zoom, 0 resets, Enter cycles dots.</span></p>
+<p class="lead-q"><b>Every dot is one real file.</b> Where it sits is decided only by its bytes — never by any compressor:</p>
+<ul class="readkey">
+  <li><b style="color:#b23a6b">→ entropy</b> — how random the bytes look</li>
+  <li><b style="color:#1f8a5a">↑ repetition</b> — how much of the file repeats</li>
+  <li><b style="color:#2a6f9e">↗ repeat distance</b> — how far apart those repeats sit</li>
+  <li><b>colour</b> = the <i>kind</i> of data · <b>dot size</b> = how big the file is (MB → GB), so each kind shows up once small and once large, same colour</li>
+  <li><b>behind the wall</b> = already-compressed media (photos, video, model weights): shown, but not scored</li>
+</ul>
+<p class="cap">So <b>where a dot is</b> = the shape of its bytes (what a compressor sees); <b>its colour</b> = what the data actually is. We use the kinds to keep the score fair — every kind counts equally, so no single type can run away with it. The thing to notice: the files are <b>spread across the whole space</b>, not piled in one corner.</p>
+<p class="hint">Drag to rotate · scroll to zoom · hover a dot for details · keys: arrows rotate, +/− zoom, 0 resets, Enter steps through.</p>
 <p id="cube-status" class="sr-only" role="status" aria-live="polite"></p>
 <details class="fallback"><summary>View the data as a table (no 3D required)</summary>
 {coverage_table}
@@ -530,20 +534,23 @@ but spread across the dimensions where compressors are known to differ.
 </section>
 
 <h2>Score your tool</h2>
-<p>One command. Hand it your compressor as a plain <code>stdin&nbsp;→&nbsp;stdout</code> command —
-it streams the corpus, runs your tool over every file, and prints your score:</p>
+<p>One command. Give it your compressor — anything that reads stdin and writes stdout —
+and it streams the corpus, runs your tool on every file, and prints your score:</p>
 <pre class="run">uv run squishy-calculate --cmd "zstd -19 -c"</pre>
-<p class="cap">Works with any codec the same way: <code>--cmd "xz -9 -c"</code>, <code>--cmd "brotli -q 11 -c"</code>,
-or your own <code>--cmd "./mytool -c"</code>. Add <code>--verify --decompress "zstd -dc"</code> to
-prove it's lossless; use <code>--cmd "mytool -o {{out}} {{in}}"</code> for tools that read/write files
-instead of pipes. It caches as it goes, so re-runs are instant.</p>
+<ul class="readkey">
+  <li><b>Any codec, same shape:</b> <code>"xz -9 -c"</code>, <code>"brotli -q 11 -c"</code>, or your own <code>"./mytool -c"</code>.</li>
+  <li><b>Reads and writes files, not pipes?</b> <code>"mytool -o {{out}} {{in}}"</code>.</li>
+  <li><b>Want proof it's lossless?</b> Add <code>--verify --decompress "zstd -dc"</code>.</li>
+  <li><b>Re-runs are instant</b> — it caches every file as it goes.</li>
+</ul>
 
-<h2>Reference board — draft (partial)</h2>
+<h2>Reference board <span class="hint">· draft</span></h2>
+<p class="cap">How the usual tools do on Squishy. It's a <b>draft</b> for now — it only runs the
+small files, so it isn't an official Squishy Score yet. Click any column to sort.</p>
 <div class="lbwrap"><table class="lead" id="lead"><thead><tr>{lbhead}</tr></thead><tbody>{lb}</tbody></table></div>
-<p class="cap"><b>Draft, partial:</b> these run only the small members of the corpus — the large
-rungs are pending, so this is <b>not yet a Squishy Score</b>. Click a column to sort; scales to any number of tool versions.</p>
 
-<h2>Every dataset</h2>
+<h2>Every file</h2>
+<p class="cap">All of it, by category — what each file is, a peek inside, and how every tool squeezes it.</p>
 {cards}
 
 <script>window.CUBE_DATA=/*CUBE_DATA*/;</script>
