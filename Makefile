@@ -7,7 +7,7 @@
 S3_BUCKET ?= squishy-corpus
 AWS_VAULT ?=
 
-.PHONY: help all properties edition board calculate site coverage validate audit pii \
+.PHONY: help all properties edition board calculate site deploy coverage validate audit pii \
         baseline check test freeze
 
 help:
@@ -19,6 +19,7 @@ help:
 	@echo "  make calculate CMD=\"zstd -19 -c\" [VERIFY='--verify --decompress \"zstd -dc\"']"
 	@echo "                           — stream the FULL edition and compute the Squishy Score"
 	@echo "  make site                — render the explorer + coverage map (build/site)"
+	@echo "  make deploy              — build the site, push to S3, invalidate the CDN (live)"
 	@echo "  make coverage            — print the 3-axis coverage summary"
 	@echo "  make baseline / check    — write / diff the golden baseline"
 	@echo "  make validate audit pii  — core validation, distribution audit, PII scan"
@@ -45,6 +46,13 @@ calculate:
 
 site:
 	uv run python scripts/build-provenance.py
+
+# Build the site fresh, then push to S3 (origin only — never direct S3) and
+# invalidate CloudFront so squishy.jackdanger.com updates immediately.
+# Prefix the whole thing with your creds if you use aws-vault:
+#   aws-vault exec personal -- make deploy
+deploy: site
+	bash scripts/deploy-site.sh
 
 coverage:
 	uv run python scripts/coverage-summary.py
