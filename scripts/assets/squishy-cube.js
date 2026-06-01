@@ -105,6 +105,8 @@
     var HOME = { yaw: -0.62, pitch: -0.46, dist: 4.8 };
     var VY = 1.0;                        // (no vertical stretch; headroom comes from a taller canvas)
     var yaw = HOME.yaw, pitch = HOME.pitch, dist = HOME.dist;
+    var zoom = 1;                        // true magnification (1 = home); wheel/pinch/keys change it
+    var MINZ = 0.6, MAXZ = 6;
     var auto = !REDUCED, focusIdx = -1, hover = null;
     var W = 0, H = 0, cx = 0, cy = 0, scale = 1;
     var screens = [];                    // last projected points, for hit-testing
@@ -124,7 +126,8 @@
     function project(c3) {
       var r = rotate([c3[0], c3[1] * VY, c3[2]], yaw, pitch);   // vertical stretch applied to every point
       var f = dist / (dist - r[2]);      // perspective foreshortening
-      return { x: cx + r[0] * scale * f, y: cy + r[1] * scale * f, z: r[2], f: f };
+      var pf = f * zoom;                 // fold zoom in so dots, gizmo + labels all magnify together
+      return { x: cx + r[0] * scale * pf, y: cy + r[1] * scale * pf, z: r[2], f: pf };
     }
     // depth in 0..1 (1 = nearest the camera) for fog/size/alpha.
     function depthOf(z) { return clamp((z + 1.5) / 3.0, 0, 1); }
@@ -399,16 +402,38 @@
       opts.tooltipEl.addEventListener("pointerleave", hideTip);
     }
 
-    // ── interaction: drag rotate, wheel zoom, hover tip ──
-    var drag = null;
+    // ── interaction: 1-finger/drag rotate, 2-finger pinch + wheel zoom, hover tip ──
+    var drag = null;                     // last pos for one-pointer rotate
+    var pointers = {};                   // active pointers by id, for pinch
+    var pinchBase = 0;                   // baseline finger distance for the current pinch
+    function pinchSpan() {
+      var id = Object.keys(pointers); if (id.length < 2) return 0;
+      var a = pointers[id[0]], b = pointers[id[1]];
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
     canvas.addEventListener("pointerdown", function (e) {
-      drag = [e.clientX, e.clientY]; auto = false; canvas.focus();
+      pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+      auto = false; canvas.focus();
       try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+      var n = Object.keys(pointers).length;
+      if (n >= 2) { drag = null; pinchBase = pinchSpan(); }   // second finger → pinch, stop rotating
+      else { drag = [e.clientX, e.clientY]; }
     });
-    function endDrag() { drag = null; }
+    function endDrag(e) {
+      if (e && e.pointerId != null) delete pointers[e.pointerId];
+      var ids = Object.keys(pointers);
+      if (ids.length < 2) pinchBase = 0;
+      drag = ids.length === 1 ? [pointers[ids[0]].x, pointers[ids[0]].y] : null;
+    }
     canvas.addEventListener("pointerup", endDrag);
     canvas.addEventListener("pointercancel", endDrag);
     canvas.addEventListener("pointermove", function (e) {
+      if (pointers[e.pointerId]) pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+      if (Object.keys(pointers).length >= 2) {            // pinch-to-zoom
+        var span = pinchSpan();
+        if (pinchBase > 0 && span > 0) zoom = clamp(zoom * span / pinchBase, MINZ, MAXZ);
+        pinchBase = span; draw(); return;
+      }
       var r = canvas.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
       if (drag) {
         yaw += (e.clientX - drag[0]) * 0.01;
@@ -426,7 +451,8 @@
     });
     canvas.addEventListener("wheel", function (e) {
       e.preventDefault(); auto = false;
-      dist = clamp(dist + e.deltaY * 0.0022, 2.4, 6.5); draw();
+      // multiplicative zoom toward/away — exponential so each notch feels even
+      zoom = clamp(zoom * Math.exp(-e.deltaY * 0.0015), MINZ, MAXZ); draw();
     }, { passive: false });
 
     // ── keyboard accessibility ──
@@ -436,9 +462,9 @@
       else if (k === "ArrowRight") yaw += 0.12;
       else if (k === "ArrowUp") pitch = clamp(pitch - 0.1, -1.45, 0.2);
       else if (k === "ArrowDown") pitch = clamp(pitch + 0.1, -1.45, 0.2);
-      else if (k === "+" || k === "=") dist = clamp(dist - 0.3, 2.4, 6.5);
-      else if (k === "-" || k === "_") dist = clamp(dist + 0.3, 2.4, 6.5);
-      else if (k === "0") { yaw = HOME.yaw; pitch = HOME.pitch; dist = HOME.dist; }
+      else if (k === "+" || k === "=") zoom = clamp(zoom * 1.18, MINZ, MAXZ);
+      else if (k === "-" || k === "_") zoom = clamp(zoom / 1.18, MINZ, MAXZ);
+      else if (k === "0") { yaw = HOME.yaw; pitch = HOME.pitch; dist = HOME.dist; zoom = 1; }
       else if (k === "Enter" || k === " ") {
         focusIdx = (focusIdx + 1) % pts.length;
         var p = pts[focusIdx];
@@ -451,7 +477,7 @@
 
     // reset button (if present) + a public reset
     if (opts.resetEl) opts.resetEl.addEventListener("click", function () {
-      yaw = HOME.yaw; pitch = HOME.pitch; dist = HOME.dist; auto = !REDUCED; focusIdx = -1; draw();
+      yaw = HOME.yaw; pitch = HOME.pitch; dist = HOME.dist; zoom = 1; auto = !REDUCED; focusIdx = -1; draw();
     });
 
     // ── legend ──
@@ -488,7 +514,7 @@
     }
 
     return {
-      reset: function () { yaw = HOME.yaw; pitch = HOME.pitch; dist = HOME.dist; auto = !REDUCED; draw(); },
+      reset: function () { yaw = HOME.yaw; pitch = HOME.pitch; dist = HOME.dist; zoom = 1; auto = !REDUCED; draw(); },
     };
   }
 

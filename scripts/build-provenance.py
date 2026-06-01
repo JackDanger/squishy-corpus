@@ -479,6 +479,10 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .legend i.dotbig{{width:.85rem;height:.85rem;background:#9aa0a6;margin-right:-.15rem}}
  .hint{{color:#888;font-size:.82rem}}
  .lead-q{{font-size:1.02rem;color:#222;margin:.6rem 0 .3rem}}
+ .axihint{{color:#888;font-size:.85rem;font-weight:400}}
+ .axiskey{{list-style:none;padding:0;margin:.2rem 0 .15rem;display:flex;flex-wrap:wrap;gap:.3rem 1.6rem;font-size:.97rem;color:#2a2a2a}}
+ .axiskey .deftip{{cursor:help}}
+ .axiskey li:last-child .pop{{left:auto;right:0}}
  ul.readkey{{list-style:none;padding:0;margin:.3rem 0 .6rem;display:grid;gap:.32rem;max-width:46rem}}
  ul.readkey li{{font-size:.95rem;color:#333;line-height:1.45}}
  ul.readkey b{{color:#111}}
@@ -511,6 +515,12 @@ single <b>Squishy Score</b> you can cite and compare. It's the 2026 <span class=
 
 <section class="hero" aria-labelledby="coverage-h">
 <h2 id="coverage-h">The shape of the corpus</h2>
+<p class="lead-q"><b>Every dot is one real file</b>, placed only by its bytes — never by any compressor. <span class="axihint">Hover an axis for exactly how it's measured.</span></p>
+<ul class="axiskey">
+  <li><span class="deftip" tabindex="0"><b style="color:#b23a6b">&rarr; entropy</b> — how random the bytes look<span class="pop"><b>Order-0 Shannon entropy</b> of the byte histogram, in bits per byte (0–8). We count how often each of the 256 byte values occurs and compute H&nbsp;=&nbsp;−Σ&nbsp;p·log₂&nbsp;p. <b>8.0</b> = every value equally likely: the bytes look random, usually because they're already compressed or encrypted. <b>Lower</b> = a skewed distribution an entropy coder can shrink. It ignores order, so it measures the <i>alphabet</i> of bytes, not their arrangement.</span></span></li>
+  <li><span class="deftip" tabindex="0"><b style="color:#1f8a5a">&uarr; repetition</b> — how much of the file repeats<span class="pop"><b>Repeat coverage</b> (0–1). We cut the file into non-overlapping <b>16-byte blocks</b> and count how many have an exact earlier copy elsewhere in the file. <b>0</b> = nothing repeats; <b>~1</b> = almost every block recurs. This is the long-range redundancy a compressor feeds on — computed exactly with a 128-bit sort over every block, no hashing or sampling.</span></span></li>
+  <li><span class="deftip" tabindex="0"><b style="color:#2a6f9e">&nearr; repeat distance</b> — how far back the <i>farthest</i> repeats sit<span class="pop"><b>How far back the copies live.</b> For every repeated 16-byte block we measure the byte distance to its previous occurrence. The dot sits at the <b>p90</b> — the 90th-percentile (farthest) distance — on a <b>log</b> scale; a dot's own tooltip also shows the median (typical) distance. <b>Small</b> = repeats cluster close, a tiny window finds them; <b>large</b> = long-range structure that needs a big compression window.</span></span></li>
+</ul>
 <div class="cube-wrap">
   <canvas id="cube" tabindex="0" role="img"
     aria-label="3D scatter plot of the Squishy corpus. Each file is placed by its byte properties: entropy, repeat coverage, and match distance. A full data table is below.">
@@ -521,16 +531,12 @@ single <b>Squishy Score</b> you can cite and compare. It's the 2026 <span class=
   <div class="tip" id="cubetip" role="status"></div>
 </div>
 <div class="legend" id="cubelegend"></div>
-<p class="lead-q"><b>Every dot is one real file.</b> Where it sits is decided only by its bytes — never by any compressor:</p>
 <ul class="readkey">
-  <li><b style="color:#b23a6b">→ entropy</b> — how random the bytes look</li>
-  <li><b style="color:#1f8a5a">↑ repetition</b> — how much of the file repeats</li>
-  <li><b style="color:#2a6f9e">↗ repeat distance</b> — how far back the <i>farthest</i> repeats sit (long-range structure)</li>
   <li><b>colour</b> = the <i>kind</i> of data · <b>dot size</b> = how big the file is (MB → GB), so each kind shows up once small and once large, same colour</li>
   <li><b>behind the wall</b> = already-compressed media (photos, video, model weights): shown, but not scored</li>
 </ul>
 <p class="cap">So <b>where a dot is</b> = the shape of its bytes (what a compressor sees); <b>its colour</b> = what the data actually is. We use the kinds to keep the score fair — every kind counts equally, so no single type can run away with it. The thing to notice: the files are <b>spread across the whole space</b>, not piled in one corner.</p>
-<p class="hint">Drag to rotate · scroll to zoom · hover a dot for details · keys: arrows rotate, +/− zoom, 0 resets, Enter steps through.</p>
+<p class="hint">Drag to rotate · scroll or pinch to zoom · hover a dot for details · keys: arrows rotate, +/− zoom, 0 resets, Enter steps through.</p>
 <p id="cube-status" class="sr-only" role="status" aria-live="polite"></p>
 <details class="fallback"><summary>View the data as a table (no 3D required)</summary>
 {coverage_table}

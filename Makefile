@@ -45,7 +45,7 @@ calculate:
 	uv run python scripts/squishy-calculate.py --cmd "$(CMD)" $(VERIFY)
 
 site:
-	uv run python scripts/build-provenance.py
+	uv run --with pyarrow --with pandas python scripts/build-provenance.py
 
 # Build the site fresh, then push to S3 (origin only — never direct S3) and
 # invalidate CloudFront so squishy.jackdanger.com updates immediately.
