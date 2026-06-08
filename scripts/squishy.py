@@ -87,6 +87,12 @@ BOUNDS = [("modern", "random-1M")]  # synthetic/incompressible — never in head
 CATEGORY_ORDER = ["Prose", "Code & Web", "Structured", "Tabular / DB", "Binary & Media"]
 
 # Reference panel: canonical "best practical" level per codec → individual/ suffix.
+# Only codecs that anyone can install at a pinned version and reproduce bit-for-bit.
+# (The old `zpaq` row was a hand-carried 2016 v7.15 binary nobody could reproduce — it
+# was removed 2026-06-08. High-ratio context-mixing codecs like zpaq/cmix/paq are
+# submitter-reported on the leaderboard, not in this reproducible reference board; a
+# packaged, version-pinnable `lrzip` is the candidate to re-add a high-ratio anchor —
+# see plans/squishy-1.0-readiness.md.)
 PANEL = {
     "gzip -9":    "gz.l9",
     "bzip2 -9":   "bz2",
@@ -94,13 +100,12 @@ PANEL = {
     "zstd -22":   "zst.l22",
     "xz -9":      "xz.l9",
     "brotli -11": "br.l11",
-    "zpaq":       "zpaq",
 }
 
 # Map a panel codec label to the tool name used in build/tools.lock.
 PANEL_TOOL = {
     "gzip -9": "gzip", "bzip2 -9": "bzip2", "zstd -19": "zstd",
-    "zstd -22": "zstd", "xz -9": "xz", "brotli -11": "brotli", "zpaq": "zpaq",
+    "zstd -22": "zstd", "xz -9": "xz", "brotli -11": "brotli",
 }
 
 # Exact canonical command line per reference codec — the OTHER half of
@@ -113,7 +118,6 @@ PANEL_ARGV = {
     "zstd -22":  "zstd --ultra -22 -c",
     "xz -9":     "xz -9 -c",
     "brotli -11": "brotli -q 11 -c",
-    "zpaq":      "zpaq add {out} {in} -method 5",  # archiver, not a filter; {out}=.zpaq
 }
 
 
@@ -257,29 +261,39 @@ def run_codec_live(cmd: str, data: bytes) -> tuple[int, float]:
 
 
 def verify_core_checksums() -> list[str]:
-    """If a core CHECKSUMS file is present, verify each core raw file's sha256.
-    Returns list of mismatched/missing display names. No-op (empty) until the
-    corpus is published with checksums (wired fully at freeze)."""
+    """Verify each PRESENT core raw file against its published sha256. Sha sources, in
+    order: build/meta/edition.json (the authoritative manifest — always committed) plus
+    build/meta/CHECKSUMS.sha256 if present. Returns the list of files that FAIL — bytes
+    that don't match, OR present-but-unverifiable (no published sha for them).
+
+    Fails CLOSED: a present core file with no known sha is reported, and if NO manifest
+    exists at all then every present file is unverifiable, so callers refuse to score.
+    An empty list means every present file was checked and matched (never "we couldn't
+    check, so assume fine")."""
     import hashlib
+    want: dict[str, str] = {}
+    ed = REPO / "build" / "meta" / "edition.json"
+    if ed.exists():
+        for f in json.loads(ed.read_text()).get("files", []):
+            if f.get("key") and f.get("sha256"):
+                want[f["key"]] = f["sha256"]
     ck = REPO / "build" / "meta" / "CHECKSUMS.sha256"
-    if not ck.exists():
-        return []
-    want = {}
-    for line in ck.read_text().splitlines():
-        parts = line.split()
-        if len(parts) == 2:
-            want[parts[1]] = parts[0]
+    if ck.exists():
+        for line in ck.read_text().splitlines():
+            parts = line.split()
+            if len(parts) == 2:
+                want.setdefault(parts[1], parts[0])
     bad = []
     for files in CORE.values():
         for display, s, name in files:
             p = raw_path(s, name)
-            key = f"{s}/{name}"
-            if key in want:
-                if not p.exists():
-                    bad.append(display); continue
-                h = hashlib.sha256(p.read_bytes()).hexdigest()
-                if h != want[key]:
-                    bad.append(display)
+            if not p.exists():
+                continue                       # not downloaded → not scored, not "altered"
+            sha = want.get(f"{s}/{name}")
+            if sha is None:                    # present but no published sha → can't certify
+                bad.append(display); continue
+            if hashlib.sha256(p.read_bytes()).hexdigest() != sha:
+                bad.append(display)
     return bad
 
 
@@ -549,16 +563,16 @@ def main() -> int:
 
     n_core = sum(len(v) for v in CORE.values())
     # Fail closed: never score bytes we can't verify against the published hashes.
-    ck = REPO / "build" / "meta" / "CHECKSUMS.sha256"
-    if not ck.exists() and not os.environ.get("SQUISHY_ALLOW_UNVERIFIED"):
-        print("⚠ build/meta/CHECKSUMS.sha256 not found — refusing to score "
-              "unverified bytes (fail closed). Fetch it with the corpus, or set "
+    manifest = REPO / "build" / "meta" / "edition.json"
+    if not manifest.exists() and not os.environ.get("SQUISHY_ALLOW_UNVERIFIED"):
+        print("⚠ build/meta/edition.json not found — refusing to score unverified "
+              "bytes (fail closed). Fetch the corpus + manifest, or set "
               "SQUISHY_ALLOW_UNVERIFIED=1 for local development.", file=sys.stderr)
         return 2
     altered = verify_core_checksums()
-    if altered:
-        print(f"⚠ CORE ALTERED: {altered} fail sha256 vs CHECKSUMS — refusing to score.",
-              file=sys.stderr)
+    if altered and not os.environ.get("SQUISHY_ALLOW_UNVERIFIED"):
+        print(f"⚠ CORE UNVERIFIED/ALTERED: {altered} fail sha256 vs the manifest — "
+              f"refusing to score.", file=sys.stderr)
         return 2
     if getattr(args, "verify", False) and not args.decompress:
         print("⚠ --verify requires --decompress \"<cmd>\".", file=sys.stderr)

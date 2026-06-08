@@ -85,13 +85,15 @@ These need human judgment — the agent cannot do them:
   pending — not yet a Squishy Score), pinned `tools.lock` builds. **The figures once
   quoted here predate the 2026-06-07 switch to the plain one-vote-per-file geomean
   (and the older nested weighting) — superseded; see `build/meta/squishy-scores.json`
-  for the current board** (zpaq 5.81× · xz 4.37× · brotli 4.34× · zstd-22 4.20× ·
-  zstd-19 4.15× · bzip2 3.98× · gzip 3.23×).
+  for the current 6-codec reproducible board** (xz 4.37× · brotli 4.34× · zstd-22
+  4.20× · zstd-19 4.15× · bzip2 3.98× · gzip 3.23×; zpaq removed — see below).
 - The NYC-taxi decoupling (2026-05-29) removed a hidden correlation: `csv`,
   `parquet`, `sqlite` previously shared the *same taxi rows*; they are now three
   independent datasets (weather / taxi / nutrition) with distinct compressibility.
 - `parquet` ships uncompressed-encoding (a prior catch: it had shipped internally
   ZSTD-compressed at 1.02× external; uncompressed → a genuine 1.7–2.2× columnar
   regime).
-- `zpaq` v7.15 is a pinned 2016 build (in `tools.lock`); its headline row is the
-  least portable to reproduce. Mainstream-codec rows are the robust references.
+- `zpaq` (2016 v7.15 binary) was **removed** from the reproducible reference panel
+  (2026-06-08) — nobody could reinstall the exact build. The board is now the six
+  mainstream, version-pinned, installable codecs. High-ratio context-mixing codecs are
+  submitter-reported; a packaged `lrzip` is the candidate reproducible re-add.

@@ -126,11 +126,16 @@ def compress_size(cmd: str, path: Path) -> tuple[int, float]:
     t0 = time.perf_counter()
     if "{in}" in cmd:
         with tempfile.TemporaryDirectory() as d:
+            # Hand the codec a NEUTRAL filename (no extension) so it can't branch on
+            # which corpus file this is (RULES §3 — no filename/extension model
+            # selection). A symlink avoids copying multi-GB bytes.
+            inp = os.path.join(d, "input")
+            os.symlink(os.path.abspath(path), inp)
             op = os.path.join(d, "out")
-            run = cmd.replace("{in}", str(path)).replace("{out}", op)
+            run = cmd.replace("{in}", inp).replace("{out}", op)
             proc = subprocess.run(run, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             if "{out}" in cmd:
-                sizes = [os.path.getsize(os.path.join(d, f)) for f in os.listdir(d)]
+                sizes = [os.path.getsize(os.path.join(d, f)) for f in os.listdir(d) if f != "input"]
                 size = max(sizes) if sizes else len(proc.stdout)
             else:
                 size = len(proc.stdout)
@@ -156,7 +161,9 @@ def verify_roundtrip_file(comp_cmd: str, decomp_cmd: str, path: Path) -> tuple[b
     with tempfile.TemporaryDirectory() as d:
         comp = os.path.join(d, "c"); dec = os.path.join(d, "d")
         if "{in}" in comp_cmd:
-            run = comp_cmd.replace("{in}", str(path)).replace("{out}", comp)
+            # neutral filename — no extension/name leak to the codec (RULES §3)
+            inp = os.path.join(d, "input"); os.symlink(os.path.abspath(path), inp)
+            run = comp_cmd.replace("{in}", inp).replace("{out}", comp)
             r = subprocess.run(run, shell=True, stdout=(subprocess.DEVNULL if "{out}" in comp_cmd
                                else open(comp, "wb")), stderr=subprocess.DEVNULL)
         else:

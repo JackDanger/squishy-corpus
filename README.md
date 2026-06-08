@@ -7,9 +7,13 @@ battery when you're tuning a codec's speed and memory without changing its outpu
 ```
 git clone https://github.com/JackDanger/squishy-corpus && cd squishy-corpus
 uv run squishy-calculate --cmd "zstd -19 -c"     # streams the FULL corpus, scores your codec
-→ Squishy Score: 6.88×   (plain geomean over every file — provisional; full freeze run pending)
-# streams + verifies every file; resumable; re-runs are instant from cache
+→ Squishy Score: <×>   # one number — but no value is citable until the v1.0 freeze + DOI
+# streams + verifies every file (fail-closed on any sha mismatch); resumable; cached
 ```
+
+> **No Squishy Score is citable yet.** The corpus is pre-freeze; the draft reference
+> board below has real, reproducible per-codec numbers over the small members, but the
+> single frozen edition number (and its Zenodo DOI) lands at v1.0. Don't cite a draft.
 
 ## What is Squishy
 
@@ -79,17 +83,24 @@ plots every artifact in 3D (size as the dot size) at
 > **Squishy Score (of a codec) = the geometric mean of the per-file compression
 > ratio (uncompressed ÷ compressed) over the whole corpus — one vote per file.**
 
-- **Plain geomean, one vote per file.** No category weights, no kind weights, no
-  size weights, no tuning constants, and no threshold deciding which files count.
-  Every file is averaged once; the geometric mean is what stops any single huge or
-  tiny file from running away with the number. (Design rationale:
+- **Plain geomean, one vote per file.** No category/kind weighting in the formula, no
+  tuning constants, and no threshold deciding which files count. Every file is
+  averaged once; the geometric mean is what stops any single huge or tiny file from
+  running away with the number. (Design rationale:
   [`plans/score-weighting-critique-and-proposal.md`](plans/score-weighting-critique-and-proposal.md).)
+- **One honest consequence: file *count* is the only weight.** A kind sampled at two
+  sizes votes twice; a single-size kind votes once. There's no hidden math here — the
+  weighting lives entirely in *what's in the corpus*, so the corpus is curated to keep
+  the per-kind file count balanced and the members structurally independent (no two
+  members sharing a source/lineage). That curation, not a formula knob, is where
+  balance is enforced — see `RULES.md` and the kinds×sizes table below.
 - **Every real file counts — including the near-incompressible media.** `photo`,
-  `movie`, and `weights` score ~1.0×, which lowers the headline by the same factor
-  for every codec, so they never change the ranking — and a corpus of real data
-  honestly contains some incompressible files. The only thing left out is the
-  unmeasured model-weight **throughput ladder** (a speed/RAM fixture, not a ratio
-  corpus member).
+  `movie`, and `weights` score ~1.0×, which lowers the headline by nearly the same
+  factor for every codec, so they barely move the ranking — and a corpus of real data
+  honestly contains some incompressible files. (A codec that genuinely squeezes them
+  from 1.00× to 1.05× earns that; it just can't *win* on them.) The only thing left
+  out is the unmeasured model-weight **throughput ladder** (a speed/RAM fixture, not a
+  ratio corpus member).
 - Reported as **"×"** (2 decimals) — a dimensionless quality index, **not** a bit
   rate. Always shown beside the **corpus bpb (byte-weighted)** = 8 · total
   compressed ÷ total input (3 decimals), the operational rate; the two are
@@ -170,11 +181,13 @@ local-bytes path (both `squishy-calculate` and `squishy bench` are implemented i
 
 ## Reference board
 
-The first **complete-edition** Squishy Score has been computed end-to-end —
-**`zstd -19` → 5.81×** over all 20 scored size-points (core + large rungs, 12.2 GB →
-1.5 GB), in [`build/meta/squishy-score-complete.json`](build/meta/squishy-score-complete.json).
-The large rungs compress *better* than their small siblings (LLVM 12.6×, csv-4 GB
-12.6×, clang-archive 17.5×) — long-range matching at scale, now in the number.
+There is **no complete-edition Squishy Score yet** — the only full-corpus run on
+record ([`build/meta/squishy-score-complete.json`](build/meta/squishy-score-complete.json))
+is flagged `DO_NOT_CITE`: it predates folding the near-incompressible members into the
+score (so its number is an over-estimate) and there's no frozen edition/DOI behind it.
+What *is* real: the large rungs compress better than their small siblings (LLVM 12.6×,
+csv-4 GB 12.6×, clang-archive 17.5×) — long-range matching at scale shows up in the
+per-file ratios.
 
 The table below is the **fast panel over the small members only** (draft) — handy
 for ranking codecs quickly; the full panel over the complete edition is the
@@ -183,7 +196,6 @@ expensive periodic computation. Every codec build is pinned in
 
 | codec | Squishy Score (×) | corpus bpb (byte-weighted) |
 |-------|------------------:|---------------------------:|
-| zpaq | 5.81× | 2.620 |
 | xz -9 | 4.37× | 2.977 |
 | brotli -11 | 4.34× | 3.021 |
 | zstd -22 | 4.20× | 3.092 |
@@ -193,12 +205,14 @@ expensive periodic computation. Every codec build is pinned in
 
 The **Squishy Score** (×) is the geometric mean of the per-file ratio over every
 file — one vote per file, including the near-incompressible media (which score ~1.0×
-and lower every codec's number equally) — a dimensionless quality index, *not* a bit
-rate (don't derive bpb from it). The **corpus bpb** is the byte-weighted operational rate over the whole corpus
-(8 · total compressed ÷ total input). They're deliberate complements: the score
-weights every file equally (anti-gaming); corpus bpb is the size-weighted physical
-number. `zpaq` is the legacy 2016 v7.15 build — an honest data point, but the
-mainstream-codec rows reproduce most portably.
+and lower every codec's number near-equally) — a dimensionless quality index, *not* a
+bit rate (don't derive bpb from it). The **corpus bpb** is the byte-weighted
+operational rate over the whole corpus (8 · total compressed ÷ total input). They're
+deliberate complements: the score weights every file equally (anti-gaming); corpus
+bpb is the size-weighted physical number. Only **mainstream, version-pinned,
+installable** codecs are on the reproducible reference board; high-ratio
+context-mixing codecs (zpaq/cmix/paq) are submitter-reported on the leaderboard, since
+a hand-carried binary can't be reproduced bit-for-bit by a third party.
 
 ## Editions & permanence
 

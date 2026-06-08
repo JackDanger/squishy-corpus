@@ -1,4 +1,6 @@
 {
+  "DO_NOT_CITE": "NOT a Squishy Score. This run omits the near-incompressible members (photo/movie/weights/1080p), so its 6.88x is an OVER-estimate \u2014 the complete number drops to ~5x once they fold in. No number is citable until the v1.0 freeze + DOI.",
+  "citable": false,
   "edition": "Squishy-2026",
   "note": "Squishy Score = plain geomean of per-file compression ratio over the whole corpus (one vote per file). PROVISIONAL: this run predates the near-incompressible core members (photo/movie/weights) being folded into the score \u2014 a fresh full-edition streaming run is required before this is a citable number.",
   "complete": false,

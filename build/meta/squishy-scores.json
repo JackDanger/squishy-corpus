@@ -292,54 +292,6 @@
         "release": true,
         "arch": "Mach-O 64-bit executable arm64"
       }
-    },
-    "zpaq": {
-      "squishy_score": 5.814,
-      "score_aggregation": "geomean of per-file compression ratio over the whole corpus (one vote per file; no weighting, no threshold)",
-      "n_files": 15,
-      "categories": {
-        "Prose": 5.319,
-        "Code & Web": 7.342,
-        "Structured": 19.259,
-        "Tabular / DB": 8.373,
-        "Binary & Media": 1.581
-      },
-      "per_file": {
-        "dickens": 4.955,
-        "aozora": 5.709,
-        "monorepo": 10.795,
-        "minjs": 5.317,
-        "markup": 6.896,
-        "json": 24.158,
-        "log": 30.673,
-        "genome": 9.64,
-        "csv": 26.107,
-        "parquet": 1.944,
-        "sqlite": 11.567,
-        "exe": 4.739,
-        "photo": 1.056,
-        "movie": 1.018,
-        "weights": 1.225
-      },
-      "bounds": {
-        "modern/random-1M": 0.998
-      },
-      "missing": [],
-      "expansions": [],
-      "total_in_bytes": 422828868,
-      "total_out_bytes": 138490615,
-      "byte_weighted_ratio": 3.053,
-      "corpus_bpb": 2.62,
-      "codec_version": "zpaq v7.15 journaling archiver, compiled Aug 17 2016",
-      "codec_command": "zpaq add {out} {in} -method 5",
-      "tool_provenance": {
-        "tool": "zpaq",
-        "argv": "zpaq add {out} {in} -method 5",
-        "version": "zpaq v7.15 journaling archiver, compiled Aug 17 2016",
-        "git_sha": null,
-        "release": true,
-        "arch": "Mach-O 64-bit executable arm64"
-      }
     }
   },
   "host_provenance": {

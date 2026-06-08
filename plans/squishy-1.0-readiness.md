@@ -61,8 +61,8 @@ archivist · IP lawyer · newcomer) reviewed the repo. Consensus: strong foundat
   comparability. *(researcher)*
 - [ ] **`squishy perf` harness** — machine-readable per-file comp/decomp time +
   peak RSS; off the citable score. *(implementer)*
-- [ ] **zpaq headline portability** — demote the 2016-binary row or deposit its
-  source. *(researcher, archivist)*
+- [x] **zpaq headline portability** — DONE 2026-06-08: removed from the reproducible
+  panel; `lrzip` is the candidate reproducible high-ratio re-add (see P1 below).
 - [ ] **Held-out shadow file per category** for "verified" board status (catches
   in-edition overfit). *(researcher)*
 - [ ] **Kind-continuity:** large prose rung = same-source PD (more Gutenberg), not
@@ -94,10 +94,26 @@ the freeze now depends on:
   per-file ratios + an explicit "NOT a Squishy Score" line; only the complete
   edition prints the headline. (One corpus, one number — no named subset.)
 - [ ] **Acquire the load-bearing large rungs** for the kinds whose redundancy
-  grows with length (csv ✓, genome ✓, parquet ✓, plus **log** and **prose** to do;
-  make the large prose rung **same-source PD** for kind-continuity, and bring in
-  **enwik8** as a labeled CC-BY-SA benchmark point). Incompressible kinds
-  (`photo`, `movie`, `weights`) stay single-size.
+  grows with length (csv ✓, genome ✓, parquet ✓, plus **log** and **prose** to do).
+  Incompressible kinds (`photo`, `movie`, `weights`) stay single-size.
+- [ ] **P0 — CSV independence (decided 2026-06-08; needs acquire+measure+SHA).** The
+  three current CSVs are all NOAA GHCN weather from the same source — the small `csv`
+  is a prefix of the 1.3 GB rung — which violates the no-shared-lineage rule AND
+  over-weights one schema (csv = 3 of 24 votes). **Keep one** NOAA GHCN CSV (the large
+  rung: numeric/narrow/integer weather). **Replace the other two** with structurally
+  different real CSVs: (1) a **wide text/categorical** export (NYC 311 or Chicago
+  crimes open data, PD under their open-data terms — high-cardinality strings); (2) a
+  **floating-point time-series** (exchange OHLCV or scientific-sensor series under a
+  permissive/PD license — dense decimal floats). Acquire, verify license, measure
+  intrinsic axes, SHA-pin, add to edition.json. Until then edition.json still lists the
+  3 NOAA files; the scored set should drop to keep the lineage rule true before freeze.
+- [ ] **P0 — Large PROSE rung (decided 2026-06-08; needs acquire+measure+SHA).**
+  `enwik9` is XML-wrapped Wikipedia and stays filed under `markup` (Code & Web), so
+  Prose currently has **no** large rung despite the corpus table promising one. Add a
+  large **public-domain English-prose** rung — a Gutenberg aggregate (e.g. the
+  Standardized Project Gutenberg Corpus, or a deterministic concatenation of many PD
+  PG books, body-sliced like `dickens`) — giving genuine long-range vocabulary reuse
+  at ~1 GB. PD, so redistributable + DOI-freezable. Acquire/measure/SHA/manifest.
 - [ ] **Compute the reference board over the complete size-spanning corpus** (panel
   codecs over every scored file) → the Squishy Score + size buckets.
   Today's published board is a **partial run over the small members** only.
@@ -424,10 +440,11 @@ notes.
 
 NEW items found reviewing the whole setup (README/RULES/CITATION, the runner,
 CLI, site/audit/freeze/zenodo scripts, manifest, tests), deduped against Phases
-0–9. Single biggest risk called out: *"one honest, reproducible number" yet the
-runner never verifies decompression and fails **open** on missing checksums,
-while the flagship board headline (`zpaq 5.86×`) depends on a 2016 binary nobody
-can reinstall.*
+0–9. Single biggest risk once called out — *"one honest, reproducible number" yet the
+runner never verifies decompression and fails **open** on missing checksums, while the
+flagship board headline (`zpaq`) depends on a 2016 binary nobody can reinstall* — is
+now **resolved** (2026-06-08): streaming `--verify` round-trips; checksums fail closed
+against `edition.json`; zpaq removed from the reproducible panel.
 
 ### P0 — found during the owner's representativeness review (2026-05-29)
 - [x] **`freeze.sh` would have frozen 61 GB of retired junk.** It did
@@ -446,14 +463,21 @@ can reinstall.*
   (sqlite, PD-USGov). (Closed 2026-05-29.)
 - [x] **`PRE-FREEZE-VERIFICATION.md` regenerated** against the real 15-file core
   (NOAA/USDA tabular, 2 counsel items, current green checks). (Closed 2026-05-29.)
-- [ ] **Runner fails *open* on missing checksums** — `verify_core_checksums()` in
-  `scripts/squishy.py` no-ops (returns `[]`) when `CHECKSUMS.sha256` is
-  absent, so a downloader gets a score + exit 0 with zero integrity guarantee,
-  contradicting the README. Make the shipped path require the checksums file and
-  **fail closed**.
-- [ ] **Pre-decide the two COUNSEL swap-outs** (`parquet` NYC-TLC soft license;
-  `exe` MPL-2.0 module) so a counsel "no" can't block release. A frozen DOI with
-  an unresolved license is the one thing unfixable after freeze.
+- [x] **Runner fails *open* on missing checksums** — FIXED 2026-06-08.
+  `verify_core_checksums()` now verifies every present core file against the sha256 in
+  **`edition.json`** (the authoritative manifest, always committed) plus `CHECKSUMS.sha256`
+  if present, and fails **closed**: a present-but-unverifiable file (no published sha)
+  is reported, and the CLI/board refuse to score on any failure. The no-op path is gone.
+- [x] **The two COUNSEL swap-outs — resolved WITHOUT counsel (2026-06-08):**
+  - `parquet` NYC-TLC → already swapped to **US-DOT BTS airline on-time (PD-USGov)**;
+    edition.json `parquet` + `bts-ontime` both carry `Public-Domain-USGov`. Closed.
+  - `exe` (Hugo) MPL-2.0 component → **cleared by reading the license, not a lawyer.**
+    Hugo's own license is Apache-2.0; it bundles some MPL-2.0 Go deps. MPL-2.0 §3.2
+    explicitly permits distributing the work **in executable form** under terms of your
+    choice provided the MPL-covered *source* remains available (it is, upstream). So
+    redistributing the compiled Hugo binary as the `exe` member is compliant. The
+    edition.json license is now `"Apache-2.0 (binary bundles MPL-2.0 components; MPL
+    §3.2 permits executable redistribution)"`. Keep Hugo.
 - [x] **Define rounding/precision in `RULES.md`** — headline `x` to 2 decimals,
   `bpb` to 3, computed from full-precision per-file sizes; ties at that precision
   are ties. (Closed 2026-05-29; also fixed a stale 2/3/3/3/3 → 2/3/3/3/4 balance.)
@@ -463,11 +487,15 @@ can reinstall.*
   `squishy-calculate --verify --decompress "<cmd>"` round-trips every file and
   refuses a score on any mismatch; `RULES.md` now requires lossless round-trip.
   Remaining: add the same `--verify` to `squishy bench` (local path).
-- [~] **Pin every panel codec** — `build/tools.lock` already records exact
-  versions + paths for all panel codecs (incl. zpaq v7.15). README now flags zpaq
-  as a pinned 2016 legacy build. Remaining judgment call: whether to keep zpaq's
-  headline row or demote it to a footnote (kept for now; it's an honest data point
-  with its build recorded).
+- [x] **Pin every panel codec / zpaq portability** — RESOLVED 2026-06-08. `zpaq`
+  (hand-carried 2016 v7.15 binary, unreproducible by a third party) **removed from the
+  reproducible reference panel** (`PANEL`/`PANEL_ARGV`/`PANEL_TOOL` in `squishy.py`)
+  and from the published board JSON. The reference board is now the 6 mainstream,
+  installable, version-pinned codecs (gzip/bzip2/zstd×2/xz/brotli). High-ratio
+  context-mixing codecs (zpaq/cmix/paq) are submitter-reported on the leaderboard.
+  **TODO (re-add a reproducible high-ratio anchor):** evaluate **`lrzip`** (packaged on
+  apt/brew, version-pinnable, rzip long-range + lzma/zpaq backend — a good high-ratio
+  point especially on the large rungs); acquire/measure it into the board at freeze.
 - [ ] **Golden end-to-end board test** — a CI test that recomputes the board from
   `build/raw/corpus/` and diffs `squishy-scores.json` to the locked precision (the
   real-bytes regression guard Phase 2 calls for but no test implements).

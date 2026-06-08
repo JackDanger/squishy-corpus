@@ -59,11 +59,19 @@ get here) is in `plans/score-weighting-critique-and-proposal.md`.
 - **One vote per file.** Every file counts equally. The geometric mean is what keeps
   any single huge or tiny file from running away with the number (a 10× and a 0.1×
   cancel; the arithmetic mean would let the 10× dominate).
+- **File *count* is the only weight — and it lives in curation, not the formula.** A
+  kind sampled at two sizes votes twice; a single-size kind votes once. There's no
+  hidden weighting math: balance is a property of *what's in the corpus*. So the
+  edition is curated to keep the per-kind count even and every member **structurally
+  independent** — no two scored members may share a source or lineage (otherwise
+  correlated near-duplicates would stack votes; this is why the three same-source NOAA
+  CSVs are being broken up — see the corpus table).
 - **Near-incompressible files stay in.** photo/movie/weights score ~1.0×, which pulls
-  the headline down *by the same factor for every codec*, so they never change the
-  ranking — and a corpus of real data honestly contains some incompressible files.
-  The only files left out are the unmeasured model-weight **throughput ladder**
-  (a speed/RAM fixture, not a ratio corpus member).
+  the headline down *by nearly the same factor for every codec*, so they barely move
+  the ranking — a codec can earn a sliver by genuinely squeezing them but can't win on
+  them — and a corpus of real data honestly contains some incompressible files. The
+  only files left out are the unmeasured model-weight **throughput ladder** (a
+  speed/RAM fixture, not a ratio corpus member).
 - **Categories are presentation only.** The five categories below organize the
   corpus (the coverage map, the by-category diagnostic table) and carry **no weight**
   in the score. The intrinsic axes — entropy, repetition, repeat-distance (3
@@ -128,11 +136,26 @@ provenanced, redistributable (PD / CC0 / CC-BY / Apache-2.0 / MIT); manifest in
 
 | Category | Kinds (core member) | large (~1 GB) member? |
 |---|---|---|
-| **Prose** | `dickens`, `aozora` | yes (long-range vocab reuse) |
-| **Code & Web** | `monorepo`, `minjs`, `markup` | `monorepo` (repo-scale) |
+| **Prose** | `dickens`, `aozora` | yes — a large PD English-prose rung (Gutenberg aggregate; long-range vocab reuse). `enwik9` is **not** this rung — it's XML-wrapped, filed under `markup`. |
+| **Code & Web** | `monorepo`, `minjs`, `markup` | `monorepo` (repo-scale); `markup`'s large rung = `enwik9` |
 | **Structured** | `json`, `log`, `genome` | `log`, `genome` (redundancy grows with length) |
-| **Tabular / DB** | `csv`, `parquet`, `sqlite` | `csv` (redundancy grows with length), `parquet`/`sqlite` |
+| **Tabular / DB** | `csv`, `parquet`, `sqlite` | csv large rung; `parquet`/`sqlite` |
 | **Binary & Media** | `exe`, `photo`, `movie`, `weights` | **no** — incompressible |
+
+**CSV independence fix (2026-06-08):** the three current CSVs are all NOAA GHCN
+weather (same source/lineage — the small `csv` is a prefix of the 1.3 GB rung),
+violating the no-shared-lineage rule. Keep **one** NOAA GHCN CSV (the large rung:
+numeric, narrow, integer-heavy weather) and replace the other two with structurally
+*different* real CSVs so the kind spans CSV structure, not one schema:
+- **wide, text/categorical CSV** — many string columns, free-text + categoricals
+  (e.g. a government open-data records export: NYC 311 / Chicago crimes, both public
+  domain under their open-data terms) → high-cardinality strings, very different byte
+  structure from numeric weather;
+- **floating-point time-series CSV** — high-precision floats (e.g. an exchange OHLCV
+  or scientific-sensor series under a permissive/PD license) → dense decimal-float
+  bytes, near-incompressible columns, different again.
+These two need acquire + measure + SHA before they enter the manifest — tracked in
+`plans/squishy-1.0-readiness.md`.
 
 **Size-sampling rule:** add a large rung **only where redundancy grows with
 length** — that's where window size and long-range matching change which codec

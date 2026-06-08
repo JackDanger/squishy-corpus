@@ -214,7 +214,7 @@
       "sha256": "c50474410d63d60e6addd259d4310eac4bc67ed16248c69017c68cc0280ed5f9",
       "key": "corpus/tool.bin",
       "url": "https://squishy.jackdanger.com/corpus/tool.bin",
-      "license": "Apache-2.0",
+      "license": "Apache-2.0 (binary bundles MPL-2.0 components; MPL \u00a73.2 permits executable redistribution)",
       "source_url": "https://github.com/gohugoio/hugo/releases/download/v0.162.1/hugo_extended_0.162.1_linux-amd64.tar.gz",
       "entropy": 6.351,
       "coverage": 0.2608,
@@ -336,7 +336,7 @@
     {
       "name": "big-buck-bunny-1080p.mov",
       "display": "big-buck-bunny-1080p.mov",
-      "kind": "media",
+      "kind": "movie",
       "category": "Binary & Media",
       "tier": "scale",
       "size_bytes": 725106140,

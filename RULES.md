@@ -44,8 +44,14 @@ the rest is on your honor and is checkable by anyone who re-runs you.
    - **The headline is the ratio over a realistic mix, including the
      near-incompressible files** (`photo`, `movie`, `weights`). It reports what a
      codec achieves on real data as it comes — not the best ratio reachable on
-     only-compressible data. Those files score ~1.0×, lowering the headline by the
-     same factor for every codec, so they never change the ranking.
+     only-compressible data. Those files score ~1.0×, lowering the headline by nearly
+     the same factor for every codec, so they barely move the ranking — a codec can
+     earn a sliver by genuinely squeezing them, but can't win on them.
+   - **One vote per file means file *count* is the only weight** (a kind sampled at
+     two sizes votes twice). The formula has no knob; balance is enforced by
+     *curation* — the edition keeps the per-kind file count even and every member
+     structurally independent (Rule: no two scored members may share a source or
+     lineage, so correlated near-duplicates can't stack votes).
 5. **The number is versioned, and the tool is provenanced like the data.** A Squishy
    Score is a property of *(codec, setting, codec-version, codec-argv, corpus-edition)*.
    Every published score records the **exact tool that produced it** — its release
