@@ -435,7 +435,6 @@
         return '<span class="lg"><i style="background:' + cats[k] + '"></i>' + k + "</span>";
       }).join("");
       lg += '<span class="lg"><i class="dotbig"></i><i class="dotsm"></i>dot size = file size (MB → GB)</span>';
-      lg += '<span class="lg"><i class="ring"></i>hollow = not scored (entropy-coded media)</span>';
       opts.legendEl.innerHTML = lg;
     }
 

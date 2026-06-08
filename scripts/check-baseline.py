@@ -35,7 +35,7 @@ def main() -> int:
 
     # 1. scored-set fingerprint unchanged
     ed = json.loads((REPO / "build/meta/edition.json").read_text())
-    fp = [(f["name"], f["sha256"], f["kind"], f["category"], f.get("scored"))
+    fp = [(f["name"], f["sha256"], f["kind"], f["category"])
           for f in sorted(ed["files"], key=lambda x: x["name"])]
     cur = hashlib.sha256(json.dumps(fp, sort_keys=True).encode()).hexdigest()
     if cur != base["scored_set_fingerprint"]:

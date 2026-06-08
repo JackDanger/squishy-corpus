@@ -463,7 +463,6 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .legend{{display:flex;flex-wrap:wrap;gap:.4rem 1.1rem;margin:.5rem 0 0;font-size:.85rem;color:#444}}
  .legend .lg{{display:inline-flex;align-items:center;gap:.4rem}}
  .legend i{{width:.72rem;height:.72rem;border-radius:50%;display:inline-block}}
- .legend i.ring{{background:transparent;border:1.5px dashed #cc79a7;box-sizing:border-box}}
  .legend i.dotsm{{width:.4rem;height:.4rem;background:#9aa0a6}}
  .legend i.dotbig{{width:.85rem;height:.85rem;background:#9aa0a6;margin-right:-.15rem}}
  .hint{{color:#888;font-size:.82rem}}

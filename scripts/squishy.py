@@ -354,11 +354,6 @@ def corpus_score(ratio_of, edition_path: Path | None = None) -> dict:
     }
 
 
-# Back-compat alias: the headline is no longer a nested geomean, but callers/tests may
-# still import the old name. Both point at the same plain-geomean implementation.
-nested_score = corpus_score
-
-
 def _core_props() -> dict[str, dict]:
     """Per-core-file intrinsic byte properties (entropy/coverage/…), keyed by display
     name, from build/meta/file-properties.json — feeds the coverage map / diagnostics."""

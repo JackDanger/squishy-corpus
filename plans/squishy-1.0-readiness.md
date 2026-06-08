@@ -86,9 +86,10 @@ is fine). The old "scale tier is out of the score" assumption is overridden.
 `squishy-score.md`, `RULES.md`, and `README.md` are rewritten to this. New work
 the freeze now depends on:
 
-- [x] **Three-level nested geomean** (size → kind → category) implemented in
-  `scripts/squishy.py` + `squishy-calculate` (equal-weight geomean of per-category
-  geomeans; for single-size kinds this reduces to per-category). Board re-aggregated.
+- [x] **Plain geomean over all files** (one vote per file) implemented in
+  `scripts/squishy.py` + `squishy-calculate` — no category/kind/size weighting and no
+  compressibility threshold (the nested geomean and the K-plane were retired
+  2026-06-07; see `plans/score-weighting-critique-and-proposal.md`). Board re-aggregated.
 - [ ] **Partial run → no headline:** a run over fewer than all files prints
   per-file ratios + an explicit "NOT a Squishy Score" line; only the complete
   edition prints the headline. (One corpus, one number — no named subset.)

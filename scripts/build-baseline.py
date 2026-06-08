@@ -44,7 +44,7 @@ def main() -> int:
     files = {f["name"]: f["sha256"] for f in ed["files"]}
     # deterministic fingerprint of the edition's scored set (independent of the
     # generated_utc timestamp in edition.json), so re-generation diffs cleanly.
-    fp = [(f["name"], f["sha256"], f["kind"], f["category"], f.get("scored"))
+    fp = [(f["name"], f["sha256"], f["kind"], f["category"])
           for f in sorted(ed["files"], key=lambda x: x["name"])]
     scored_set_fingerprint = hashlib.sha256(json.dumps(fp, sort_keys=True).encode()).hexdigest()
 

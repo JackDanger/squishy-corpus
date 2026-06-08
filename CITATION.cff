@@ -4,9 +4,9 @@ title: "Squishy: a curated 2026 compression benchmark corpus and score"
 abstract: >-
   Squishy is a successor to the Silesia corpus: one curated set of real,
   redistributable files spanning kinds and sizes, plus a single citable headline
-  metric — the Squishy Score, a category-balanced (nested size→kind→category)
-  geometric mean of per-file compression ratios over the whole corpus, reported
-  with a byte-weighted corpus bits-per-byte. Editions are versioned and dated;
+  metric — the Squishy Score, the geometric mean of per-file compression ratio
+  over the whole corpus (one vote per file), reported with a byte-weighted corpus
+  bits-per-byte. Editions are versioned and dated;
   each is frozen and assigned a DOI.
 type: dataset
 authors:

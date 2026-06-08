@@ -1,10 +1,9 @@
 {
   "edition": "Squishy-2026-DRAFT",
-  "generated_utc": "2026-05-30T05:38:29Z",
+  "generated_utc": "2026-06-08T03:33:52Z",
   "n_files": 27,
-  "n_scored_size_points": 20,
-  "scored_set_fingerprint": "90e4639ea48c4ec244229a4b87c8793882b120b2003f29fb0d25d433e44b49d8",
-  "compressibility_min": 0.11,
+  "n_scored_size_points": 24,
+  "scored_set_fingerprint": "6bbd93d50f3f9dd86d2ed646f97433922454b3f6f6b22131c5953376f29ac684",
   "files_sha256": {
     "dickens": "7312e776a3d7e5e25b7415116d3777c934f3c9c47fc153356ca16608d6428bc0",
     "aozora.txt": "c12106e76b22b238f43bcc62b26d6426192425e5f819d7406e2c2af7f8ef0237",
@@ -37,7 +36,7 @@
   "reference_score": {
     "codec": "zstd -19 -c",
     "codec_version": "*** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***",
-    "squishy_score": 5.81,
+    "squishy_score": 6.8754,
     "corpus_bpb": 1.008,
     "tool_provenance": {
       "tool": "zstd",
@@ -53,13 +52,13 @@
     "pyarrow": null,
     "python": "3.14.4",
     "host": {
-      "platform": "macOS-26.5-arm64-arm-64bit-Mach-O",
+      "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
       "system": "Darwin",
       "release": "25.5.0",
       "machine": "arm64",
       "processor": "arm",
       "python": "3.14.4",
-      "recorded_utc": "2026-05-30T05:38:29Z"
+      "recorded_utc": "2026-06-08T03:33:52Z"
     }
   }
 }

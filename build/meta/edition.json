@@ -22,9 +22,7 @@
       "coverage": 0.0228,
       "match_distance": 859936,
       "match_distance_p90": 6753120,
-      "size": 12174519,
-      "compressibility": 0.442,
-      "scored": true
+      "size": 12174519
     },
     {
       "name": "aozora.txt",
@@ -42,9 +40,7 @@
       "coverage": 0.1027,
       "match_distance": 1089640,
       "match_distance_p90": 5661721,
-      "size": 12003648,
-      "compressibility": 0.5022,
-      "scored": true
+      "size": 12003648
     },
     {
       "name": "monorepo.tar",
@@ -62,9 +58,7 @@
       "coverage": 0.34,
       "match_distance": 20384,
       "match_distance_p90": 6352657,
-      "size": 50915328,
-      "compressibility": 0.6961,
-      "scored": true
+      "size": 50915328
     },
     {
       "name": "minjs.min.js",
@@ -82,9 +76,7 @@
       "coverage": 0.0948,
       "match_distance": 33200,
       "match_distance_p90": 676544,
-      "size": 3598158,
-      "compressibility": 0.4111,
-      "scored": true
+      "size": 3598158
     },
     {
       "name": "markup.xml",
@@ -102,9 +94,7 @@
       "coverage": 0.3414,
       "match_distance": 14000,
       "match_distance_p90": 1172067,
-      "size": 7974912,
-      "compressibility": 0.6889,
-      "scored": true
+      "size": 7974912
     },
     {
       "name": "data.json",
@@ -122,9 +112,7 @@
       "coverage": 0.6988,
       "match_distance": 12112,
       "match_distance_p90": 434972,
-      "size": 14215394,
-      "compressibility": 1.0672,
-      "scored": true
+      "size": 14215394
     },
     {
       "name": "access.log",
@@ -142,9 +130,7 @@
       "coverage": 0.7266,
       "match_distance": 20768,
       "match_distance_p90": 1485496,
-      "size": 26214398,
-      "compressibility": 1.0741,
-      "scored": true
+      "size": 26214398
     },
     {
       "name": "ecoli.fastq",
@@ -162,9 +148,7 @@
       "coverage": 0.4896,
       "match_distance": 16,
       "match_distance_p90": 12816,
-      "size": 26214271,
-      "compressibility": 1.0795,
-      "scored": true
+      "size": 26214271
     },
     {
       "name": "data.csv",
@@ -182,9 +166,7 @@
       "coverage": 0.5689,
       "match_distance": 151584,
       "match_distance_p90": 7588704,
-      "size": 26500039,
-      "compressibility": 1.0658,
-      "scored": true
+      "size": 26500039
     },
     {
       "name": "data.parquet",
@@ -202,9 +184,7 @@
       "coverage": 0.0784,
       "match_distance": 293120,
       "match_distance_p90": 801120,
-      "size": 20859349,
-      "compressibility": 0.145,
-      "scored": true
+      "size": 20859349
     },
     {
       "name": "data.sqlite",
@@ -222,9 +202,7 @@
       "coverage": 0.0891,
       "match_distance": 4096,
       "match_distance_p90": 94416,
-      "size": 48308224,
-      "compressibility": 0.3858,
-      "scored": true
+      "size": 48308224
     },
     {
       "name": "tool.bin",
@@ -242,9 +220,7 @@
       "coverage": 0.2608,
       "match_distance": 2672,
       "match_distance_p90": 582272,
-      "size": 62480352,
-      "compressibility": 0.4669,
-      "scored": true
+      "size": 62480352
     },
     {
       "name": "photo.jpg",
@@ -262,9 +238,7 @@
       "coverage": 0.0007,
       "match_distance": 16,
       "match_distance_p90": 1616,
-      "size": 6511067,
-      "compressibility": 0.0065,
-      "scored": false
+      "size": 6511067
     },
     {
       "name": "movie.mp4",
@@ -282,9 +256,7 @@
       "coverage": 0.0,
       "match_distance": 24704,
       "match_distance_p90": 729049,
-      "size": 12942257,
-      "compressibility": 0.003,
-      "scored": false
+      "size": 12942257
     },
     {
       "name": "weights.safetensors",
@@ -302,9 +274,7 @@
       "coverage": 0.0001,
       "match_distance": 224,
       "match_distance_p90": 4331,
-      "size": 90868376,
-      "compressibility": 0.0807,
-      "scored": false
+      "size": 90868376
     },
     {
       "name": "weights-smollm2-135m.safetensors",
@@ -361,9 +331,7 @@
       "coverage": 0.7848,
       "match_distance": 1548144,
       "match_distance_p90": 39620304,
-      "size": 1331439742,
-      "compressibility": 1.2764,
-      "scored": true
+      "size": 1331439742
     },
     {
       "name": "big-buck-bunny-1080p.mov",
@@ -381,9 +349,7 @@
       "coverage": 0.0006,
       "match_distance": 53200,
       "match_distance_p90": 3874849,
-      "size": 725106140,
-      "compressibility": 0.002,
-      "scored": false
+      "size": 725106140
     },
     {
       "name": "ecoli-DRR002013-full.fastq",
@@ -401,9 +367,7 @@
       "coverage": 0.667,
       "match_distance": 1040,
       "match_distance_p90": 258146816,
-      "size": 1073389140,
-      "compressibility": 1.2526,
-      "scored": true
+      "size": 1073389140
     },
     {
       "name": "enwik9.txt",
@@ -421,9 +385,7 @@
       "coverage": 0.3031,
       "match_distance": 1064272,
       "match_distance_p90": 251084998,
-      "size": 1000000000,
-      "compressibility": 0.6586,
-      "scored": true
+      "size": 1000000000
     },
     {
       "name": "llvm-project-19.1.0.src.tar",
@@ -441,9 +403,7 @@
       "coverage": 0.6756,
       "match_distance": 9776,
       "match_distance_p90": 4673131,
-      "size": 1772216320,
-      "compressibility": 0.9643,
-      "scored": true
+      "size": 1772216320
     },
     {
       "name": "nasa-http-jul-aug-1995.log",
@@ -461,9 +421,7 @@
       "coverage": 0.8348,
       "match_distance": 36720,
       "match_distance_p90": 17611148,
-      "size": 373056138,
-      "compressibility": 1.1804,
-      "scored": true
+      "size": 373056138
     },
     {
       "name": "noaa-ghcn-daily-2021-2023.csv",
@@ -481,9 +439,7 @@
       "coverage": 0.8036,
       "match_distance": 2939936,
       "match_distance_p90": 52128816,
-      "size": 4069135443,
-      "compressibility": 1.2975,
-      "scored": true
+      "size": 4069135443
     },
     {
       "name": "clang-releases-16-17-18-19.tar",
@@ -501,9 +457,7 @@
       "coverage": 0.8704,
       "match_distance": 20832,
       "match_distance_p90": 379105008,
-      "size": 1504071680,
-      "compressibility": 1.1704,
-      "scored": true
+      "size": 1504071680
     },
     {
       "name": "bts-ontime-2022-2024.parquet",
@@ -521,9 +475,7 @@
       "coverage": 0.0786,
       "match_distance": 226720,
       "match_distance_p90": 3567232,
-      "size": 772265623,
-      "compressibility": 0.143,
-      "scored": true
+      "size": 772265623
     }
   ]
 }

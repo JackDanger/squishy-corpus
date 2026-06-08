@@ -2,7 +2,7 @@
 """Recompute the reference board LIVE over build/raw/corpus (the actual bytes),
 running each pinned panel codec on every core file. Replaces the old
 individual/-matrix path. Writes build/meta/squishy-scores.json in the published
-schema (nested score + byte-weighted corpus_bpb + per-file + per-category +
+schema (score + byte-weighted corpus_bpb + per-file + per-category +
 codec_version/codec_command), labelled DRAFT/partial (small members only; the
 large rungs are the periodic whole-corpus computation).
 

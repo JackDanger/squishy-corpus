@@ -82,9 +82,11 @@ These need human judgment — the agent cannot do them:
 ## Notes for the record
 
 - Reference-board numbers are **draft, partial** (small members only; large rungs
-  pending — not yet a Squishy Score), nested geomean, pinned `tools.lock` builds:
-  zpaq 6.35× · xz 4.70× · brotli 4.66× · zstd-22 4.50× · zstd-19 4.44× ·
-  bzip2 4.31× · gzip 3.43×.
+  pending — not yet a Squishy Score), pinned `tools.lock` builds. **The figures once
+  quoted here predate the 2026-06-07 switch to the plain one-vote-per-file geomean
+  (and the older nested weighting) — superseded; see `build/meta/squishy-scores.json`
+  for the current board** (zpaq 5.81× · xz 4.37× · brotli 4.34× · zstd-22 4.20× ·
+  zstd-19 4.15× · bzip2 3.98× · gzip 3.23×).
 - The NYC-taxi decoupling (2026-05-29) removed a hidden correlation: `csv`,
   `parquet`, `sqlite` previously shared the *same taxi rows*; they are now three
   independent datasets (weather / taxi / nutrition) with distinct compressibility.
