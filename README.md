@@ -7,7 +7,7 @@ battery when you're tuning a codec's speed and memory without changing its outpu
 ```
 git clone https://github.com/JackDanger/squishy-corpus && cd squishy-corpus
 uv run squishy-calculate --cmd "zstd -19 -c"     # streams the FULL corpus, scores your codec
-→ Squishy Score: 5.81×   (complete edition: 20 scored size-points, 12.2 GB → 1.5 GB)
+→ Squishy Score: 6.88×   (plain geomean over every file — provisional; full freeze run pending)
 # streams + verifies every file; resumable; re-runs are instant from cache
 ```
 
@@ -69,30 +69,27 @@ The files are **sparse in this space — not a dense grid — but representative
 the whole.** We claim *coverage of the range*, not completeness; and these
 properties are the dimensions along which compressors are *known* to behave
 differently — they describe why each file is here, they don't *predict* a ratio.
-A single **compressibility plane** (`coverage + (8 − entropy)/8 = 0.11`) cuts
-through the space: files above it are scored, the entropy-coded media below it
-(`photo`, `movie`, `weights`) are kept as diagnostics — the map draws the plane so
-you can see the split. Explore it: the live map plots every artifact in 3D (size as
-the dot size) at [squishy.jackdanger.com](https://squishy.jackdanger.com) *(soon)*.
+These four properties are why each file is here; they make the *file selection*
+representative. They are **not** a weight in the score. Explore it: the live map
+plots every artifact in 3D (size as the dot size) at
+[squishy.jackdanger.com](https://squishy.jackdanger.com) *(soon)*.
 
 ## The Squishy Score
 
-> **Squishy Score (of a codec) = the geometric mean compression ratio
-> (uncompressed ÷ compressed) over the whole corpus, balanced by category, then
-> by kind, then by size.**
+> **Squishy Score (of a codec) = the geometric mean of the per-file compression
+> ratio (uncompressed ÷ compressed) over the whole corpus — one vote per file.**
 
-- **Three-level nested geomean** (size → kind → category): each category counts
-  equally; within a category each kind counts equally; within a kind each size point
-  counts equally. So adding a file or a size variant never silently re-weights the
-  score — and no single file, however large, can dominate.
-- **Only intrinsically compressible files are scored.** A file enters the score iff
-  it sits on the compressible side of one plane in the property space —
-  **compressibility K = coverage + (8 − entropy)/8 ≥ 0.11** — measured from the bytes
-  alone, no codec involved. That cleanly separates the entropy-coded media
-  (`photo`, `movie`, `weights`; every lossless codec scores ~1.0× on them) from
-  everything a codec can actually work on (`exe` and up). The non-scored files stay
-  in the corpus as **behaviour/throughput diagnostics**; you can see the dividing
-  plane on the [coverage map](#the-coverage-map).
+- **Plain geomean, one vote per file.** No category weights, no kind weights, no
+  size weights, no tuning constants, and no threshold deciding which files count.
+  Every file is averaged once; the geometric mean is what stops any single huge or
+  tiny file from running away with the number. (Design rationale:
+  [`plans/score-weighting-critique-and-proposal.md`](plans/score-weighting-critique-and-proposal.md).)
+- **Every real file counts — including the near-incompressible media.** `photo`,
+  `movie`, and `weights` score ~1.0×, which lowers the headline by the same factor
+  for every codec, so they never change the ranking — and a corpus of real data
+  honestly contains some incompressible files. The only thing left out is the
+  unmeasured model-weight **throughput ladder** (a speed/RAM fixture, not a ratio
+  corpus member).
 - Reported as **"×"** (2 decimals) — a dimensionless quality index, **not** a bit
   rate. Always shown beside the **corpus bpb (byte-weighted)** = 8 · total
   compressed ÷ total input (3 decimals), the operational rate; the two are
@@ -186,18 +183,18 @@ expensive periodic computation. Every codec build is pinned in
 
 | codec | Squishy Score (×) | corpus bpb (byte-weighted) |
 |-------|------------------:|---------------------------:|
-| zpaq | 7.85× | 2.620 |
-| xz -9 | 5.76× | 2.977 |
-| brotli -11 | 5.69× | 3.021 |
-| zstd -22 | 5.46× | 3.092 |
-| zstd -19 | 5.40× | 3.106 |
-| bzip2 -9 | 5.08× | 3.278 |
-| gzip -9 | 3.99× | 3.495 |
+| zpaq | 5.81× | 2.620 |
+| xz -9 | 4.37× | 2.977 |
+| brotli -11 | 4.34× | 3.021 |
+| zstd -22 | 4.20× | 3.092 |
+| zstd -19 | 4.15× | 3.106 |
+| bzip2 -9 | 3.98× | 3.278 |
+| gzip -9 | 3.23× | 3.495 |
 
-The **Squishy Score** (×) is a category-balanced geometric mean of per-file ratios
-over the compressibility-scored files (entropy-coded media are diagnostics, not in
-the score) — a dimensionless quality index, *not* a bit rate (don't derive bpb from
-it). The **corpus bpb** is the byte-weighted operational rate over the whole corpus
+The **Squishy Score** (×) is the geometric mean of the per-file ratio over every
+file — one vote per file, including the near-incompressible media (which score ~1.0×
+and lower every codec's number equally) — a dimensionless quality index, *not* a bit
+rate (don't derive bpb from it). The **corpus bpb** is the byte-weighted operational rate over the whole corpus
 (8 · total compressed ÷ total input). They're deliberate complements: the score
 weights every file equally (anti-gaming); corpus bpb is the size-weighted physical
 number. `zpaq` is the legacy 2016 v7.15 build — an honest data point, but the

@@ -206,14 +206,14 @@ def main() -> int:
             state = {}
     pf = state.get("per_file", {})
 
-    # The scored edition (core + large rungs), grouped category→kind→size-point and
-    # gated by compressibility — the single source of truth is build/meta/edition.json,
-    # which pins every file's key + sha256. We verify each streamed file against that
-    # sha (fail closed); edition.json is the published, pinned manifest.
+    # The whole edition (core + large rungs) — every file counts, one vote each. The
+    # single source of truth is build/meta/edition.json, which pins every file's key +
+    # sha256. We verify each streamed file against that sha (fail closed); edition.json
+    # is the published, pinned manifest.
     sc = sq.scored_corpus()
     points = [pt for ks in sc.values() for pts in ks.values() for pt in pts]
     n_total = len(points)
-    print(f"Squishy-2026 · {n_total} scored size-points (core + large rungs) · codec: {args.cmd}  [{ver}]")
+    print(f"Squishy-2026 · {n_total} files (core + large rungs) · codec: {args.cmd}  [{ver}]")
     print(f"  base:  {args.base}\n  cache: {cache}")
 
     for i, pt in enumerate(points, 1):
@@ -247,9 +247,9 @@ def main() -> int:
         print(f"  [{i:>2}/{n_total}] {name:<34} {ratio:6.2f}×  "
               f"({size_in/1e6:.0f}→{size_c/1e6:.1f}MB, {secs:.0f}s){vflag}")
 
-    # headline = the nested geomean size→kind→category over the scored edition,
-    # computed by the canonical scorer in squishy.py from the cached per-file ratios.
-    res = sq.nested_score(lambda pt: pf[pt["name"]]["ratio"] if pt["name"] in pf else None)
+    # headline = the plain geomean of per-file ratio over the whole edition (one vote
+    # per file), computed by the canonical scorer in squishy.py from the cached ratios.
+    res = sq.corpus_score(lambda pt: pf[pt["name"]]["ratio"] if pt["name"] in pf else None)
     score = res["squishy_score"]
     cat_scores = res["categories"]
     complete = res["complete"]
@@ -262,13 +262,13 @@ def main() -> int:
     # (every scored size-point — core AND the large rungs).
     if not complete:
         done, total = res["n_done"], res["n_scored"]
-        print(f"\n  partial run ({done}/{total} scored size-points) — per-file ratios for your "
+        print(f"\n  partial run ({done}/{total} files) — per-file ratios for your "
               f"own regression use; NOT a Squishy Score.")
         for n in pf:
             print(f"    {n:<34} {pf[n]['ratio']:5.2f}×")
     else:
-        print(f"\n  Squishy Score: {score:.2f}×   [{res['n_scored']} scored size-points, core+scale]  "
-              f"(nested size→kind→category geomean)")
+        print(f"\n  Squishy Score: {score:.2f}×   [{res['n_scored']} files, core+scale]  "
+              f"(plain geomean of per-file ratios — one vote per file)")
         print(f"  corpus bpb (byte-weighted, total out÷in): {corpus_bpb:.3f}  "
               f"[{tot_in/1e9:.1f}→{tot_out/1e9:.1f} GB]")
         print("  ── category ───────────────")

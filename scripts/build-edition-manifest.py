@@ -29,17 +29,13 @@ SCALE_CATEGORY = {"csv": "Tabular / DB", "columnar": "Tabular / DB", "parquet": 
 
 
 def _props(measured: dict, sq) -> dict:
-    """Carry the intrinsic byte axes + the compressibility `scored` gate into each
-    edition entry (so the scorer and the webpage's 3-D map both read one file). The
-    gate threshold is single-sourced from squishy.py (no duplicate constant)."""
+    """Carry the intrinsic byte axes (entropy/coverage/match-distance/size) into each
+    edition entry, so the scorer and the webpage's 3-D map both read one file. There is
+    no compressibility gate any more — every file is scored (one vote per file)."""
     if not measured:
         return {}
-    keep = {k: measured[k] for k in ("entropy", "coverage", "match_distance",
+    return {k: measured[k] for k in ("entropy", "coverage", "match_distance",
                                      "match_distance_p90", "size") if k in measured}
-    if "entropy" in keep and "coverage" in keep:
-        keep["compressibility"] = round(sq.compressibility(keep["entropy"], keep["coverage"]), 4)
-        keep["scored"] = bool(sq.is_scored(keep))
-    return keep
 
 
 def main() -> int:

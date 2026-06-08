@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """squishy — the Squishy Score runner (shared scoring core).
 
-Squishy Score (of a codec) = the nested geometric mean (size → kind → category) of
-per-file compression ratio (uncompressed / compressed) over the compressibility-
-scored files. A file is scored iff it sits on the compressible side of the K plane
-(see `is_scored`); entropy-coded media (photo/movie/weights) are measured but kept
-out of the headline as diagnostics. Reported as a dimensionless "×" beside a
-byte-weighted `corpus_bpb` (never derive bpb from the score).
+Squishy Score (of a codec) = the geometric mean of per-file compression ratio
+(uncompressed / compressed) over the whole corpus — one vote per file, no
+category/kind/size weighting and no compressibility threshold. Every real file is
+in, including the near-incompressible media (photo/movie/weights): they score ~1.0×
+and pull the headline down by the same factor for every codec, so they never change
+the ranking. Reported as a dimensionless "×" beside a byte-weighted `corpus_bpb`
+(never derive bpb from the score).
 
 This module is the scoring + provenance library; the canonical whole-edition number
 is produced by `scripts/squishy-calculate.py` (streams core + large rungs). Local:
@@ -74,33 +75,16 @@ CORE: dict[str, list[tuple[str, str, str]]] = {
 }
 BOUNDS = [("modern", "random-1M")]  # synthetic/incompressible — never in headline
 
-# What enters the Squishy Score is decided by intrinsic COMPRESSIBILITY, not by
-# category. From the codec-free byte axes alone:
-#     K = coverage + (8 − entropy)/8        (repetition gain + entropy headroom)
-# a file is scored iff K ≥ COMPRESSIBILITY_MIN. Because K ignores match-distance, the
-# boundary is a single flat PLANE in the (entropy × coverage × distance) space — a
-# vertical curtain — that cleanly separates the entropy-coded media (photo/movie/
-# weights, top K ≈ 0.081) from everything compressible (lowest scored point: parquet
-# K ≈ 0.143): the plane at 0.11 sits inside that ≈0.062-wide gap. Non-scored files
-# stay in the corpus as behaviour/throughput diagnostics; `exe` (K ≈ 0.47) is scored.
-# (Owner decision 2026-05-29: a compressibility plane, not a category, gates scoring.)
+# The Squishy Score weights every file in the corpus equally: ONE VOTE PER FILE — no
+# category/kind/size weighting and no compressibility threshold deciding what counts.
+# Every real file you'd want to compress is in, including the near-incompressible
+# media (photo/movie/weights): they score ~1.0×, which lowers the headline by the same
+# factor for every codec and so never changes the ranking. The categories below are a
+# presentation / diagnostic grouping only (the by-category table, the coverage map) —
+# never a weight in the score. (Owner decision 2026-06-07: plain geomean, no magic
+# numbers; the compressibility plane and the nested size→kind→category weighting are
+# both retired — see plans/score-weighting-critique-and-proposal.md.)
 CATEGORY_ORDER = ["Prose", "Code & Web", "Structured", "Tabular / DB", "Binary & Media"]
-COMPRESSIBILITY_MIN = 0.11
-
-
-def compressibility(entropy: float, coverage: float) -> float:
-    """Intrinsic, codec-free compressibility proxy: repetition gain + entropy headroom."""
-    return coverage + (8.0 - entropy) / 8.0
-
-
-def is_scored(props: dict) -> bool:
-    """A file is in the Squishy Score iff it sits on the compressible side of the plane.
-    A file we have not measured cannot be certified compressible, so it is NOT scored
-    (the build should measure every distributed file; an un-measured one is excluded
-    from the headline rather than scored on a guess)."""
-    if not props or "entropy" not in props or "coverage" not in props:
-        return False
-    return compressibility(props["entropy"], props["coverage"]) >= COMPRESSIBILITY_MIN
 
 # Reference panel: canonical "best practical" level per codec → individual/ suffix.
 PANEL = {
@@ -304,19 +288,22 @@ def geomean(xs: list[float]) -> float:
 
 
 def scored_corpus(edition_path: Path | None = None) -> dict[str, dict[str, list[dict]]]:
-    """The scored set, edition-driven (single source of truth) and grouped for the
-    nested geomean: {category: {kind: [size-point, ...]}}, size-points sorted small→
-    large. Reads build/meta/edition.json (category/kind/tier/key/url/sha256/props per
-    file). ALL five categories are kept; the per-file compressibility plane (is_scored)
-    decides membership — so entropy-coded media (photo/movie/weights) fall out one by
-    one while `exe` stays, and Binary & Media is NOT special-cased. Each kind's list is
-    its size axis (one entry for single-size kinds, several for kinds with large rungs)."""
+    """The whole corpus, edition-driven (single source of truth) and grouped for the
+    by-category / by-kind diagnostic re-slices: {category: {kind: [size-point, ...]}},
+    size-points sorted small→large. Reads build/meta/edition.json (category/kind/tier/
+    key/url/sha256/props per file). Every file we've placed on the intrinsic map (i.e.
+    measured — has an `entropy`) is scored, one vote each; there is no compressibility
+    gate. The only files left out are the unmeasured throughput-ladder fixtures (the
+    model-weight size ladder), which exist purely for speed/RAM testing and are not
+    corpus members for ratio. The grouping here only feeds the diagnostic tables, never
+    a score weight. Each kind's list is its size axis (one entry for single-size kinds,
+    several for kinds with load-bearing large rungs)."""
     path = edition_path or (REPO / "build" / "meta" / "edition.json")
     data = json.loads(path.read_text())
     out: dict[str, dict[str, list[dict]]] = {c: {} for c in CATEGORY_ORDER}
     for f in data.get("files", []):
         cat = f.get("category")
-        if cat not in out or not is_scored(f):     # below the compressibility plane → not scored
+        if cat not in out or "entropy" not in f:   # unmeasured throughput fixture → not corpus
             continue
         out[cat].setdefault(f.get("kind"), []).append(f)
     for cat in out:
@@ -325,38 +312,40 @@ def scored_corpus(edition_path: Path | None = None) -> dict[str, dict[str, list[
     return {c: ks for c, ks in out.items() if ks}
 
 
-def nested_score(ratio_of, edition_path: Path | None = None) -> dict:
-    """Compute the Squishy Score as the true nested geomean size→kind→category over
-    the scored corpus. `ratio_of(size_point)->ratio|None` supplies each file's ratio
-    (the caller decides how to obtain it: local bytes, streamed bytes, cached). Equal
-    weight at every level; non-compressible files (below the K plane) are already
-    excluded per-file by scored_corpus()."""
+def corpus_score(ratio_of, edition_path: Path | None = None) -> dict:
+    """Compute the Squishy Score = the geometric mean of per-file compression ratio over
+    the whole corpus. ONE VOTE PER FILE — no weighting, no threshold. `ratio_of(size_
+    point)->ratio|None` supplies each file's ratio (the caller decides how to obtain it:
+    local bytes, streamed bytes, cached). The by-category and by-kind geomeans are also
+    returned, but ONLY as diagnostic re-slices — the headline does not nest them."""
     sc = scored_corpus(edition_path)
+    all_ratios: list[float] = []
     cat_scores: dict[str, float] = {}
     kind_scores: dict[str, float] = {}
     per_file: dict[str, float] = {}
     missing: list[str] = []
     for cat, kinds in sc.items():
-        ks = []
+        cat_ratios: list[float] = []
         for kind, points in kinds.items():
             rs = []
             for pt in points:
                 r = ratio_of(pt)
                 if r is None:
                     missing.append(pt.get("name")); continue
-                rs.append(r); per_file[pt.get("name")] = round(r, 4)
+                rs.append(r); all_ratios.append(r); cat_ratios.append(r)
+                per_file[pt.get("name")] = round(r, 4)
             if rs:
-                g = geomean(rs); kind_scores[f"{cat}/{kind}"] = round(g, 4); ks.append(g)
-        if ks:
-            cat_scores[cat] = geomean(ks)
+                kind_scores[f"{cat}/{kind}"] = round(geomean(rs), 4)
+        if cat_ratios:
+            cat_scores[cat] = round(geomean(cat_ratios), 4)
     n_total = sum(len(p) for ks in sc.values() for p in ks.values())
-    headline = geomean(list(cat_scores.values())) if cat_scores else float("nan")
+    headline = geomean(all_ratios) if all_ratios else float("nan")
     return {
-        "squishy_score": round(headline, 4) if cat_scores else float("nan"),
-        "score_aggregation": "nested geomean size→kind→category over compressibility-scored "
-                             "files (below-plane media excluded; equal weight per level)",
-        "categories": {c: round(v, 4) for c, v in cat_scores.items()},
-        "kinds": kind_scores,
+        "squishy_score": round(headline, 4) if all_ratios else float("nan"),
+        "score_aggregation": "geomean of per-file compression ratio over the whole corpus "
+                             "(one vote per file; no weighting, no threshold)",
+        "categories": cat_scores,          # diagnostic re-slice only — NOT a score weight
+        "kinds": kind_scores,              # diagnostic re-slice only — NOT a score weight
         "per_file": per_file,
         "n_scored": n_total,
         "n_done": len(per_file),
@@ -365,9 +354,14 @@ def nested_score(ratio_of, edition_path: Path | None = None) -> dict:
     }
 
 
+# Back-compat alias: the headline is no longer a nested geomean, but callers/tests may
+# still import the old name. Both point at the same plain-geomean implementation.
+nested_score = corpus_score
+
+
 def _core_props() -> dict[str, dict]:
     """Per-core-file intrinsic byte properties (entropy/coverage/…), keyed by display
-    name, from build/meta/file-properties.json — used to apply the compressibility gate."""
+    name, from build/meta/file-properties.json — feeds the coverage map / diagnostics."""
     p = REPO / "build" / "meta" / "file-properties.json"
     if not p.exists():
         return {}
@@ -377,16 +371,12 @@ def _core_props() -> dict[str, dict]:
 def _collect(ratio_fn) -> dict:
     """Apply ratio_fn(set, name) -> ratio|None over the core; return structured result.
 
-    A file enters the headline only if it is intrinsically compressible (the
-    compressibility plane, see is_scored); non-scored files (entropy-coded media) are
-    still measured and reported as diagnostics, never in the Squishy Score. The
-    headline is the nested geomean size→kind→category — for the local core each kind
-    is single-size, so it reduces to category-balanced geomean over scored files."""
-    props = _core_props()
+    The headline is the plain geomean of per-file compression ratio over EVERY core
+    file — one vote per file, no weighting and no threshold. Categories are kept only
+    for the diagnostic by-category table, never as a score weight."""
     cats: dict[str, list[float]] = {}
     all_r: list[float] = []
     per_file: dict[str, float] = {}
-    diagnostic: dict[str, float] = {}     # measured but non-scored (below the plane)
     missing: list[str] = []
     expansions: list[str] = []
     for cat, files in CORE.items():
@@ -397,9 +387,6 @@ def _collect(ratio_fn) -> dict:
                 missing.append(display)
                 continue
             per_file[display] = round(r, 3)
-            if not is_scored(props.get(display)):
-                diagnostic[display] = round(r, 3)      # incompressible → out of the score
-                continue
             if r < 1.0:
                 expansions.append(display)
             rs.append(r); all_r.append(r)
@@ -409,23 +396,19 @@ def _collect(ratio_fn) -> dict:
         r = ratio_fn(s, name)
         if r is not None:
             bounds[f"{s}/{name}"] = round(r, 3)
-    # Headline = equal-weight nested geomean (size→kind→category) over scored files.
-    # Each category counts 1/N regardless of how many files sit under it; categories
-    # with no scored file drop out rather than poison the mean.
+    # Headline = plain geomean of per-file ratio over the whole corpus (one vote per
+    # file). The per-category geomeans below are a diagnostic re-slice, NOT a weight.
     cat_scores = {c: (geomean(rs) if rs else float("nan")) for c, rs in cats.items()}
-    scored = [v for v in cat_scores.values() if not math.isnan(v)]
-    headline = geomean(scored) if scored else float("nan")
+    headline = geomean(all_r) if all_r else float("nan")
     return {
-        "squishy_score": round(headline, 3) if scored else float("nan"),
-        # The Squishy Score is a dimensionless quality index (a balanced geomean of
-        # ratios), NOT a bit rate — do not derive bpb from it. The operational bit
-        # rate is `corpus_bpb` (byte-weighted), added by _add_byte_weighted().
-        "score_aggregation": "equal-weight geomean of per-category geomeans over "
-                             "compressibility-scored files (nested size→kind→category); "
-                             "files below the compressibility plane are diagnostic-only",
+        "squishy_score": round(headline, 3) if all_r else float("nan"),
+        # The Squishy Score is a dimensionless quality index (a geomean of ratios), NOT
+        # a bit rate — do not derive bpb from it. The operational bit rate is
+        # `corpus_bpb` (byte-weighted), added by _add_byte_weighted().
+        "score_aggregation": "geomean of per-file compression ratio over the whole corpus "
+                             "(one vote per file; no weighting, no threshold)",
         "n_files": len(all_r),
         "categories": {c: (round(v, 3) if not math.isnan(v) else None) for c, v in cat_scores.items()},
-        "diagnostic_non_scored": diagnostic,
         "per_file": per_file,
         "bounds": bounds,
         "missing": missing,
@@ -493,8 +476,8 @@ def _add_byte_weighted(res: dict, tot_in: int, tot_out: float) -> None:
     """Attach the *true* byte-weighted corpus numbers — total bytes in/out, the
     byte-weighted ratio, and the real corpus bits-per-byte (8·out/in). This is the
     operational bpb the literature uses (total compressed ÷ total input); it is
-    distinct from the Squishy Score, which is a category-balanced geomean of
-    per-file ratios. Both are reported so neither is mistaken for the other."""
+    distinct from the Squishy Score, which is the plain geomean of per-file ratios
+    (one vote per file). Both are reported so neither is mistaken for the other."""
     res["total_in_bytes"] = int(tot_in)
     res["total_out_bytes"] = int(round(tot_out))
     res["byte_weighted_ratio"] = round(tot_in / tot_out, 3) if tot_out else None
@@ -544,7 +527,7 @@ def print_board(results: dict[str, dict]) -> None:
                                else f"{'—':>9}") for c in cats)
             cbpb = r.get("corpus_bpb")
             print(f"{codec:<13} {r['squishy_score']:>7.2f}× {(f'{cbpb:.3f}' if cbpb else '—'):>11}   {cells}")
-        print(f"\nSquishy Score = category-balanced geomean of per-file ratios (dimensionless, not a bit rate).")
+        print(f"\nSquishy Score = plain geomean of per-file ratios, one vote per file (dimensionless, not a bit rate).")
         print(f"corpus bpb = byte-weighted total compressed÷input bits/byte (the operational rate).")
         best = max(valid.items(), key=lambda kv: kv[1]["squishy_score"])
         print(f"Squishiest in panel: {best[0]} at {best[1]['squishy_score']:.2f}x")
@@ -597,7 +580,7 @@ def main() -> int:
                 r["codec_command"] = PANEL_ARGV.get(codec, codec)
             missing = sorted(set(next(iter(results.values()))["missing"]))
             args.json.write_text(json.dumps({
-                "score_definition": "equal-weight geomean of per-category geomeans (nested size→kind→category)",
+                "score_definition": "geomean of per-file compression ratio over the whole corpus (one vote per file; no weighting, no threshold)",
                 "edition": "Squishy-2026-DRAFT",
                 "corpus_files": n_core,
                 "missing": missing,
@@ -633,7 +616,7 @@ def main() -> int:
                 print(f"  {d:<16} {r:>6.2f}x")
         else:
             print(f"\nSquishy Score: {res['squishy_score']:.2f}×   [{res['n_files']}/{n_core} files]"
-                  f"   (category-balanced geomean of per-file ratios)")
+                  f"   (plain geomean of per-file ratios — one vote per file)")
             if res.get("corpus_bpb") is not None:
                 print(f"  corpus bpb (byte-weighted, total out÷in): {res['corpus_bpb']:.3f}  "
                       f"[{res['total_in_bytes']/1e6:.0f}→{res['total_out_bytes']/1e6:.0f} MB]")

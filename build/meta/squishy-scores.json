@@ -1,25 +1,20 @@
 {
-  "score_definition": "Squishy Score = category-balanced geomean of per-file ratios (nested size\u2192kind\u2192category; dimensionless, NOT a bit rate). corpus_bpb = byte-weighted 8\u00b7total_out/total_in (operational rate).",
+  "score_definition": "Squishy Score = geomean of per-file compression ratio over the whole corpus (one vote per file; no weighting, no threshold). corpus_bpb = byte-weighted 8\u00b7total_out/total_in (operational rate).",
   "edition": "Squishy-2026-DRAFT",
   "core_files": 15,
   "missing": [],
   "status": "DRAFT \u2014 partial board over the small core members only. The large size rungs are scored in the periodic whole-corpus computation; until then this is NOT a citable Squishy Score. Each row is a property of (corpus, codec, codec_version, codec_command), reproducible for the pinned build.",
   "panel": {
     "gzip -9": {
-      "squishy_score": 3.988,
-      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
-      "n_files": 12,
+      "squishy_score": 3.233,
+      "score_aggregation": "geomean of per-file compression ratio over the whole corpus (one vote per file; no weighting, no threshold)",
+      "n_files": 15,
       "categories": {
         "Prose": 2.84,
         "Code & Web": 3.995,
         "Structured": 8.384,
         "Tabular / DB": 3.534,
-        "Binary & Media": 2.999
-      },
-      "diagnostic_non_scored": {
-        "photo": 1.003,
-        "movie": 1.003,
-        "weights": 1.093
+        "Binary & Media": 1.348
       },
       "per_file": {
         "dickens": 2.687,
@@ -59,20 +54,15 @@
       }
     },
     "bzip2 -9": {
-      "squishy_score": 5.081,
-      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
-      "n_files": 12,
+      "squishy_score": 3.983,
+      "score_aggregation": "geomean of per-file compression ratio over the whole corpus (one vote per file; no weighting, no threshold)",
+      "n_files": 15,
       "categories": {
         "Prose": 4.021,
         "Code & Web": 5.18,
         "Structured": 12.215,
         "Tabular / DB": 4.109,
-        "Binary & Media": 3.238
-      },
-      "diagnostic_non_scored": {
-        "photo": 1.021,
-        "movie": 1.001,
-        "weights": 1.071
+        "Binary & Media": 1.372
       },
       "per_file": {
         "dickens": 3.729,
@@ -112,20 +102,15 @@
       }
     },
     "zstd -19": {
-      "squishy_score": 5.396,
-      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
-      "n_files": 12,
+      "squishy_score": 4.149,
+      "score_aggregation": "geomean of per-file compression ratio over the whole corpus (one vote per file; no weighting, no threshold)",
+      "n_files": 15,
       "categories": {
-        "Prose": 4.067,
-        "Code & Web": 5.225,
+        "Prose": 4.066,
+        "Code & Web": 5.226,
         "Structured": 11.564,
         "Tabular / DB": 4.952,
-        "Binary & Media": 3.76
-      },
-      "diagnostic_non_scored": {
-        "photo": 1.014,
-        "movie": 1.006,
-        "weights": 1.095
+        "Binary & Media": 1.432
       },
       "per_file": {
         "dickens": 3.629,
@@ -165,20 +150,15 @@
       }
     },
     "zstd -22": {
-      "squishy_score": 5.465,
-      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
-      "n_files": 12,
+      "squishy_score": 4.197,
+      "score_aggregation": "geomean of per-file compression ratio over the whole corpus (one vote per file; no weighting, no threshold)",
+      "n_files": 15,
       "categories": {
         "Prose": 4.1,
         "Code & Web": 5.269,
         "Structured": 11.959,
         "Tabular / DB": 4.987,
-        "Binary & Media": 3.784
-      },
-      "diagnostic_non_scored": {
-        "photo": 1.014,
-        "movie": 1.006,
-        "weights": 1.096
+        "Binary & Media": 1.434
       },
       "per_file": {
         "dickens": 3.634,
@@ -218,20 +198,15 @@
       }
     },
     "xz -9": {
-      "squishy_score": 5.756,
-      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
-      "n_files": 12,
+      "squishy_score": 4.367,
+      "score_aggregation": "geomean of per-file compression ratio over the whole corpus (one vote per file; no weighting, no threshold)",
+      "n_files": 15,
       "categories": {
-        "Prose": 4.147,
+        "Prose": 4.146,
         "Code & Web": 5.371,
         "Structured": 11.907,
         "Tabular / DB": 5.74,
-        "Binary & Media": 4.151
-      },
-      "diagnostic_non_scored": {
-        "photo": 1.01,
-        "movie": 1.005,
-        "weights": 1.118
+        "Binary & Media": 1.473
       },
       "per_file": {
         "dickens": 3.664,
@@ -271,20 +246,15 @@
       }
     },
     "brotli -11": {
-      "squishy_score": 5.691,
-      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
-      "n_files": 12,
+      "squishy_score": 4.341,
+      "score_aggregation": "geomean of per-file compression ratio over the whole corpus (one vote per file; no weighting, no threshold)",
+      "n_files": 15,
       "categories": {
         "Prose": 4.111,
         "Code & Web": 5.397,
         "Structured": 12.602,
-        "Tabular / DB": 5.323,
-        "Binary & Media": 4.011
-      },
-      "diagnostic_non_scored": {
-        "photo": 1.015,
-        "movie": 1.012,
-        "weights": 1.109
+        "Tabular / DB": 5.322,
+        "Binary & Media": 1.462
       },
       "per_file": {
         "dickens": 3.658,
@@ -324,20 +294,15 @@
       }
     },
     "zpaq": {
-      "squishy_score": 7.852,
-      "score_aggregation": "equal-weight geomean of per-category geomeans over compressibility-scored files (nested size\u2192kind\u2192category); files below the compressibility plane are diagnostic-only",
-      "n_files": 12,
+      "squishy_score": 5.814,
+      "score_aggregation": "geomean of per-file compression ratio over the whole corpus (one vote per file; no weighting, no threshold)",
+      "n_files": 15,
       "categories": {
         "Prose": 5.319,
         "Code & Web": 7.342,
         "Structured": 19.259,
         "Tabular / DB": 8.373,
-        "Binary & Media": 4.739
-      },
-      "diagnostic_non_scored": {
-        "photo": 1.056,
-        "movie": 1.018,
-        "weights": 1.225
+        "Binary & Media": 1.581
       },
       "per_file": {
         "dickens": 4.955,

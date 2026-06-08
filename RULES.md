@@ -16,22 +16,19 @@ the rest is on your honor and is checkable by anyone who re-runs you.
    built-in dictionary is fine.
 3. **No filename / extension / magic-byte model selection.** The codec must not
    branch on which corpus file it is. It sees bytes, not names.
-4. **Score = a three-level nested geometric mean of per-file (uncompressed ÷
-   compressed) ratio over the whole corpus — balanced by category, then kind, then
-   size.** That is: geomean over the 5 categories of (geomean over the kinds in
-   that category of (geomean over that kind's size points of the ratio)). Each
-   category counts equally; within it each kind equally; within a kind each size
-   point equally. This is **not** a flat geomean over all files (that
-   double-weights any kind sampled at more sizes) — do not simplify it back to one.
-   The Squishy Score is reported as **"×"** and is a **dimensionless quality index,
-   NOT a bit rate — do not derive bpb from it.** Always shown beside it is the
-   **corpus bpb** = `8 · total_out_bytes / total_in_bytes` (byte-weighted, the
-   operational bits-per-byte the literature uses). The two are deliberate
-   complements: the Score weights every file equally regardless of size
-   (anti-gaming); corpus bpb is the size-weighted physical number. Bare "bpb" never
-   appears as a standalone label. Plus a **by-category** diagnostic sub-table (same
-   nested rule filtered); a **by-size-bucket** sub-table (`≤100 MB` vs `≥1 GB`) lands
-   once the large rungs are acquired.
+4. **Score = the geometric mean of per-file (uncompressed ÷ compressed) ratio over
+   the whole corpus — one vote per file.** No category weights, no kind weights, no
+   size weights, no tuning constants, and no threshold deciding which files count.
+   Every file is averaged once. The Squishy Score is reported as **"×"** and is a
+   **dimensionless quality index, NOT a bit rate — do not derive bpb from it.**
+   Always shown beside it is the **corpus bpb** = `8 · total_out_bytes /
+   total_in_bytes` (byte-weighted, the operational bits-per-byte the literature
+   uses). The two are deliberate complements: the Score weights every file equally
+   regardless of size (anti-gaming); corpus bpb is the size-weighted physical number.
+   Bare "bpb" never appears as a standalone label. Plus a **by-category** diagnostic
+   sub-table (the geomean of each category's files) and a **by-size-bucket** sub-table
+   (`≤100 MB` vs `≥1 GB`, landing once the large rungs are acquired) — both are
+   re-slices of the same per-file ratios, never a weight in the headline.
    - **One corpus, one number.** The Squishy Score is computed over the *complete*
      edition and is the only citable number. There is no subset and no second
      score; a run over fewer than all files prints per-file ratios for your own
@@ -41,13 +38,14 @@ the rest is on your honor and is checkable by anyone who re-runs you.
      show that. The no-corpus-bytes rule (#2) applies *especially* to the large
      files — they're the lucrative dictionary target. A general-purpose
      `--long`/large-window mode is fine.
-   - The nested geomean **structurally caps any one file's leverage** (≤ 1/sizes ×
-     1/kinds × 1/5), so no single giant file can be overfit to move the headline.
-   - **The headline is the ratio over a realistic mix, including a bounded budget of
+   - The geometric mean **caps any one file's leverage to a single vote**, so no
+     single giant file can be overfit to move the headline, and a codec that overfits
+     one kind of data pays for it on every other file.
+   - **The headline is the ratio over a realistic mix, including the
      near-incompressible files** (`photo`, `movie`, `weights`). It reports what a
      codec achieves on real data as it comes — not the best ratio reachable on
-     only-compressible data — and the nested geomean caps that budget's pull to one
-     category.
+     only-compressible data. Those files score ~1.0×, lowering the headline by the
+     same factor for every codec, so they never change the ranking.
 5. **The number is versioned, and the tool is provenanced like the data.** A Squishy
    Score is a property of *(codec, setting, codec-version, codec-argv, corpus-edition)*.
    Every published score records the **exact tool that produced it** — its release
@@ -68,8 +66,8 @@ the rest is on your honor and is checkable by anyone who re-runs you.
 
 - Compute each per-file ratio from the **exact byte counts** (`uncompressed_bytes ÷
   compressed_bytes`) at full precision — never from a pre-rounded ratio.
-- Apply the nested geomean (size → kind → category) on the full-precision per-file
-  ratios, then round **once** for reporting: the **Squishy Score to 2 decimals**
+- Take the geomean over the full-precision per-file ratios (one vote per file),
+  then round **once** for reporting: the **Squishy Score to 2 decimals**
   (e.g. `4.44×`). Compute **corpus bpb** from the exact byte totals
   (`8 · total_out_bytes / total_in_bytes`) and report to **3 decimals** (e.g.
   `3.090`). Category and size sub-scores to 2 decimals.
@@ -103,7 +101,7 @@ the rest is on your honor and is checkable by anyone who re-runs you.
 
 Anyone can reproduce a reported score: download the edition's files by their
 published sha256 (the edition manifest / `CHECKSUMS.sha256`), run the same codec
-build at the same setting, and recompute the nested geometric mean. `squishy-calculate --cmd "<your
+build at the same setting, and recompute the geometric mean. `squishy-calculate --cmd "<your
 codec>"` streams the verified corpus and does exactly this — it refuses to score
 bytes whose published hash is missing or wrong (fail closed). `squishy bench
 --cmd "<your codec>"` scores a local copy with the same rules.

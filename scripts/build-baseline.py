@@ -62,7 +62,6 @@ def main() -> int:
         "n_files": len(files),
         "n_scored_size_points": sum(len(p) for ks in sq.scored_corpus().values() for p in ks.values()),
         "scored_set_fingerprint": scored_set_fingerprint,
-        "compressibility_min": sq.COMPRESSIBILITY_MIN,
         "files_sha256": files,
         "reference_score": ref,
         "reproducibility_toolchain": {

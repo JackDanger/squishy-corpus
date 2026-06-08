@@ -177,30 +177,21 @@ def cube_data(sq, props, scale=None) -> dict:
             "sizeMB": m["size"] / 1e6, "entropy": m["entropy"],
             "coverage": m["coverage"], "dist": m["match_distance"],
             "distp90": m.get("match_distance_p90", m["match_distance"]),
-            "scored": bool(sq.is_scored(m)),
-            "K": round(sq.compressibility(m["entropy"], m["coverage"]), 3),
         })
-    # The compressibility plane that gates the Squishy Score: K = coverage + (8−entropy)/8
-    # ≥ COMPRESSIBILITY_MIN. K ignores match-distance, so the boundary is a flat vertical
-    # plane; in the (x=entropy, y=coverage) face it is the line y = entropy/8 − (1 − K_min),
-    # extended across all z. Points below it (high entropy, ~no repetition) are the
-    # entropy-coded media that are measured but NOT scored.
-    kmin = sq.COMPRESSIBILITY_MIN
+    # Every file is scored (one vote per file) — there is no compressibility gate and no
+    # plane to draw. The scatter is purely the three intrinsic byte axes.
     return {
         "axes": {"x": {"label": "entropy", "min": 0, "max": 8, "log": False},
                  "y": {"label": "repetition", "min": 0, "max": 1, "log": False},
                  "z": {"label": "repeat distance", "min": K, "max": max(dists), "log": True}},
         "categories": CUBE_COLORS,
-        "plane": {"label": f"compressibility K = {kmin} (scored ↔ diagnostic)",
-                  "kmin": kmin, "slope_x": 1.0 / 8.0, "intercept": -(1.0 - kmin)},
         "points": pts}
 
 
 def coverage_table(cube: dict) -> str:
     """Accessible, non-3D fallback for the explorer: the same points as a sortable
     table. Mirrors the tooltip fields so screen-reader / no-WebGL users get everything."""
-    head = ["category", "file", "entropy (bpb)", "coverage", "match distance",
-            "size", "K", "status"]
+    head = ["category", "file", "entropy (bpb)", "coverage", "match distance", "size"]
     rows = []
     for p in sorted(cube["points"], key=lambda p: (p["cat"], -p["sizeMB"])):
         dist = p["dist"]
@@ -208,9 +199,7 @@ def coverage_table(cube: dict) -> str:
               if dist >= 1e3 else f"{dist} B")
         sz = (f"{p['sizeMB']/1000:.1f} GB" if p["sizeMB"] >= 1000 else f"{p['sizeMB']:.1f} MB")
         rows.append([p["cat"], p["name"], f"{p['entropy']:.2f}",
-                     f"{p['coverage']*100:.0f}%", ds, sz,
-                     f"{p['K']:.2f}" if p.get("K") is not None else "—",
-                     "scored" if p.get("scored") else "diagnostic"])
+                     f"{p['coverage']*100:.0f}%", ds, sz])
     h = "<tr>" + "".join(f"<th>{esc(c)}</th>" for c in head) + "</tr>"
     body = "".join("<tr>" + "".join(f"<td>{esc(c)}</td>" for c in r) + "</tr>" for r in rows)
     return f'<table class="coverage"><thead>{h}</thead><tbody>{body}</tbody></table>'
@@ -228,7 +217,7 @@ def scale_what(name: str) -> str:
         return ("Qwen2.5-1.5B — a larger (1.5B-parameter) language model's weights "
                 "(Apache-2.0). The top rung of the ladder; multi-GB, for large-window "
                 "and throughput work.")
-    return "Scale-tier file — for throughput / large-window testing (not scored)."
+    return "Scale-tier file — a large rung for large-window and throughput testing."
 
 
 def preview_safetensors(p) -> str:
@@ -359,10 +348,10 @@ def main() -> int:
     if extra:
         cards += ('<h2>The big ones</h2>'
                   '<p class="cap">The same kinds of data, but huge (~0.3–3 GB) — where long-range '
-                  'tricks and big windows start to matter. The compressible ones (weather, airline, '
-                  'genome, text, code) are scored just like the small files. The model weights and the '
-                  'full-length video are basically pre-compressed already, so they don\'t count toward '
-                  'the score — we keep them to test speed and memory. <em>Still being assembled.</em></p>')
+                  'tricks and big windows start to matter. Every measured file counts once in the '
+                  'score, just like the small ones (the pre-compressed ones simply barely shrink). The '
+                  'one exception is the model-weight size-ladder, which exists only to test speed and '
+                  'memory and isn\'t scored. <em>Still being assembled.</em></p>')
         for r in sorted(extra, key=lambda r: int(r["size_bytes"])):
             nm = r["name"]
             local = next((p for p in REPO.glob(f"build/raw/*/{nm}") if p.exists()), None)
@@ -533,9 +522,9 @@ single <b>Squishy Score</b> you can cite and compare. It's the 2026 <span class=
 <div class="legend" id="cubelegend"></div>
 <ul class="readkey">
   <li><b>colour</b> = the <i>kind</i> of data · <b>dot size</b> = how big the file is (MB → GB), so each kind shows up once small and once large, same colour</li>
-  <li><b>behind the wall</b> = already-compressed media (photos, video, model weights): shown, but not scored</li>
+  <li>the dots in the high-entropy / no-repetition corner are already-compressed media (photos, video, model weights): they barely shrink — but they're still real files you'd compress, so they still count</li>
 </ul>
-<p class="cap">So <b>where a dot is</b> = the shape of its bytes (what a compressor sees); <b>its colour</b> = what the data actually is. We use the kinds to keep the score fair — every kind counts equally, so no single type can run away with it. The thing to notice: the files are <b>spread across the whole space</b>, not piled in one corner.</p>
+<p class="cap">So <b>where a dot is</b> = the shape of its bytes (what a compressor sees); <b>its colour</b> = what the data actually is. The thing to notice: the files are <b>spread across the whole space</b>, not piled in one corner — that's what makes the corpus representative. The score itself stays simple: <b>every file counts once</b>.</p>
 <p class="hint">Drag to rotate · scroll or pinch to zoom · hover a dot for details · keys: arrows rotate, +/− zoom, 0 resets, Enter steps through.</p>
 <p id="cube-status" class="sr-only" role="status" aria-live="polite"></p>
 <details class="fallback"><summary>View the data as a table (no 3D required)</summary>
@@ -547,6 +536,12 @@ single <b>Squishy Score</b> you can cite and compare. It's the 2026 <span class=
 <p>One command. Give it your compressor — anything that reads stdin and writes stdout —
 and it streams the corpus, runs your tool on every file, and prints your score:</p>
 <pre class="run">uv run squishy-calculate --cmd "zstd -19 -c"</pre>
+<p class="cap"><b>The Squishy Score is the geometric mean of the compression ratio
+(original ÷ compressed) over every file — one vote per file.</b> No category weights,
+no size weights, no tuning knobs, no threshold deciding what counts: every real file is
+in, and the geometric mean keeps any single huge or tiny file from running away with the
+number. Beside it we always print the <b>corpus bpb</b> (byte-weighted bits per byte),
+the operational rate the big files dominate.</p>
 <ul class="readkey">
   <li><b>Any codec, same shape:</b> <code>"xz -9 -c"</code>, <code>"brotli -q 11 -c"</code>, or your own <code>"./mytool -c"</code>.</li>
   <li><b>Reads and writes files, not pipes?</b> <code>"mytool -o {{out}} {{in}}"</code>.</li>

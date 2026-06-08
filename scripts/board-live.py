@@ -41,9 +41,10 @@ def main() -> int:
 
     missing = sorted(set(next(iter(panel.values()))["missing"]))
     out = {
-        "score_definition": ("Squishy Score = category-balanced geomean of per-file ratios "
-                             "(nested size→kind→category; dimensionless, NOT a bit rate). "
-                             "corpus_bpb = byte-weighted 8·total_out/total_in (operational rate)."),
+        "score_definition": ("Squishy Score = geomean of per-file compression ratio over the "
+                             "whole corpus (one vote per file; no weighting, no threshold; "
+                             "dimensionless, NOT a bit rate). corpus_bpb = byte-weighted "
+                             "8·total_out/total_in (operational rate)."),
         "edition": "Squishy-2026-DRAFT",
         "core_files": n_core,
         "host_provenance": sq.host_provenance(),       # machine/arch the scores ran on

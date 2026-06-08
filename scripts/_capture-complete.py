@@ -14,8 +14,8 @@ if "{" not in txt:
 d = json.loads(txt[txt.index("{"):])
 out = {
     "edition": d["edition"],
-    "note": ("Complete-edition Squishy Score — nested size→kind→category geomean over the "
-             "compressibility-scored size-points (core + large rungs), round-trip verified."),
+    "note": ("Complete-edition Squishy Score — plain geomean of per-file compression ratio "
+             "over the whole corpus (one vote per file; core + large rungs), round-trip verified."),
     "complete": d["complete"], "round_trip_verified": d.get("round_trip_verified"),
     "codec": d["cmd"], "codec_version": d["codec_version"],
     "tool_provenance": d.get("tool_provenance"), "host_provenance": d.get("host_provenance"),

@@ -44,27 +44,31 @@ whole.** Honesty rules for how we talk about it:
 
 ## The Squishy Score
 
-**Squishy Score (of a codec) = the geometric-mean compression ratio
-(uncompressed ÷ compressed) over the whole corpus, balanced by category, then by
-kind, then by size.**
-
-Concretely, a **three-level nested geometric mean** — *size → kind → category*:
+**Squishy Score (of a codec) = the geometric mean of the per-file compression ratio
+(uncompressed ÷ compressed) over the whole corpus — one vote per file.**
 
 ```
-score = geomean over the 5 categories of
-          ( geomean over the kinds in that category of
-              ( geomean over that kind's size points of  uncompressed/compressed ) )
+score = geomean over every file in the corpus of  ( uncompressed / compressed )
 ```
 
-In plain terms: balance the vote so a category with more kinds, or a kind measured
-at two sizes, doesn't silently get more say.
+That's the whole formula. **No category weights, no kind weights, no size weights,
+no tuning constants, and no threshold deciding which files count** — every real file
+you'd want to compress is in. The design rationale (why this, and what was retired to
+get here) is in `plans/score-weighting-critique-and-proposal.md`.
 
-- Each **category** counts equally; within it each **kind** counts equally; within
-  a kind each **size point** counts equally. Adding a file or a size variant never
-  silently re-weights the score, and **no single file — however large — can
-  dominate** (its leverage is capped at 1/sizes × 1/kinds × 1/5).
-- It is **not** the flat geomean of all files (that double-weights any kind sampled
-  at more sizes). Do not "simplify" it back to a flat geomean.
+- **One vote per file.** Every file counts equally. The geometric mean is what keeps
+  any single huge or tiny file from running away with the number (a 10× and a 0.1×
+  cancel; the arithmetic mean would let the 10× dominate).
+- **Near-incompressible files stay in.** photo/movie/weights score ~1.0×, which pulls
+  the headline down *by the same factor for every codec*, so they never change the
+  ranking — and a corpus of real data honestly contains some incompressible files.
+  The only files left out are the unmeasured model-weight **throughput ladder**
+  (a speed/RAM fixture, not a ratio corpus member).
+- **Categories are presentation only.** The five categories below organize the
+  corpus (the coverage map, the by-category diagnostic table) and carry **no weight**
+  in the score. The intrinsic axes — entropy, repetition, repeat-distance (3
+  structural) plus size (operational) — are what make the *file selection*
+  representative; the score itself just averages every file once.
 - Reported as **"×"** to 2 decimals — a **dimensionless quality index, NOT a bit
   rate; do not derive bpb from it.** Always shown beside it is the **corpus bpb**
   = `8 · total_out_bytes / total_in_bytes` (byte-weighted, the operational
@@ -75,11 +79,13 @@ at two sizes, doesn't silently get more say.
 
 ### Reporting
 One headline `×` paired with the byte-weighted corpus bpb, plus the **by-category**
-diagnostic sub-table (Prose · Code & Web · Structured · Tabular/DB · Binary & Media),
-computed by the same nested rule. A **by-size-bucket** sub-table (`≤100 MB` vs
-`≥1 GB`) lands once the large rungs are acquired (today's corpus is all small).
+diagnostic sub-table (Prose · Code & Web · Structured · Tabular/DB · Binary & Media):
+each cell is just the geomean of that slice's files. A **by-size-bucket** sub-table
+(`≤100 MB` vs `≥1 GB`) lands once the large rungs are acquired (today's corpus is all
+small).
 
-Both tables are diagnostic re-slices of the same data, never a second formula.
+Both tables are diagnostic re-slices of the same data — a geomean over a subset of
+the files — never a second formula and never a weight in the headline.
 
 ### Canonical run rule
 One codec, **one setting, all files.** No per-file/per-corpus tuning, no
@@ -152,8 +158,9 @@ is a **speed/RAM diagnostic, not a ratio signal** — kept out of the headline S
    exact set of `(kind, size)` members — not just filenames — so two people citing
    "Squishy-2026" can't silently disagree. Overfit-to-2026 codecs stop winning on
    `Squishy-2030`. (Most important mechanism; free.)
-2. **The nested geomean is itself the anti-overfit guard** — single-file leverage
-   is structurally capped; document this in `RULES.md`.
+2. **The geometric mean is itself the anti-overfit guard** — one vote per file means
+   no single file can run away with the headline, and a codec that overfits one kind
+   pays for it on the rest; document this in `RULES.md`.
 3. **A rules file** enforcing the canonical run rule; the no-corpus-bytes rule
    applies *especially* to the large files (the lucrative dictionary target).
 

@@ -54,29 +54,36 @@ def _all_files():
     return [(s, n) for files in sq.CORE.values() for (_d, s, n) in files]
 
 
-def _scored_core_count():
-    """Number of core files on the compressible side of the K plane (the rest are
-    measured but diagnostic-only)."""
-    props = sq._core_props()
-    return sum(1 for files in sq.CORE.values() for (d, _s, _n) in files
-               if sq.is_scored(props.get(d)))
+def _core_count():
+    """Every core file counts in the score now — one vote per file, no threshold."""
+    return sum(len(v) for v in sq.CORE.values())
 
 
 def test_golden_vector_all_equal():
-    """Every SCORED core file at ratio 4.0 → score 4.0; the entropy-coded media are
-    measured but excluded from the headline. (The Score is a dimensionless geomean;
-    there is no `bpb` field on it — corpus bpb is byte-weighted and lives elsewhere.)"""
+    """Every core file at ratio 4.0 → score 4.0. EVERY file counts (one vote each) —
+    including the entropy-coded media; there is no compressibility gate. (The Score is a
+    dimensionless geomean; there is no `bpb` field on it — corpus bpb lives elsewhere.)"""
     res = sq._collect(lambda s, n: 4.0)
-    assert res["n_files"] == _scored_core_count()      # scored files only
-    assert res["n_files"] < sum(len(v) for v in sq.CORE.values())  # some are diagnostic
+    assert res["n_files"] == _core_count()             # ALL files, no exclusions
     assert res["squishy_score"] == pytest.approx(4.0)
     assert "bpb" not in res                       # the misleading 8/geomean field is gone
+    assert "diagnostic_non_scored" not in res     # nothing is excluded any more
     assert res["missing"] == []
     assert res["expansions"] == []
     for cat_score in res["categories"].values():
         assert cat_score == pytest.approx(4.0)
-    # the non-scored media are reported as diagnostics, never in the score
-    assert set(res["diagnostic_non_scored"]) == {"photo", "movie", "weights"}
+
+
+def test_headline_is_plain_geomean_over_all_files():
+    """Unequal ratios incl. a near-incompressible: the headline is the flat geomean of
+    EVERY per-file ratio (one vote each), not a category-nested or gated geomean."""
+    files = _all_files()
+    ratios = {fn: 2.0 + i for i, fn in enumerate(files)}        # all distinct
+    ratios[("corpus", "photo.jpg")] = 1.01                      # an incompressible still votes
+    res = sq._collect(lambda s, n: ratios.get((s, n)))          # BOUNDS files → None (not core)
+    assert res["n_files"] == len(files)                         # nothing dropped
+    expected = sq.geomean(list(ratios.values()))
+    assert res["squishy_score"] == pytest.approx(round(expected, 3), abs=0.001)
 
 
 def test_corpus_bpb_is_byte_weighted_not_geomean_inverse():
@@ -99,10 +106,10 @@ def test_corpus_bpb_is_byte_weighted_not_geomean_inverse():
 
 def test_missing_files_are_reported_not_silently_dropped():
     files = _all_files()
-    drop = {files[0], files[1]}                    # dickens, aozora — both scored (Prose)
+    drop = {files[0], files[1]}                    # dickens, aozora
     res = sq._collect(lambda s, n: None if (s, n) in drop else 4.0)
-    # both dropped files are scored, so the scored count falls by exactly 2
-    assert res["n_files"] == _scored_core_count() - 2
+    # two files dropped, so the counted-file total falls by exactly 2
+    assert res["n_files"] == _core_count() - 2
     assert len(res["missing"]) == 2
 
 
@@ -195,30 +202,17 @@ def test_scored_artifacts_record_tool_and_host_provenance():
 
 
 def test_published_board_is_internally_consistent():
-    """Each codec's headline must equal the NESTED geomean (equal-weight geomean of
-    per-category geomeans), NOT the flat geomean of all files, and bpb = 8/score."""
+    """Each codec's headline must equal the PLAIN geomean of every per-file ratio (one
+    vote per file — no category nesting, no compressibility gate), and bpb is byte-weighted."""
     board = _published_board()
-    cat_of = {d: c for c, files in sq.CORE.items() for (d, _s, _n) in files}
-    core_displays = set(cat_of)
-    props = sq._core_props()
+    core_displays = {d for c, files in sq.CORE.items() for (d, _s, _n) in files}
     for codec, row in board["panel"].items():
         pf = row.get("per_file", {})
         assert set(pf) == core_displays, f"{codec}: per_file keys ≠ the core files"
-        # headline nests only the compressibility-SCORED files (entropy-coded media,
-        # below the K plane, are measured but excluded from the Squishy Score).
-        by_cat = {}
-        for d, r in pf.items():
-            if not sq.is_scored(props.get(d)):
-                continue
-            by_cat.setdefault(cat_of[d], []).append(r)
-        nested = sq.geomean([sq.geomean(rs) for rs in by_cat.values()])
-        flat = sq.geomean([r for d, r in pf.items() if sq.is_scored(props.get(d))])
-        assert nested == pytest.approx(row["squishy_score"], abs=0.01), \
-            f"{codec}: stored {row['squishy_score']} ≠ nested {nested:.3f}"
-        # the headline must NOT be the flat geomean (when categories are unbalanced)
-        if abs(nested - flat) > 0.02:
-            assert row["squishy_score"] != pytest.approx(flat, abs=0.005), \
-                f"{codec}: headline is the flat geomean — spec requires nested"
+        # headline = flat geomean over EVERY file, incompressibles included.
+        flat = sq.geomean(list(pf.values()))
+        assert flat == pytest.approx(row["squishy_score"], abs=0.01), \
+            f"{codec}: stored {row['squishy_score']} ≠ plain geomean {flat:.3f}"
         # no vestigial geomean-inverse "bpb"; corpus_bpb is byte-weighted + self-consistent
         assert "bpb" not in row, f"{codec}: stale 8/geomean 'bpb' field must be gone"
         assert row["corpus_bpb"] == pytest.approx(

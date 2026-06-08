@@ -1,7 +1,7 @@
 {
   "edition": "Squishy-2026",
-  "note": "Complete-edition Squishy Score \u2014 nested size\u2192kind\u2192category geomean over the compressibility-scored size-points (core + large rungs), round-trip verified.",
-  "complete": true,
+  "note": "Squishy Score = plain geomean of per-file compression ratio over the whole corpus (one vote per file). PROVISIONAL: this run predates the near-incompressible core members (photo/movie/weights) being folded into the score \u2014 a fresh full-edition streaming run is required before this is a citable number.",
+  "complete": false,
   "round_trip_verified": true,
   "codec": "zstd -19 -c",
   "codec_version": "*** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***",
@@ -22,15 +22,15 @@
     "python": "3.14.4",
     "recorded_utc": "2026-05-30T05:38:22Z"
   },
-  "squishy_score": 5.81,
+  "squishy_score": 6.8754,
   "corpus_bpb": 1.008,
   "total_in_bytes": 12207032678,
   "total_out_bytes": 1537865666,
   "categories": {
     "Prose": 4.0666,
-    "Code & Web": 7.4467,
-    "Structured": 11.6499,
-    "Tabular / DB": 5.0038,
+    "Code & Web": 7.1454,
+    "Structured": 11.36,
+    "Tabular / DB": 5.7351,
     "Binary & Media": 3.7597
   },
   "kinds": {

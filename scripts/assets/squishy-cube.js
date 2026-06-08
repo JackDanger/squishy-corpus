@@ -10,10 +10,8 @@
  *   y = repeat coverage(0..1           — how much of the file exactly recurs)
  *   z = match distance (bytes, LOG     — how far back the repeats sit)
  * coloured by category (Okabe–Ito, colour-blind-safe), sized by file size (dot AREA ∝
- * log size, so the encoding is honest). A translucent vertical WALL marks the
- * compressibility gate K = coverage + (8−entropy)/8 ≥ K_min that gates the Squishy
- * Score: points on the compressible side are SCORED (solid, glowing); points behind it
- * (entropy-coded media: photo/movie/weights) are kept as DIAGNOSTICS and drawn hollow.
+ * log size, so the encoding is honest). Every file is scored (one vote per file in the
+ * Squishy Score) — there is no gate and no wall; every dot is drawn solid and glowing.
  *
  * Depth cues, in order of strength: occlusion (painter's sort) · perspective foreshortening
  * · size-by-distance · shading/desaturation fog with depth · a shadow projected onto the
@@ -205,42 +203,6 @@
       ctx.fillText(ax.y.label, ya.x, ya.y);
     }
 
-    // the compressibility wall: K = coverage + (8−entropy)/8 = K_min ⇒ a boundary line
-    // y = entropy/8 − (1 − K_min) in the (entropy, coverage) face, EXTRUDED across all z.
-    // It is a vertical wall (independent of match distance). Side toward higher
-    // coverage / lower entropy is SCORED; behind it is diagnostic.
-    function drawWall(behind) {
-      var pl = data.plane; if (!pl) return;
-      // boundary y(x) clipped to [0,1] coverage and [0,8] entropy
-      var xLo = ax.x.min, xHi = ax.x.max;
-      function yAt(x) { return pl.slope_x * x + pl.intercept; }   // coverage at boundary
-      // entropy where boundary hits coverage=0 and coverage=1
-      var xAt0 = (0 - pl.intercept) / pl.slope_x;
-      var xAt1 = (1 - pl.intercept) / pl.slope_x;
-      var a = clamp(Math.min(xAt0, xAt1), xLo, xHi);
-      var b = clamp(Math.max(xAt0, xAt1), xLo, xHi);
-      // build the wall as the quad between (a, y(a)) and (b, y(b)) extruded z=min..max
-      var zN = [ax.z.min, ax.z.max];
-      var corners = [
-        [a, clamp(yAt(a), 0, 1), zN[1]], [b, clamp(yAt(b), 0, 1), zN[1]],
-        [b, clamp(yAt(b), 0, 1), zN[0]], [a, clamp(yAt(a), 0, 1), zN[0]],
-      ].map(function (p) { return project([normalize(p[0], ax.x), -normalize(p[1], ax.y), -normalize(p[2], ax.z)]); });
-      var zc = (corners[0].z + corners[2].z) / 2;
-      // draw only on the requested pass (behind data, or in front)
-      if ((zc < 0) !== behind) return;
-      ctx.beginPath(); ctx.moveTo(corners[0].x, corners[0].y);
-      for (var i = 1; i < 4; i++) ctx.lineTo(corners[i].x, corners[i].y);
-      ctx.closePath();
-      ctx.fillStyle = "rgba(204,121,167,0.14)"; ctx.fill();
-      ctx.strokeStyle = "rgba(168,70,120,0.62)"; ctx.lineWidth = 1.4;
-      ctx.setLineDash([5, 4]); ctx.stroke(); ctx.setLineDash([]);
-      if (!behind) {
-        ctx.fillStyle = "rgba(150,40,95,0.95)"; ctx.textAlign = "left";
-        ctx.textBaseline = "alphabetic"; ctx.font = "600 11px ui-monospace,Menlo,monospace";
-        ctx.fillText("compressibility gate K = " + pl.kmin, corners[1].x + 6, corners[1].y + 4);
-      }
-    }
-
     function dotRadius(p, isHover) {
       // honest size: AREA ∝ normalized log-size. r in [4.5, 15] px at unit perspective.
       var base = Math.sqrt(0.18 + 0.82 * (p.d.r || 0.5)) * 13 + 1.5;
@@ -269,7 +231,6 @@
       ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
 
       drawGizmo();
-      drawWall(true);                    // wall behind the data
 
       // project + painter-sort back→front
       var sp = pts.map(function (p, i) { var s = project(p.c); s.i = i; return s; })
@@ -283,34 +244,26 @@
 
       sp.forEach(function (s) {
         var p = pts[s.i], isH = hover === p || focusIdx === s.i;
-        var scored = p.d.scored !== false;
         var depth = depthOf(s.z);
         var rad = dotRadius(p, isH) * s.f;
         // fog: recede toward background, and desaturate
         var col = mix(p.rgb, BG_FAR, (1 - depth) * 0.55);
         ctx.globalAlpha = 1;
-        if (scored) {
-          var gg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, rad * 2.4);
-          gg.addColorStop(0, mix(p.rgb, BG_FAR, (1 - depth) * 0.3));
-          gg.addColorStop(1, "rgba(0,0,0,0)");
-          ctx.globalAlpha = 0.32 + 0.4 * depth;
-          ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(s.x, s.y, rad * 2.4, 0, 7); ctx.fill();
-          ctx.globalAlpha = 1;
-          ctx.fillStyle = col; ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.fill();
-          // crisp edge + soft top highlight → a glossy lit-sphere read on light bg
-          ctx.lineWidth = 1; ctx.strokeStyle = "rgba(0,0,0," + (0.30 * (0.5 + 0.5 * depth)).toFixed(2) + ")";
-          ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.stroke();
-          var sg = ctx.createRadialGradient(s.x - rad * 0.35, s.y - rad * 0.4, rad * 0.05, s.x, s.y, rad);
-          sg.addColorStop(0, "rgba(255,255,255," + (0.55 * depth).toFixed(2) + ")");
-          sg.addColorStop(0.5, "rgba(255,255,255,0)");
-          ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.fill();
-        } else {
-          // diagnostic: hollow dashed ring on a light fill (visually "not scored")
-          ctx.globalAlpha = 0.5 + 0.4 * depth;
-          ctx.fillStyle = "rgba(250,250,251,0.92)"; ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.fill();
-          ctx.strokeStyle = col; ctx.lineWidth = 1.8; ctx.setLineDash([3, 2.5]);
-          ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.stroke(); ctx.setLineDash([]);
-        }
+        // every file is scored → one solid, glossy lit-sphere read for every dot
+        var gg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, rad * 2.4);
+        gg.addColorStop(0, mix(p.rgb, BG_FAR, (1 - depth) * 0.3));
+        gg.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.globalAlpha = 0.32 + 0.4 * depth;
+        ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(s.x, s.y, rad * 2.4, 0, 7); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = col; ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.fill();
+        // crisp edge + soft top highlight → a glossy lit-sphere read on light bg
+        ctx.lineWidth = 1; ctx.strokeStyle = "rgba(0,0,0," + (0.30 * (0.5 + 0.5 * depth)).toFixed(2) + ")";
+        ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.stroke();
+        var sg = ctx.createRadialGradient(s.x - rad * 0.35, s.y - rad * 0.4, rad * 0.05, s.x, s.y, rad);
+        sg.addColorStop(0, "rgba(255,255,255," + (0.55 * depth).toFixed(2) + ")");
+        sg.addColorStop(0.5, "rgba(255,255,255,0)");
+        ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.fill();
         if (isH) { ctx.globalAlpha = 1; ctx.strokeStyle = "#1c2530"; ctx.lineWidth = 2;
           ctx.beginPath(); ctx.arc(s.x, s.y, rad + 3, 0, 7); ctx.stroke(); }
         s.rad = rad;
@@ -341,28 +294,23 @@
       });
       ctx.globalAlpha = 1;
 
-      drawWall(false);                   // wall edge/label in front of data behind it
       screens = sp;
     }
 
     function tooltipHTML(d) {
       var sw = '<i style="display:inline-block;width:.6rem;height:.6rem;border-radius:50%;vertical-align:middle;' +
                'background:' + (cats[d.cat] || "#9aa") + '"></i>';
-      var gate = (d.scored !== false)
-        ? "<span style='color:#1a9e63;font-weight:600'>scored</span>"
-        : "<span style='color:#b23a6b;font-weight:600'>diagnostic · not scored</span>";
       var links = [];
       if (d.source_url) links.push('<a href="' + esc(d.source_url) + '" target="_blank" rel="noopener">source ↗</a>');
       if (d.url) links.push('<a href="' + esc(d.url) + '" target="_blank" rel="noopener">download ↗</a>');
       if (d.license) links.push('<span style="color:#888">' + esc(d.license) + '</span>');
       return "<b>" + esc(d.label || d.name) + "</b> &nbsp;" + sw +
-        " <span style='color:#888'>" + esc(d.cat) + " · " + gate + "</span>" +
+        " <span style='color:#888'>" + esc(d.cat) + "</span>" +
         (d.desc ? "<div class='tdesc'>" + esc(d.desc) + "</div>" : "") +
         "<div class='tnums'>entropy <b>" + d.entropy.toFixed(2) + "</b> · repeats <b>" +
         (d.coverage * 100).toFixed(0) + "%</b> · repeat distance farthest <b>" +
         shortBytes(d.distp90 != null ? d.distp90 : d.dist) + "</b> / typical <b>" + shortBytes(d.dist) +
-        "</b> · size <b>" + shortSize(d.sizeMB) + "</b> · K <b>" +
-        (d.K != null ? d.K.toFixed(2) : "—") + "</b></div>" +
+        "</b> · size <b>" + shortSize(d.sizeMB) + "</b></div>" +
         (links.length ? "<div class='tlinks'>" + links.join("") + "</div>" : "");
     }
 
@@ -469,8 +417,8 @@
         focusIdx = (focusIdx + 1) % pts.length;
         var p = pts[focusIdx];
         showTip(p);
-        if (opts.statusEl) opts.statusEl.textContent = "Focused: " + p.d.name + ". " +
-          (p.d.scored !== false ? "scored." : "diagnostic, not scored.");
+        if (opts.statusEl) opts.statusEl.textContent = "Focused: " + p.d.name +
+          " · " + (p.d.cat || "");
       } else used = false;
       if (used) { e.preventDefault(); auto = false; draw(); }
     });
