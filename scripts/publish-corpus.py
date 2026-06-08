@@ -235,7 +235,16 @@ def do_mint(files, bucket, force):
         if s3_sha(bucket, src_key) == want and not force:
             print(f"  have   {key}  (source ✓)"); nskip += 1; continue
         ct = content_type(Path(key).name)
-        if rec.get("gen"):                                  # reproducible by our generator → mint fresh
+        # Prefer promoting the already-verified working copy (a cheap server-side copy)
+        # over re-downloading/rebuilding — the draft bytes already match the manifest.
+        work_key = f"{WORK_PREFIX}/{key}"
+        if s3_sha(bucket, work_key) == want:
+            if copy_s3(bucket, work_key, src_key, want, ct):
+                print(f"  mint   {key}  (promoted {WORK_PREFIX}/ → source/)"); nmint += 1
+            else:
+                nfail += 1
+            continue
+        if rec.get("gen"):                                  # no working copy → regenerate from our recipe
             with tempfile.TemporaryDirectory() as d:
                 dst = Path(d) / Path(key).name
                 try:
@@ -245,21 +254,13 @@ def do_mint(files, bucket, force):
                 if got != want:
                     print(f"  ✗ SHA {key}: {got[:12]} != {want[:12]}", file=sys.stderr); nfail += 1; continue
                 if put_local(dst, bucket, src_key, want, ct, cache=False):
-                    print(f"  mint   {key}  ({nbytes/1e6:.1f} MB → source/)"); nmint += 1
+                    print(f"  mint   {key}  ({nbytes/1e6:.1f} MB regenerated → source/)"); nmint += 1
                 else:
                     nfail += 1
             continue
-        # not regenerable → promote an existing copy (working prefix) into source/
-        work_key = f"{WORK_PREFIX}/{key}"
-        if s3_sha(bucket, work_key) == want:
-            if copy_s3(bucket, work_key, src_key, want, ct):
-                print(f"  mint   {key}  (promoted {WORK_PREFIX}/ → source/)"); nmint += 1
-            else:
-                nfail += 1
-        else:
-            print(f"  ✗ NO SOURCE for minted {key}: not in source/ or {WORK_PREFIX}/, and not "
-                  f"regenerable — provide the original bytes ({rec.get('note', '?')})", file=sys.stderr)
-            nmissing += 1
+        print(f"  ✗ NO SOURCE for minted {key}: not in source/ or {WORK_PREFIX}/, and not "
+              f"regenerable — provide the original bytes ({rec.get('note', '?')})", file=sys.stderr)
+        nmissing += 1
     print(f"\n— mint: have={nskip} minted={nmint} missing={nmissing} failed={nfail}")
     return 1 if (nfail or nmissing) else 0
 
