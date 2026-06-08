@@ -7,7 +7,7 @@
 S3_BUCKET ?= squishy-corpus
 AWS_VAULT ?=
 
-.PHONY: help all properties edition board calculate site deploy coverage validate audit pii \
+.PHONY: help all properties edition board calculate site deploy publish coverage validate audit pii \
         baseline check test freeze
 
 help:
@@ -20,6 +20,7 @@ help:
 	@echo "                           — stream the FULL edition and compute the Squishy Score"
 	@echo "  make site                — render the explorer + coverage map (build/site)"
 	@echo "  make deploy              — build the site, push to S3, invalidate the CDN (live)"
+	@echo "  make publish [ARGS=…]    — stream the corpus into S3, idempotently (--plan/--check/--force)"
 	@echo "  make coverage            — print the 3-axis coverage summary"
 	@echo "  make baseline / check    — write / diff the golden baseline"
 	@echo "  make validate audit pii  — core validation, distribution audit, PII scan"
@@ -53,6 +54,15 @@ site:
 #   aws-vault exec personal -- make deploy
 deploy: site
 	bash scripts/deploy-site.sh
+
+# Stream every edition member into S3, idempotently (skip-if-already-present-by-sha;
+# acquire + verify + upload the rest, one file at a time so the 17 GB corpus never
+# lands on disk all at once). Needs creds — prefix with your aws-vault:
+#   aws-vault exec personal -- make publish
+#   make publish ARGS=--plan          # offline preview, no AWS
+#   aws-vault exec personal -- make publish ARGS=--check
+publish:
+	uv run --with pyarrow python scripts/publish-corpus.py $(ARGS)
 
 coverage:
 	uv run python scripts/coverage-summary.py
