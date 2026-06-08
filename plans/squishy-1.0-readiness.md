@@ -23,6 +23,19 @@ archivist · IP lawyer · newcomer) reviewed the repo. Consensus: strong foundat
 "freeze the 15 now" path). Do it right and thoroughly. Tracked checklist:
 
 **P0 — freeze blockers**
+- [x] **Streaming publish pipeline + provenance partition — DONE 2026-06-08.**
+  `make publish | mint | release` (`scripts/publish-corpus.py`), driven by edition.json,
+  stream the corpus into S3 one file at a time (peak ≈ 4 GB). Every member now carries
+  an `origin`: **upstream** (11 — pinned immutable source + deterministic decode, so
+  `publish`/`release` re-fetch + sha-verify) vs **minted** (16 — volatile or
+  we-built, so the canonical bytes live write-once in `source/` and a release copies
+  them straight into the edition). `mint` seeds `source/` (regenerating the
+  reproducible ones — clang-archive, bts-parquet — and promoting the rest from an
+  existing copy); a minted member with no `source/` copy **blocks the freeze**. This is
+  the concrete mechanism behind "`v1.0/` is the immutable frozen copy." **Owner-run
+  (needs creds):** `make mint` → `make publish` → `make release EDITION=v1.0`.
+  Open follow-up: pin the HuggingFace weights to a commit revision to *promote* them
+  from minted → upstream (re-fetchable), shrinking the source-of-record set.
 - [x] **bpb mislabel — FIXED.** Deleted the `8÷geomean` field everywhere; the Score
   is a dimensionless `×` shown adjacent to a true byte-weighted `corpus_bpb`
   (8·out/in) + byte totals, across runner/JSON/README/RULES/cube; regression test

@@ -103,6 +103,29 @@ the rest is on your honor and is checkable by anyone who re-runs you.
   synthetic or hand-built data in the scored corpus; synthetic/pathological inputs
   live only in the separate Bounds panel.
 
+## Provenance: two classes, one frozen copy
+
+Every member carries an `origin` in the manifest, and that decides who keeps the
+authoritative bytes:
+
+- **`upstream`** — third-party and **independently retrievable**: a pinned, immutable
+  source URL plus a deterministic decode (gunzip / xz / unzip / head-slice). Anyone
+  can re-fetch and reproduce the exact bytes, so we don't have to be their keeper.
+- **`minted`** — bytes that **might change (or vanish) if re-fetched**, or that we
+  built ourselves (slices, concatenations, format conversions, point-in-time
+  snapshots). These cannot be trusted to re-derive, so we **mint them once and keep
+  our own canonical copy** in the source-of-record (`s3://<bucket>/source/<key>`).
+  That copy — not the volatile upstream — is the authority.
+
+The pipeline (`scripts/publish-corpus.py`, `make mint|publish|release`) enforces it:
+`mint` seeds `source/` for every minted member (generating the ones we can reproduce,
+promoting the rest from an existing copy); `publish` populates the working corpus
+(upstream re-fetched + sha-verified, minted server-side-copied from `source/`); and a
+**release copies the frozen edition into `<edition>/` (e.g. `v1.0/`) — minted straight
+from `source/`, upstream re-fetched to prove it still reproduces.** Nothing is ever
+uploaded whose sha256 doesn't match the manifest. A minted member with no copy in
+`source/` blocks the release (we never freeze bytes we can't stand behind).
+
 ## Verifying a score
 
 Anyone can reproduce a reported score: download the edition's files by their
