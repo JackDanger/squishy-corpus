@@ -63,6 +63,12 @@ RECIPES: dict[str, dict] = {
     "scale/text/enwik9.txt":             {"origin": "upstream", "how": "unzip", "member": "enwik9"},
     "scale/genome/ecoli-DRR002013-full.fastq":  {"origin": "upstream", "how": "stream", "dec": "gzip"},
     "scale/log/nasa-http-jul-aug-1995.log":     {"origin": "upstream", "how": "stream", "dec": "gzip"},
+    # HuggingFace weights, pinned to an immutable commit revision (resolve/<sha>/…) so a
+    # re-fetch reproduces the exact bytes → independently retrievable, not minted.
+    "corpus/weights.safetensors":                      {"origin": "upstream", "how": "stream"},
+    "scale/weights/weights-smollm2-135m.safetensors":  {"origin": "upstream", "how": "stream"},
+    "scale/weights/weights-qwen2.5-0.5b.safetensors":  {"origin": "upstream", "how": "stream"},
+    "scale/weights/weights-qwen2.5-1.5b.safetensors":  {"origin": "upstream", "how": "stream"},
     # ── minted, but reproducible by OUR deterministic generator (mintable from scratch) ──
     "scale/archive/clang-releases-16-17-18-19.tar": {"origin": "minted", "how": "recipe", "gen": "clang-archive"},
     "corpus/data.parquet":                          {"origin": "minted", "how": "recipe", "gen": "bts-parquet", "months": "2024-1"},
@@ -74,10 +80,6 @@ RECIPES: dict[str, dict] = {
     "corpus/data.csv":    {"origin": "minted", "note": "NOAA GHCN head-slice (by_year files are revised)"},
     "corpus/data.sqlite": {"origin": "minted", "note": "our sqlite build from USDA FoodData Central"},
     "corpus/photo.jpg":   {"origin": "minted", "note": "Wikimedia Commons file (overwritable upstream)"},
-    "corpus/weights.safetensors":  {"origin": "minted", "note": "HuggingFace resolve/main (branch tip moves)"},
-    "scale/weights/weights-smollm2-135m.safetensors":  {"origin": "minted", "note": "HuggingFace resolve/main"},
-    "scale/weights/weights-qwen2.5-0.5b.safetensors":  {"origin": "minted", "note": "HuggingFace resolve/main"},
-    "scale/weights/weights-qwen2.5-1.5b.safetensors":  {"origin": "minted", "note": "HuggingFace resolve/main"},
     "scale/csv/noaa-ghcn-daily-2024-full.csv":  {"origin": "minted", "note": "NOAA GHCN by_year (revised over time)"},
     "scale/csv/noaa-ghcn-daily-2021-2023.csv":  {"origin": "minted", "note": "NOAA GHCN by_year (revised over time)"},
     "scale/columnar/bts-ontime-2022-2024.parquet": {"origin": "minted", "note": "our pyarrow parquet build"},

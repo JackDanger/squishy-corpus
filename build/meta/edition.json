@@ -283,13 +283,13 @@
       "key": "corpus/weights.safetensors",
       "url": "https://squishy.jackdanger.com/corpus/weights.safetensors",
       "license": "Apache-2.0",
-      "source_url": "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/model.safetensors",
+      "source_url": "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/model.safetensors",
       "entropy": 7.355,
       "coverage": 0.0001,
       "match_distance": 224,
       "match_distance_p90": 4331,
       "size": 90868376,
-      "origin": "minted"
+      "origin": "upstream"
     },
     {
       "name": "weights-smollm2-135m.safetensors",
@@ -302,8 +302,8 @@
       "key": "scale/weights/weights-smollm2-135m.safetensors",
       "url": "https://squishy.jackdanger.com/scale/weights/weights-smollm2-135m.safetensors",
       "license": "Apache-2.0",
-      "source_url": "https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct/resolve/main/model.safetensors",
-      "origin": "minted"
+      "source_url": "https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct/resolve/12fd25f77366fa6b3b4b768ec3050bf629380bac/model.safetensors",
+      "origin": "upstream"
     },
     {
       "name": "weights-qwen2.5-0.5b.safetensors",
@@ -316,8 +316,8 @@
       "key": "scale/weights/weights-qwen2.5-0.5b.safetensors",
       "url": "https://squishy.jackdanger.com/scale/weights/weights-qwen2.5-0.5b.safetensors",
       "license": "Apache-2.0",
-      "source_url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/model.safetensors",
-      "origin": "minted"
+      "source_url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/7ae557604adf67be50417f59c2c2f167def9a775/model.safetensors",
+      "origin": "upstream"
     },
     {
       "name": "weights-qwen2.5-1.5b.safetensors",
@@ -330,8 +330,8 @@
       "key": "scale/weights/weights-qwen2.5-1.5b.safetensors",
       "url": "https://squishy.jackdanger.com/scale/weights/weights-qwen2.5-1.5b.safetensors",
       "license": "Apache-2.0",
-      "source_url": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/main/model.safetensors",
-      "origin": "minted"
+      "source_url": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/989aa7980e4cf806f80c7fef2b1adb7bc71aa306/model.safetensors",
+      "origin": "upstream"
     },
     {
       "name": "noaa-ghcn-daily-2024-full.csv",

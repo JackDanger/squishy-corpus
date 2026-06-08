@@ -34,8 +34,10 @@ archivist · IP lawyer · newcomer) reviewed the repo. Consensus: strong foundat
   existing copy); a minted member with no `source/` copy **blocks the freeze**. This is
   the concrete mechanism behind "`v1.0/` is the immutable frozen copy." **Owner-run
   (needs creds):** `make mint` → `make publish` → `make release EDITION=v1.0`.
-  Open follow-up: pin the HuggingFace weights to a commit revision to *promote* them
-  from minted → upstream (re-fetchable), shrinking the source-of-record set.
+  The HuggingFace weights are now **pinned to immutable commit revisions**
+  (`resolve/<sha>/model.safetensors`), verified to reproduce the recorded sha256, so all
+  four moved minted → **upstream** (re-fetchable). Partition is now 15 upstream / 12
+  minted; the source-of-record set shrank accordingly.
 - [x] **bpb mislabel — FIXED.** Deleted the `8÷geomean` field everywhere; the Score
   is a dimensionless `×` shown adjacent to a true byte-weighted `corpus_bpb`
   (8·out/in) + byte totals, across runner/JSON/README/RULES/cube; regression test
