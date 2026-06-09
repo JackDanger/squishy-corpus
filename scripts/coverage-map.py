@@ -44,6 +44,19 @@ KIND_CATEGORY = {
     "text": "Prose",
     "media": "Binary & Media",
 }
+# Friendly, distinct tooltip labels for the large rungs (the raw filenames collide:
+# two NOAA CSVs would both shorten to "noaa"). Falls back to a derived short name.
+SCALE_LABEL = {
+    "noaa-ghcn-daily-2024-full.csv": "csv 1yr",
+    "noaa-ghcn-daily-2021-2023.csv": "csv 3yr",
+    "big-buck-bunny-1080p.mov": "movie 1080p",
+    "ecoli-DRR002013-full.fastq": "genome 1GB",
+    "enwik9.txt": "enwik9",
+    "llvm-project-19.1.0.src.tar": "monorepo 1.8GB",
+    "nasa-http-jul-aug-1995.log": "log 0.4GB",
+    "clang-releases-16-17-18-19.tar": "archive 1.5GB",
+    "bts-ontime-2022-2024.parquet": "parquet 0.8GB",
+}
 
 W, H = 960, 600
 ML, MR, MT, MB = 72, 210, 78, 74          # margins (right margin holds the legend)
@@ -65,7 +78,7 @@ def load_points() -> list[dict]:
         for fname, m in json.loads(sp.read_text())["files"].items():
             kind = m.get("key", "//").split("/")[2] if "key" in m else ""
             cat = KIND_CATEGORY.get(kind, "Binary & Media")
-            label = fname.split("-")[0].split(".")[0]
+            label = SCALE_LABEL.get(fname, fname.split("-")[0].split(".")[0])
             pts.append({"name": label, "tier": "scale", "cat": cat, **m})
     # Deterministic order: by entropy, then name (stable, no run-to-run drift).
     return sorted(pts, key=lambda p: (p["entropy"], p["name"]))
@@ -100,6 +113,10 @@ def main() -> int:
       f'font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" '
       f'role="img" aria-label="Squishy coverage map: corpus files spread across '
       f'byte entropy and repeat coverage">')
+    # Document-level <title> as the accessible name (more reliably honoured than
+    # aria-label on an SVG); the per-circle <title>s below are hover tooltips.
+    a('<title>Squishy coverage map: corpus files spread across byte entropy and '
+      'repeat coverage</title>')
     a(f'<rect width="{W}" height="{H}" fill="#fafafa"/>')
 
     # Title + subtitle.
@@ -160,7 +177,7 @@ def main() -> int:
     # Size legend (dot area ∝ log size).
     sy0 = ly + 22 + len(CAT_COLOR) * 24 + 22
     a(f'<text x="{lx}" y="{sy0}" font-size="12" font-weight="700" fill="{INK}">'
-      f'dot size ∝ file size</text>')
+      f'dot area ∝ log file size</text>')
     for i, (lbl, rr) in enumerate([("~4 MB", R_MIN), ("~50 MB", 9.5), ("~4 GB", R_MAX)]):
         yy = sy0 + 26 + i * 30
         a(f'<circle cx="{lx + 12}" cy="{yy - 4:.0f}" r="{rr}" fill="{MUTED}" '

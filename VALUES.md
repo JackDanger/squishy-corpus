@@ -9,23 +9,26 @@ than an impressive number it can't yet stand behind.
 ### 1. Honesty over hype
 
 No number is citable until the edition is frozen and DOI-backed — and we say so,
-loudly. The one full-corpus run on record is stamped `DO_NOT_CITE` because it
-predates a scoring fix; we left the flag in the file rather than quietly drop the
-number. A draft is labelled a draft.
+loudly. The one near-full run on record is stamped `DO_NOT_CITE` because it
+predates the near-incompressible members (photo / movie / weights) being folded
+into the scored corpus — so its number is a known over-estimate. We left the flag
+in the file rather than quietly drop the number. A draft is labelled a draft.
 
 > *See it:* the `DO_NOT_CITE` flag in
 > [`build/meta/squishy-score-complete.json`](build/meta/squishy-score-complete.json);
-> the pre-1.0 banner at the top of the [README](README.md).
+> the pre-1.0 status note at the foot of the [README](README.md).
 
 ### 2. Reproducible by anyone, forever
 
 You never have to trust us — you re-run us. Every file carries a published
-SHA-256; the runner **refuses to score bytes it can't verify** (fail-closed), and
-a Zenodo DOI defeats link-rot. A score is a property of *(codec, setting,
-version, argv, edition)* and is recorded with the exact tool that produced it.
+SHA-256 and the runner **refuses to score bytes it can't verify** (always-on,
+fail-closed — not an opt-in flag); a Zenodo DOI defeats link-rot. A score is a
+property of *(codec, setting, version, argv, edition)* and is recorded with the
+exact tool that produced it. (Add `--verify --decompress "<cmd>"` to also prove
+the round-trip is lossless.)
 
-> *See it:* `squishy-calculate --verify`; the per-file hashes in
-> [`build/meta/edition.json`](build/meta/edition.json) and
+> *See it:* run `squishy-calculate` and watch it reject a tampered byte; the
+> per-file hashes in [`build/meta/edition.json`](build/meta/edition.json) and
 > [`build/meta/LICENSE-MANIFEST.csv`](build/meta/LICENSE-MANIFEST.csv).
 
 ### 3. Real data only

@@ -10,7 +10,7 @@ codec over it to get a Squishy Score — a single, citable compression-ratio num
 set spans the space. That spread is what makes "I tested on Squishy" mean
 something. [How to read this →](#the-coverage-map)*
 
-### Start here
+## Start here
 
 | If you want to… | Go to |
 |---|---|
@@ -24,13 +24,15 @@ something. [How to read this →](#the-coverage-map)*
 ```
 git clone https://github.com/JackDanger/squishy-corpus && cd squishy-corpus
 uv run squishy-calculate --cmd "zstd -19 -c"   # streams + verifies the FULL corpus, scores your codec
-→ Squishy Score (draft): 4.15×   # real & reproducible NOW — citable once v1.0 freezes (DOI pending)
+→ Squishy Score (draft): <×>   # real & reproducible NOW — citable once v1.0 freezes (DOI pending)
 ```
 
-You get a **real, reproducible number today**; a **citable** number at the v1.0
-freeze. We keep those two separate on purpose — labelling a draft a draft is
-[value #1](VALUES.md). The runner verifies every file against its published
-SHA-256 (fail-closed on any mismatch), caches results, and is resumable.
+You get a **real, reproducible number today** (for a ranking taste, zstd -19
+lands at **4.15×** on the draft small-member panel — see the [reference
+board](#reference-board)); a **citable** number lands at the v1.0 freeze. We keep
+those two separate on purpose — labelling a draft a draft is [value #1](VALUES.md).
+The runner verifies every file against its published SHA-256 (fail-closed on any
+mismatch), caches results, and is resumable.
 [What the numbers mean →](#what-the-numbers-mean)
 
 ## What the numbers mean
@@ -107,7 +109,7 @@ differently — they describe why each file is here, they don't *predict* a rati
 These four properties are why each file is here; they make the *file selection*
 representative. They are **not** a weight in the score. The [static coverage
 map](build/meta/coverage-map.svg) at the top plots every file by two of them
-(entropy × repeat coverage, dot area ∝ size); the live 3D explorer adds the third
+(entropy × repeat coverage, dot area ∝ log size); the live 3D explorer adds the third
 (repeat distance) and rotates, at
 [squishy.jackdanger.com](https://squishy.jackdanger.com) *(soon)*.
 
