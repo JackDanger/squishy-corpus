@@ -25,7 +25,7 @@ echo "== 3/4 copy draft/ -> v1.0/ (server-side, immutable cache) =="
 # that must NOT be immortalized in the permanent DOI. Copy the curated set only.
 INCLUDES=(
   --exclude "*"
-  --include "corpus/*"                      # the 15 named core files
+  --include "corpus/*"                      # the named core files
   --include "scale/*"                     # scale-tier (weights ladder, large files)
   --include "LICENSES/*"                  # full license texts
   --include "index.html"                  # the primary page (hero + 3D cube + datasets)
