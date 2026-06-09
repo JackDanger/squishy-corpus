@@ -2,7 +2,7 @@
 <title>Squishy coverage map: corpus files spread across byte entropy and repeat coverage</title>
 <rect width="960" height="600" fill="#fafafa"/>
 <text x="72" y="34" font-size="22" font-weight="700" fill="#1c2530">The coverage map</text>
-<text x="72" y="56" font-size="13" fill="#6b7682">Every Squishy file, placed by how its bytes behave — spread across the space, not bunched in one corner.</text>
+<text x="72" y="56" font-size="13" fill="#6b7682">Every Squishy file, placed by how its bytes behave — orderly/compressible (left) to random (right), highly repetitive (top) to not (bottom).</text>
 <rect x="72" y="78" width="678" height="448" fill="#ffffff" stroke="#e3e7ec"/>
 <line x1="72.0" y1="78" x2="72.0" y2="526" stroke="#e3e7ec"/>
 <text x="72.0" y="544" font-size="11" fill="#6b7682" text-anchor="middle">0</text>

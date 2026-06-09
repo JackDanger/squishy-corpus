@@ -48,16 +48,17 @@ repetitive, near vs. far-range repeats, tens of MB to multi-GB — not piled int
 one easy corner. That spread is the whole basis for "I tested on Squishy" meaning
 something, and it's something you can *see*, not just take on faith.
 
-> *See it:* the [coverage map](build/meta/coverage-map.svg) and the live 3D
-> explorer at [squishy.jackdanger.com](https://squishy.jackdanger.com).
+> *See it:* the [coverage map](build/meta/coverage-map.svg) (and the live 3D
+> explorer at [squishy.jackdanger.com](https://squishy.jackdanger.com), *soon*).
 
 ### 5. Un-gameable by design
 
 The score is a plain geometric mean — **one vote per file**, no category/size
-weights, no tuning knobs. You can't ship corpus bytes (or a dictionary trained on
-them) inside your codec, can't tune per file, and can't branch on filename. A
-codec that overfits one giant file or one kind of data pays for it everywhere
-else.
+weights, no tuning knobs. You must not ship corpus bytes (or a dictionary trained
+on them) inside your codec, tune per file, or branch on filename — rules the
+runner enforces where it can and that anyone re-running you can check. And the
+math itself is the backstop: a codec that overfits one giant file or one kind of
+data pays for it on every other file.
 
 > *See it:* "The canonical run" rules #1–#4 in [`RULES.md`](RULES.md).
 

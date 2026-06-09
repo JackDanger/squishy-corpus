@@ -2,13 +2,16 @@
 
 **Squishy is the 2026 compression corpus: one curated set of real, redistributable
 files, chosen to span the full range of how data actually compresses. Run your
-codec over it to get a Squishy Score — a single, citable compression-ratio number.**
+codec (compression program) over it to get a Squishy Score — a single, citable
+compression-ratio number.**
 
-![The Squishy coverage map: every corpus file plotted by byte entropy and repeat coverage, spread across the space rather than bunched in one corner](build/meta/coverage-map.svg)
+![The Squishy coverage map: every corpus file plotted by byte entropy (how random, x-axis) against repeat coverage (how repetitive, y-axis), dot size by file size, colored by category — the files spread across the space rather than clumping in one spot](build/meta/coverage-map.svg)
 
-*Every file in the corpus, placed by how its bytes behave — the evidence that the
-set spans the space. That spread is what makes "I tested on Squishy" mean
-something. [How to read this →](#the-coverage-map)*
+*Every file in the corpus, placed by how its bytes behave — **left→right: orderly
+and compressible → random and incompressible; bottom→top: little internal
+repetition → lots.** The files spread across that space instead of clumping in one
+spot, which is what makes "I tested on Squishy" mean something.
+[How to read this →](#the-coverage-map)*
 
 ## Start here
 
@@ -24,29 +27,36 @@ something. [How to read this →](#the-coverage-map)*
 ```
 git clone https://github.com/JackDanger/squishy-corpus && cd squishy-corpus
 uv run squishy-calculate --cmd "zstd -19 -c"   # streams + verifies the FULL corpus, scores your codec
-→ Squishy Score (draft): <×>   # real & reproducible NOW — citable once v1.0 freezes (DOI pending)
+→ Squishy Score (draft): N.NN×   # real & reproducible NOW — citable once v1.0 freezes (DOI pending)
 ```
 
-You get a **real, reproducible number today** (for a ranking taste, zstd -19
-lands at **4.15×** on the draft small-member panel — see the [reference
-board](#reference-board)); a **citable** number lands at the v1.0 freeze. We keep
-those two separate on purpose — labelling a draft a draft is [value #1](VALUES.md).
-The runner verifies every file against its published SHA-256 (fail-closed on any
-mismatch), caches results, and is resumable.
-[What the numbers mean →](#what-the-numbers-mean)
+You get a **real, reproducible number today**; a **citable** number lands at the
+v1.0 freeze. We keep those two separate on purpose — labelling a draft a draft is
+[value #1](VALUES.md). The runner verifies every file against its published
+SHA-256 (fail-closed on any mismatch), caches results, and is resumable.
+
+> **Which number?** Two panels exist and they are *not* the same: a quick
+> **small-member** panel (zstd -19 = **4.15×**, table in the [reference
+> board](#reference-board)) for ranking codecs fast, and the **complete-edition**
+> run, which is larger and is the only thing that ever prints a citable *Squishy
+> Score* — none exists yet (the one near-complete run is flagged `DO_NOT_CITE`).
+> [What the numbers mean →](#what-the-numbers-mean)
 
 ## What the numbers mean
 
 | term | one line | reading |
 |---|---|---|
-| **Squishy Score** (`×`) | equal-vote quality index — geomean of per-file ratio, one vote per file | **higher is better**; a dimensionless index, **not** a bit rate |
+| **Squishy Score** (`×`) | equal-vote quality index — *geometric mean* of per-file ratio (multiply the ratios, take the Nth root, so no single huge file dominates), one vote per file | **higher is better**; a dimensionless index, **not** a bit rate |
+| **ratio** | a single file's `uncompressed ÷ compressed` | **higher is better**; `3×` means it shrank to a third |
 | **corpus bpb** | size-weighted physical rate — `8 · total compressed ÷ total input` | **lower is better**; the operational bits/byte the literature uses |
 | **kind** | a named member of the corpus (`dickens`, `log`, `weights`, …) | what you pick from when stress-testing |
-| **edition** | a frozen, dated, DOI-pinned file set (`Squishy-2026`) | what you cite — a number without one is meaningless |
+| **edition** | a frozen, dated, DOI-pinned file set (`Squishy-2026`, freezes at v1.0) | what you cite — a number without one is meaningless |
 
-Score and bpb are **deliberate complements**: the Score weights every file
-equally (so no giant file can be gamed); bpb is the honest size-weighted rate.
-Both are always shown together.
+Score and bpb are **deliberate complements**, always shown together: the Score
+weights every file equally (so no giant file can be gamed); bpb is the honest
+size-weighted rate. **Cite the Score; read bpb as the cross-check.** They diverge
+on purpose — for one file `bpb = 8 ÷ ratio`, but across the corpus the Score is
+equal-per-file while bpb is byte-weighted, so don't derive one from the other.
 
 ## What is Squishy
 

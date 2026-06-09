@@ -123,8 +123,8 @@ def main() -> int:
     a(f'<text x="{ML}" y="34" font-size="22" font-weight="700" fill="{INK}">'
       f'The coverage map</text>')
     a(f'<text x="{ML}" y="56" font-size="13" fill="{MUTED}">Every Squishy file, '
-      f'placed by how its bytes behave — spread across the space, not bunched in '
-      f'one corner.</text>')
+      f'placed by how its bytes behave — orderly/compressible (left) to random '
+      f'(right), highly repetitive (top) to not (bottom).</text>')
 
     # Plot frame.
     a(f'<rect x="{X0}" y="{Y0}" width="{X1 - X0}" height="{Y1 - Y0}" '
