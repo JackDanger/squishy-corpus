@@ -54,7 +54,7 @@ map:
 	uv run python scripts/coverage-map.py
 
 site: map
-	uv run --with pyarrow --with pandas python scripts/build-provenance.py
+	uv run --with pyarrow --with pandas python scripts/build-site.py
 
 # Build the site fresh, then push to S3 (origin only — never direct S3) and
 # invalidate CloudFront so squishy.jackdanger.com updates immediately.

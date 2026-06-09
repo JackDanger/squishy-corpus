@@ -44,7 +44,7 @@ aws s3 sync "$site" "$dest" \
   --cache-control "public, max-age=86400" \
   --exclude '*.html' --exclude '*.js' --exclude '*.json'
 
-# 2) Text files (html/js/json, incl. subdirs like provenance/): always re-put
+# 2) Text files (html/js/json): always re-put
 #    with an explicit charset content-type and a short cache. They're tiny.
 find "$site" -type f \( -name '*.html' -o -name '*.js' -o -name '*.json' \) -print0 \
   | while IFS= read -r -d '' f; do

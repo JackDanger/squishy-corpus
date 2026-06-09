@@ -27,7 +27,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 OUT = REPO / "build/meta/coverage-map.svg"
 
-# Okabe–Ito by category — identical to the live cube (scripts/build-provenance.py).
+# Okabe–Ito by category — identical to the live cube (scripts/build-site.py).
 CAT_COLOR = {
     "Prose": "#E69F00",
     "Code & Web": "#56B4E9",

@@ -201,7 +201,7 @@ geomean *and* the `K ≥ 0.11` compressibility plane (a magic number by the owne
 
 **Landed:** `scripts/squishy.py` (`corpus_score`, flat `_collect`, plane removed),
 `squishy-calculate.py`, the board/`_capture`/`baseline`/`edition-manifest` scripts,
-the index page (`build-provenance.py` + `squishy-cube.js`: compressibility wall and
+the index page (`build-site.py` + `squishy-cube.js`: compressibility wall and
 "not scored" UI removed), `RULES.md`, `README.md`, `plans/squishy-score.md`, and the
 tests (now assert the plain geomean over all files). Published board JSON
 re-aggregated from its real per-file ratios; the complete-edition number is marked

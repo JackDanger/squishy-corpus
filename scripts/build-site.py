@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Build the Squishy data-explorer: build/site/provenance/index.html plus rendered
-preview assets (image thumbnail, video poster frame). Shows each dataset clearly
-— a preview of every file, what it is, and how every tool+version compresses it,
-in a layout that scales to many versions.
+"""Build the Squishy website — the single explorer page at build/site/index.html,
+plus its rendered preview assets (image thumbnail, video poster frame). Shows each
+dataset clearly: a preview of every file, what it is, and how every tool+version
+compresses it, in a layout that scales to many versions.
 
-  uv run --with pyarrow --with pandas python scripts/build-provenance.py
+  uv run --with pyarrow --with pandas python scripts/build-site.py   # or: make site
 """
 from __future__ import annotations
 import csv, html, importlib.util, json, re, sqlite3, subprocess
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-OUT = REPO / "build" / "site"          # this is now the PRIMARY site page (index.html)
+OUT = REPO / "build" / "site"          # the site lives here: index.html + its assets
 ASSETS = REPO / "scripts" / "assets"   # maintainable JS/CSS sources copied into the build
 
 WHATIS = {
