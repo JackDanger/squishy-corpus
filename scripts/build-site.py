@@ -358,11 +358,8 @@ def main() -> int:
     extra = [r for r in rows if r["core_slot"] not in core_slots]
     if extra:
         cards += ('<h2>The big ones</h2>'
-                  '<p class="cap">The same kinds of data, but huge (~0.3–3 GB) — where long-range '
-                  'tricks and big windows start to matter. Every measured file counts once in the '
-                  'score, just like the small ones (the pre-compressed ones simply barely shrink). The '
-                  'one exception is the model-weight size-ladder, which exists only to test speed and '
-                  'memory and isn\'t scored. <em>Still being assembled.</em></p>')
+                  '<p class="cap">The same kinds of data at gigabyte scale, where long-range '
+                  'matching and big compression windows start to matter. Still being assembled.</p>')
         for r in sorted(extra, key=lambda r: int(r["size_bytes"])):
             nm = r["name"]
             local = next((p for p in REPO.glob(f"build/raw/*/{nm}") if p.exists()), None)
@@ -397,7 +394,7 @@ def main() -> int:
 
 
 TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>Squishy data</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Squishy</title>
 <style>
  body{{font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111;max-width:920px;margin:0 auto;padding:1.5rem;background:#fafafa}}
  h1{{font-size:1.9rem;margin:.1em 0}} h2{{margin:2rem 0 .3rem;font-size:1.15rem;color:#555;text-transform:uppercase;letter-spacing:.05em}}
@@ -409,29 +406,8 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .prev{{margin:.4rem 0}} .src{{font-size:.82rem}} a{{color:#0a5fa5}}
  pre.txt,pre.hex{{background:#f6f8fa;border:1px solid #e2e2e2;border-radius:6px;padding:.6rem;overflow:auto;font-size:.78rem;max-height:230px;margin:.2rem 0}}
  pre.run{{background:#0d1117;color:#e6edf3;border-radius:8px;padding:.85rem 1rem;font-size:.95rem;overflow:auto;margin:.4rem 0 .3rem;border:0}}
- .topbars{{position:sticky;top:0;z-index:50;margin:-1.5rem -1.5rem 1.4rem;
-   font:500 .82rem ui-monospace,Menlo,Consolas,monospace}}
- .sitehead{{display:flex;justify-content:space-between;align-items:center;gap:1rem;
-   padding:.45rem .9rem;background:#0d1117;color:#e6edf3}}
- .sitehead .brand{{font-weight:700;letter-spacing:.02em}}
- .sitehead a{{color:#9cd2ff;text-decoration:none;white-space:nowrap}}
- .sitehead a:hover{{text-decoration:underline}}
- .cmdbar{{display:flex;align-items:center;gap:.75rem;padding:.4rem .9rem;
-   background:#161b22;border-top:1px solid #222831;color:#e6edf3}}
- .cmdbar code{{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-   user-select:all;color:#e6edf3}}
- .cmdbar .codec{{color:#7ee787;transition:opacity .22s ease}}
- .copyb{{flex:none;margin-left:auto;cursor:pointer;border:1px solid #30363d;background:#0d1117;
-   color:#9cd2ff;border-radius:5px;padding:.12rem .6rem;font:inherit}}
- .copyb:hover{{background:#21262d}}
- .deftip{{position:relative;border-bottom:1px dotted #999;cursor:help;outline:none}}
- .deftip .pop{{visibility:hidden;opacity:0;position:absolute;left:0;bottom:1.6em;z-index:60;
-   width:24rem;max-width:84vw;background:#0d1117;color:#e6edf3;border-radius:8px;padding:.6rem .75rem;
-   font:400 .82rem/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-   box-shadow:0 8px 28px rgba(0,0,0,.28);transition:opacity .15s;pointer-events:none}}
- .deftip .pop b{{color:#7ee787;font-weight:600}}
- .deftip:hover .pop,.deftip:focus .pop{{visibility:visible;opacity:1}}
- @media(max-width:560px){{ .cmdbar .lead-uv{{display:none}} }}
+ .head{{display:flex;justify-content:space-between;align-items:baseline;gap:1rem}}
+ .head a{{font-size:.9rem;white-space:nowrap}}
  pre.hex{{font-size:.72rem;color:#555}}
  table.data{{border-collapse:collapse;font-size:.8rem;width:100%;overflow:auto;display:block}}
  table.data th,table.data td{{border:1px solid #e2e2e2;padding:.2rem .45rem;text-align:left;white-space:nowrap}}
@@ -477,11 +453,7 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .legend i.dotsm{{width:.4rem;height:.4rem;background:#9aa0a6}}
  .legend i.dotbig{{width:.85rem;height:.85rem;background:#9aa0a6;margin-right:-.15rem}}
  .hint{{color:#888;font-size:.82rem}}
- .lead-q{{font-size:1.02rem;color:#222;margin:.6rem 0 .3rem}}
- .axihint{{color:#888;font-size:.85rem;font-weight:400}}
  .axiskey{{list-style:none;padding:0;margin:.2rem 0 .15rem;display:flex;flex-wrap:wrap;gap:.3rem 1.6rem;font-size:.97rem;color:#2a2a2a}}
- .axiskey .deftip{{cursor:help}}
- .axiskey li:last-child .pop{{left:auto;right:0}}
  ul.readkey{{list-style:none;padding:0;margin:.3rem 0 .6rem;display:grid;gap:.32rem;max-width:46rem}}
  ul.readkey li{{font-size:.95rem;color:#333;line-height:1.45}}
  ul.readkey b{{color:#111}}
@@ -495,30 +467,26 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  table.coverage td:first-child,table.coverage th:first-child,
  table.coverage td:nth-child(2),table.coverage th:nth-child(2){{text-align:left}}
 </style></head><body>
-<div class="topbars">
-  <div class="sitehead">
-    <span class="brand">Squishy</span>
-    <a href="https://github.com/JackDanger/squishy-corpus">GitHub&nbsp;↗</a>
-  </div>
-  <div class="cmdbar">
-    <code id="headcmd-text"><span class="lead-uv">uv run </span>squishy-calculate --cmd "<span class="codec" id="codec">zstd -19 -c</span>"</code>
-    <button class="copyb" id="copyb" title="copy command">copy</button>
-  </div>
+<div class="head">
+  <h1>Squishy</h1>
+  <a href="https://github.com/JackDanger/squishy-corpus">GitHub ↗</a>
 </div>
-<h1>Squishy</h1>
 <p class="tag">One number for how well a compressor does on real data.</p>
-<p class="lede">Squishy is a fixed set of real, freely-shareable files — prose, code, logs,
-genomes, tables, images, binaries — picked to cover the range of things people actually
-compress, from a few megabytes to several gigabytes. Run your tool over it and you get a
-single <b>Squishy Score</b> you can cite and compare. It's the 2026 <span class="deftip" tabindex="0">successor<span class="pop">Every file is real and <b>freely redistributable</b> — public-domain or permissively licensed — with its source URL and SHA-256 published. So you can download, ship, cite, and freeze Squishy without licensing worry. (Silesia's files were gathered decades ago without clear licenses, which makes it awkward to redistribute today.)</span></span> to the <a href="https://sun.aei.polsl.pl/~sdeor/index.php?page=silesia">Silesia</a> corpus.</p>
+<p class="lede">Squishy is a fixed set of real files: novels, source code, server logs,
+genome reads, weather tables, databases, executables, a photo, a film clip, the weights
+of a neural network. They range from a few megabytes to a few gigabytes, and every one
+is freely redistributable, with its source and checksum published. Run your compressor
+over the set and you get a single Squishy Score you can cite and compare. It's a
+successor to the <a href="https://sun.aei.polsl.pl/~sdeor/index.php?page=silesia">Silesia</a> corpus.</p>
 
 <section class="hero" aria-labelledby="coverage-h">
 <h2 id="coverage-h">The shape of the corpus</h2>
-<p class="lead-q"><b>Every dot is one real file</b>, placed only by its bytes — never by any compressor. <span class="axihint">Hover an axis for exactly how it's measured.</span></p>
+<p>Each dot is one file, placed by three measurements of its bytes. No compressor is
+involved in the placement.</p>
 <ul class="axiskey">
-  <li><span class="deftip" tabindex="0"><b style="color:#b23a6b">&rarr; entropy</b> — how random the bytes look<span class="pop"><b>Order-0 Shannon entropy</b> of the byte histogram, in bits per byte (0–8). We count how often each of the 256 byte values occurs and compute H&nbsp;=&nbsp;−Σ&nbsp;p·log₂&nbsp;p. <b>8.0</b> = every value equally likely: the bytes look random, usually because they're already compressed or encrypted. <b>Lower</b> = a skewed distribution an entropy coder can shrink. It ignores order, so it measures the <i>alphabet</i> of bytes, not their arrangement.</span></span></li>
-  <li><span class="deftip" tabindex="0"><b style="color:#1f8a5a">&uarr; repetition</b> — how much of the file repeats<span class="pop"><b>Repeat coverage</b> (0–1). We cut the file into non-overlapping <b>16-byte blocks</b> and count how many have an exact earlier copy elsewhere in the file. <b>0</b> = nothing repeats; <b>~1</b> = almost every block recurs. This is the long-range redundancy a compressor feeds on — computed exactly with a 128-bit sort over every block, no hashing or sampling.</span></span></li>
-  <li><span class="deftip" tabindex="0"><b style="color:#2a6f9e">&nearr; repeat distance</b> — how far back the <i>farthest</i> repeats sit<span class="pop"><b>How far back the copies live.</b> For every repeated 16-byte block we measure the byte distance to its previous occurrence. The dot sits at the <b>p90</b> — the 90th-percentile (farthest) distance — on a <b>log</b> scale; a dot's own tooltip also shows the median (typical) distance. <b>Small</b> = repeats cluster close, a tiny window finds them; <b>large</b> = long-range structure that needs a big compression window.</span></span></li>
+  <li><b style="color:#b23a6b">&rarr; entropy</b> — how random the bytes look (bits per byte, 0–8)</li>
+  <li><b style="color:#1f8a5a">&uarr; repetition</b> — how much of the file repeats itself (16-byte blocks with an earlier exact copy)</li>
+  <li><b style="color:#2a6f9e">&nearr; repeat distance</b> — how far back those copies sit (log scale)</li>
 </ul>
 <div class="cube-wrap">
   <canvas id="cube" tabindex="0" role="img"
@@ -530,12 +498,12 @@ single <b>Squishy Score</b> you can cite and compare. It's the 2026 <span class=
   <div class="tip" id="cubetip" role="status"></div>
 </div>
 <div class="legend" id="cubelegend"></div>
-<ul class="readkey">
-  <li><b>colour</b> = the <i>kind</i> of data · <b>dot size</b> = how big the file is (MB → GB), so each kind shows up once small and once large, same colour</li>
-  <li>the dots in the high-entropy / no-repetition corner are already-compressed media (photos, video, model weights): they barely shrink — but they're still real files you'd compress, so they still count</li>
-</ul>
-<p class="cap">So <b>where a dot is</b> = the shape of its bytes (what a compressor sees); <b>its colour</b> = what the data actually is. The thing to notice: the files are <b>spread across the whole space</b>, not piled in one corner — that's what makes the corpus representative. The score itself stays simple: <b>every file counts once</b>.</p>
-<p class="hint">Drag to rotate · scroll or pinch to zoom · hover a dot for details · keys: arrows rotate, +/− zoom, 0 resets, Enter steps through.</p>
+<p class="cap">Color is the kind of data; dot size is file size. The dots in the
+random, nothing-repeats corner are already-compressed media — the photo, the film,
+the model weights. They barely shrink, but people compress them anyway, so they
+count too. The corpus is chosen so the dots spread across the whole space instead
+of piling up in one corner.</p>
+<p class="hint">Drag to rotate · scroll to zoom · hover a dot for details · keyboard: arrows rotate, +/− zoom, 0 resets, Enter steps through.</p>
 <p id="cube-status" class="sr-only" role="status" aria-live="polite"></p>
 <details class="fallback"><summary>View the data as a table (no 3D required)</summary>
 {coverage_table}
@@ -543,29 +511,27 @@ single <b>Squishy Score</b> you can cite and compare. It's the 2026 <span class=
 </section>
 
 <h2>Score your tool</h2>
-<p>One command. Give it your compressor — anything that reads stdin and writes stdout —
-and it streams the corpus, runs your tool on every file, and prints your score:</p>
+<p>Give it any compressor that reads stdin and writes stdout, such as
+<code>"xz -9 -c"</code> or your own <code>"./mytool -c"</code>. It streams the corpus,
+runs your tool on every file, and prints the score:</p>
 <pre class="run">uv run squishy-calculate --cmd "zstd -19 -c"</pre>
-<p class="cap"><b>The Squishy Score is the geometric mean of the compression ratio
-(original ÷ compressed) over every file — one vote per file.</b> No category weights,
-no size weights, no tuning knobs, no threshold deciding what counts: every real file is
-in, and the geometric mean keeps any single huge or tiny file from running away with the
-number. Beside it we always print the <b>corpus bpb</b> (byte-weighted bits per byte),
-the operational rate the big files dominate.</p>
+<p class="cap">The Squishy Score is the geometric mean of each file's compression ratio
+(original size ÷ compressed size). Every file counts once; nothing is weighted,
+excluded, or tuned. Beside it the runner prints corpus bpb, the plain bits-per-byte
+over all bytes, where the big files dominate.</p>
 <ul class="readkey">
-  <li><b>Any codec, same shape:</b> <code>"xz -9 -c"</code>, <code>"brotli -q 11 -c"</code>, or your own <code>"./mytool -c"</code>.</li>
-  <li><b>Reads and writes files, not pipes?</b> <code>"mytool -o {{out}} {{in}}"</code>.</li>
-  <li><b>Want proof it's lossless?</b> Add <code>--verify --decompress "zstd -dc"</code>.</li>
-  <li><b>Re-runs are instant</b> — it caches every file as it goes.</li>
+  <li>Tools that need files instead of pipes: <code>"mytool -o {{out}} {{in}}"</code>.</li>
+  <li>Add <code>--verify --decompress "zstd -dc"</code> to prove the round trip is lossless.</li>
+  <li>Files and results are cached, so re-runs are instant.</li>
 </ul>
 
 <h2>Reference board <span class="hint">· draft</span></h2>
-<p class="cap">How the usual tools do on Squishy. It's a <b>draft</b> for now — it only runs the
-small files, so it isn't an official Squishy Score yet. Click any column to sort.</p>
+<p class="cap">Familiar tools on the small files only, so not an official Squishy Score yet.
+Click a column to sort.</p>
 <div class="lbwrap"><table class="lead" id="lead"><thead><tr>{lbhead}</tr></thead><tbody>{lb}</tbody></table></div>
 
 <h2>Every file</h2>
-<p class="cap">All of it, by category — what each file is, a peek inside, and how every tool squeezes it.</p>
+<p class="cap">What each file is, a peek inside, and how each tool compresses it.</p>
 {cards}
 
 <script>window.CUBE_DATA=/*CUBE_DATA*/;</script>
@@ -584,34 +550,6 @@ document.querySelectorAll('#lead th').forEach((th,i)=>th.onclick=()=>{{
                           : num(b.cells[i].textContent)-num(a.cells[i].textContent));
   rows.forEach(r=>tb.appendChild(r));
 }});
-// header one-liner: slowly rotate the codec; always selectable/copyable; pause on
-// hover or while the user has a selection inside it.
-(function(){{
-  const codecs=["zstd -19 -c","xz -9 -c","brotli -q 11 -c","./build/zstd --ultra -22 -c",
-                "gzippy -9 -c","/path/to/hacked/bzip2 -9 -c","lz4 -9 -c","./mytool -c"];
-  const el=document.getElementById('codec'),
-        cmd=document.getElementById('headcmd-text'),
-        wrap=document.querySelector('.cmdbar'),
-        btn=document.getElementById('copyb');
-  if(!el) return;
-  let i=0, hover=false;
-  function selInside(){{ const s=window.getSelection();
-    return s && !s.isCollapsed && s.anchorNode && wrap.contains(s.anchorNode); }}
-  function tick(){{
-    if(hover || selInside()) return;            // frozen while hovered/selected
-    i=(i+1)%codecs.length; el.style.opacity=0;
-    setTimeout(()=>{{ el.textContent=codecs[i]; el.style.opacity=1; }}, 220);
-  }}
-  setInterval(tick, 3000);
-  wrap.addEventListener('mouseenter',()=>hover=true);
-  wrap.addEventListener('mouseleave',()=>hover=false);
-  btn.addEventListener('click',()=>{{
-    navigator.clipboard.writeText(cmd.textContent.trim()).then(()=>{{
-      const o=btn.textContent; btn.textContent='copied ✓';
-      setTimeout(()=>btn.textContent=o, 1200);
-    }}).catch(()=>{{}});
-  }});
-}})();
 </script>
 </body></html>"""
 
