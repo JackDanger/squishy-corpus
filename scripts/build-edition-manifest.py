@@ -4,11 +4,12 @@ manifest for the Squishy edition. One row per distributed file with everything a
 consumer needs to fetch + verify a single artifact by name:
 
   name, display, kind, category, tier (core|scale), size_bytes, sha256,
-  url (HTTPS), license, source_url
+  url (HTTPS), license, source_url, origin (upstream|minted)
 
 Derived entirely from the single sources of truth — scripts/squishy.py:CORE,
-build/meta/CHECKSUMS.sha256, build/meta/LICENSE-MANIFEST.csv, and (for the scale
-tier) build/meta/scale-properties.json — so it cannot drift from the product.
+scripts/publish-corpus.py:RECIPES (the per-member origin), build/meta/CHECKSUMS.sha256,
+build/meta/LICENSE-MANIFEST.csv, and (for the scale tier) build/meta/scale-properties.json
+— so it cannot drift from the product.
 
   uv run python scripts/build-edition-manifest.py
 """
@@ -41,6 +42,12 @@ def _props(measured: dict, sq) -> dict:
 def main() -> int:
     s = importlib.util.spec_from_file_location("sq", REPO / "scripts" / "squishy.py")
     sq = importlib.util.module_from_spec(s); s.loader.exec_module(sq)
+    # Provenance class (upstream|minted) is owned by publish-corpus.py RECIPES — the
+    # single source of truth for how each member is produced. Derive it here so the
+    # manifest's `origin` field can never drift from the mint/publish contract (and
+    # so regenerating edition.json preserves it instead of silently dropping it).
+    p = importlib.util.spec_from_file_location("pc", REPO / "scripts" / "publish-corpus.py")
+    pc = importlib.util.module_from_spec(p); p.loader.exec_module(pc)
     man = {r["core_slot"]: r for r in csv.DictReader((REPO / "build/meta/LICENSE-MANIFEST.csv").open())}
     man_by_name = {r["name"]: r for r in csv.DictReader((REPO / "build/meta/LICENSE-MANIFEST.csv").open())}
     sums = {}
@@ -65,6 +72,7 @@ def main() -> int:
                 "size_bytes": p.stat().st_size if p.exists() else None,
                 "sha256": sums.get(key), "key": key, "url": f"{BASE}/{key}",
                 "license": m.get("license"), "source_url": m.get("source_url"),
+                "origin": pc.rec_of(key)["origin"],
                 **_props(core_props.get(display, {}), sq),
             })
     # scale tier — LICENSE-MANIFEST is the set-of-record (every distributed scale
@@ -87,6 +95,7 @@ def main() -> int:
             "sha256": row.get("sha256") or v.get("sha256"),
             "key": key, "url": f"{BASE}/{key}",
             "license": row.get("license"), "source_url": row.get("source_url"),
+            "origin": pc.rec_of(key)["origin"],
             **_props(v, sq),
         })
 
