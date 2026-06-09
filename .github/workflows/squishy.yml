@@ -13,8 +13,9 @@ jobs:
       - name: Tests (score golden-vector, fail-on-missing, PRNG reference vectors)
         run: uv run pytest -m "not slow" -q
       - name: Squishy Score runner self-check (exits non-zero on incomplete core)
-        # The 15-file core isn't checked into the repo (it's published separately),
-        # so the runner must report CORE INCOMPLETE and exit non-zero here. This
+        # The core raw files aren't checked into the repo (they're published
+        # separately), so the runner must report CORE INCOMPLETE and exit non-zero
+        # here. This
         # guards the fail-on-missing contract that makes a reported score trustworthy.
         run: |
           if uv run squishy board; then

@@ -3,8 +3,9 @@
 
 A 20-year public corpus must not leak credentials or personal data. This scans
 given files (or the core raw files present locally) for credential patterns and
-PII signals. The `log` and `mail` core files are the highest-risk and MUST be
-clean before freeze. Findings are reported; exit non-zero on any credential hit.
+PII signals. The `log` core file (real web-server traffic) is the highest-risk
+and MUST be clean before freeze. Findings are reported; exit non-zero on any
+credential hit.
 
 Usage:
   uv run python scripts/pii-scan.py [FILE ...]     # default: core files on disk
@@ -28,7 +29,7 @@ CREDENTIAL = {
     "aws-secret-hint": rb"aws_secret_access_key",
 }
 # Lower-confidence PII signals → reported as WARN (review), not auto-fail
-# (email/IP are legitimately present in some real data, e.g. mail/log).
+# (email/IP are legitimately present in some real data, e.g. the access log).
 PII = {
     "email": rb"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}",
     "ipv4": rb"\b(?:\d{1,3}\.){3}\d{1,3}\b",
