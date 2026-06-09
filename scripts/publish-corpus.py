@@ -33,7 +33,7 @@ Modes:
 Needs creds for everything but --plan:  aws-vault exec personal -- make publish
 """
 from __future__ import annotations
-import argparse, gzip, hashlib, importlib.util, json, lzma, os, subprocess, sys, tempfile, urllib.request, zipfile
+import argparse, gzip, hashlib, importlib.util, json, lzma, os, subprocess, sys, tarfile, tempfile, urllib.request, zipfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -58,6 +58,13 @@ RECIPES: dict[str, dict] = {
     "corpus/ecoli.fastq":  {"origin": "upstream", "how": "stream", "dec": "gzip", "limit": 26214271},
     "corpus/tool.bin":                   {"origin": "upstream", "how": "stream"},
     "corpus/movie.mp4":                  {"origin": "upstream", "how": "stream"},
+    # executable-format members: prebuilt release archives → re-fetch + extract the member.
+    "corpus/engine.wasm": {"origin": "upstream", "how": "unzip",
+                           "member": "sqlite-wasm-3530200/jswasm/sqlite3.wasm"},
+    "corpus/winexe.exe":  {"origin": "upstream", "how": "unzip",
+                           "member": "fd-v10.4.2-x86_64-pc-windows-msvc/fd.exe"},
+    "corpus/armexe.elf":  {"origin": "upstream", "how": "untar",
+                           "member": "hyperfine-v1.20.0-aarch64-unknown-linux-gnu/hyperfine"},
     "scale/monorepo/llvm-project-19.1.0.src.tar":  {"origin": "upstream", "how": "stream", "dec": "xz"},
     "scale/media/big-buck-bunny-1080p.mov":        {"origin": "upstream", "how": "stream"},
     "scale/text/enwik9.txt":             {"origin": "upstream", "how": "unzip", "member": "enwik9"},
@@ -80,6 +87,9 @@ RECIPES: dict[str, dict] = {
     "corpus/data.csv":    {"origin": "minted", "note": "NOAA GHCN head-slice (by_year files are revised)"},
     "corpus/data.sqlite": {"origin": "minted", "note": "our sqlite build from USDA FoodData Central"},
     "corpus/photo.jpg":   {"origin": "minted", "note": "Wikimedia Commons file (overwritable upstream)"},
+    "corpus/symbols.dwarf": {"origin": "minted", "note": "Lua 5.4.8 -g build, DWARF companion "
+                             "(toolchain-specific bytes — not byte-reproducible; the kept copy is the authority; "
+                             "scripts/acquire-binaries.py rebuilds a fresh one)"},
     "scale/csv/noaa-ghcn-daily-2024-full.csv":  {"origin": "minted", "note": "NOAA GHCN by_year (revised over time)"},
     "scale/csv/noaa-ghcn-daily-2021-2023.csv":  {"origin": "minted", "note": "NOAA GHCN by_year (revised over time)"},
     "scale/columnar/bts-ontime-2022-2024.parquet": {"origin": "minted", "note": "our pyarrow parquet build"},
@@ -177,6 +187,20 @@ def acquire(f: dict, rec: dict, dst: Path) -> tuple[str, int]:
                 for c in iter(lambda: m.read(CHUNK), b""):
                     out.write(c); h.update(c); n += len(c)
         return h.hexdigest(), n
+    if rec.get("how") == "untar":                            # .tar / .tar.gz / .tar.xz → one member
+        with tempfile.NamedTemporaryFile() as tmp:
+            with urllib.request.urlopen(urllib.request.Request(urls[0], headers=UA), timeout=600) as r:
+                for c in iter(lambda: r.read(CHUNK), b""):
+                    tmp.write(c)
+            tmp.flush()
+            with tarfile.open(tmp.name, "r:*") as t:
+                m = t.extractfile(rec["member"])
+                if m is None:
+                    raise RuntimeError(f"tar member not found: {rec['member']}")
+                with dst.open("wb") as out:
+                    for c in iter(lambda: m.read(CHUNK), b""):
+                        out.write(c); h.update(c); n += len(c)
+        return h.hexdigest(), n
     if rec.get("how") == "stream":
         with dst.open("wb") as out:
             for url in urls:
@@ -258,8 +282,20 @@ def do_mint(files, bucket, force):
                 else:
                     nfail += 1
             continue
-        print(f"  ✗ NO SOURCE for minted {key}: not in source/ or {WORK_PREFIX}/, and not "
-              f"regenerable — provide the original bytes ({rec.get('note', '?')})", file=sys.stderr)
+        # Bootstrap: seed source/ from the verified LOCAL canonical copy (build/raw/<key>).
+        # This is how a minted member whose bytes aren't byte-reproducible (e.g. a compiled
+        # artifact) first enters the source-of-record — sha-gated, so we only ever upload
+        # bytes that match the manifest.
+        local = REPO / "build" / "raw" / key
+        if local.exists() and hashlib.sha256(local.read_bytes()).hexdigest() == want:
+            if put_local(local, bucket, src_key, want, ct, cache=False):
+                print(f"  mint   {key}  (seeded source/ from local {local.relative_to(REPO)})"); nmint += 1
+            else:
+                nfail += 1
+            continue
+        print(f"  ✗ NO SOURCE for minted {key}: not in source/ or {WORK_PREFIX}/, no local "
+              f"build/raw copy, and not regenerable — provide the original bytes ({rec.get('note', '?')})",
+              file=sys.stderr)
         nmissing += 1
     print(f"\n— mint: have={nskip} minted={nmint} missing={nmissing} failed={nfail}")
     return 1 if (nfail or nmissing) else 0
