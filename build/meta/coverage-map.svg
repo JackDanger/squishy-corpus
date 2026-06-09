@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Squishy coverage map: corpus files spread across byte entropy and repeat coverage">
+<rect width="960" height="600" fill="#fafafa"/>
+<text x="72" y="34" font-size="22" font-weight="700" fill="#1c2530">The coverage map</text>
+<text x="72" y="56" font-size="13" fill="#6b7682">Every Squishy file, placed by how its bytes behave — spread across the space, not bunched in one corner.</text>
+<rect x="72" y="78" width="678" height="448" fill="#ffffff" stroke="#e3e7ec"/>
+<line x1="72.0" y1="78" x2="72.0" y2="526" stroke="#e3e7ec"/>
+<text x="72.0" y="544" font-size="11" fill="#6b7682" text-anchor="middle">0</text>
+<line x1="156.8" y1="78" x2="156.8" y2="526" stroke="#e3e7ec"/>
+<text x="156.8" y="544" font-size="11" fill="#6b7682" text-anchor="middle">1</text>
+<line x1="241.5" y1="78" x2="241.5" y2="526" stroke="#e3e7ec"/>
+<text x="241.5" y="544" font-size="11" fill="#6b7682" text-anchor="middle">2</text>
+<line x1="326.2" y1="78" x2="326.2" y2="526" stroke="#e3e7ec"/>
+<text x="326.2" y="544" font-size="11" fill="#6b7682" text-anchor="middle">3</text>
+<line x1="411.0" y1="78" x2="411.0" y2="526" stroke="#e3e7ec"/>
+<text x="411.0" y="544" font-size="11" fill="#6b7682" text-anchor="middle">4</text>
+<line x1="495.8" y1="78" x2="495.8" y2="526" stroke="#e3e7ec"/>
+<text x="495.8" y="544" font-size="11" fill="#6b7682" text-anchor="middle">5</text>
+<line x1="580.5" y1="78" x2="580.5" y2="526" stroke="#e3e7ec"/>
+<text x="580.5" y="544" font-size="11" fill="#6b7682" text-anchor="middle">6</text>
+<line x1="665.2" y1="78" x2="665.2" y2="526" stroke="#e3e7ec"/>
+<text x="665.2" y="544" font-size="11" fill="#6b7682" text-anchor="middle">7</text>
+<line x1="750.0" y1="78" x2="750.0" y2="526" stroke="#e3e7ec"/>
+<text x="750.0" y="544" font-size="11" fill="#6b7682" text-anchor="middle">8</text>
+<line x1="72" y1="526.0" x2="750" y2="526.0" stroke="#e3e7ec"/>
+<text x="62" y="530.0" font-size="11" fill="#6b7682" text-anchor="end">0.0</text>
+<line x1="72" y1="436.4" x2="750" y2="436.4" stroke="#e3e7ec"/>
+<text x="62" y="440.4" font-size="11" fill="#6b7682" text-anchor="end">0.2</text>
+<line x1="72" y1="346.8" x2="750" y2="346.8" stroke="#e3e7ec"/>
+<text x="62" y="350.8" font-size="11" fill="#6b7682" text-anchor="end">0.4</text>
+<line x1="72" y1="257.2" x2="750" y2="257.2" stroke="#e3e7ec"/>
+<text x="62" y="261.2" font-size="11" fill="#6b7682" text-anchor="end">0.6</text>
+<line x1="72" y1="167.6" x2="750" y2="167.6" stroke="#e3e7ec"/>
+<text x="62" y="171.6" font-size="11" fill="#6b7682" text-anchor="end">0.8</text>
+<line x1="72" y1="78.0" x2="750" y2="78.0" stroke="#e3e7ec"/>
+<text x="62" y="82.0" font-size="11" fill="#6b7682" text-anchor="end">1.0</text>
+<text x="411" y="568" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle">how random  →  entropy (bits / byte)</text>
+<text x="22" y="302" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle" transform="rotate(-90 22 302)">how repetitive  →  repeat coverage</text>
+<circle cx="535.6" cy="483.5" r="4.5" fill="#56B4E9" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>minjs — 4 MB, H=5.47, cover=0.09</title></circle>
+<circle cx="746.1" cy="525.7" r="7.8" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>photo — 7 MB, H=7.95, cover=0.00</title></circle>
+<circle cx="514.4" cy="373.1" r="8.4" fill="#56B4E9" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>markup — 8 MB, H=5.22, cover=0.34</title></circle>
+<circle cx="479.1" cy="480.0" r="9.3" fill="#E69F00" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>aozora — 12 MB, H=4.80, cover=0.10</title></circle>
+<circle cx="465.7" cy="515.8" r="9.3" fill="#E69F00" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>dickens — 12 MB, H=4.65, cover=0.02</title></circle>
+<circle cx="748.0" cy="526.0" r="9.4" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>movie — 13 MB, H=7.98, cover=0.00</title></circle>
+<circle cx="500.2" cy="212.9" r="9.6" fill="#009E73" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>json — 14 MB, H=5.05, cover=0.70</title></circle>
+<circle cx="704.8" cy="490.9" r="10.2" fill="#0072B2" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>parquet — 21 MB, H=7.47, cover=0.08</title></circle>
+<circle cx="350.1" cy="306.7" r="10.6" fill="#009E73" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>genome — 26 MB, H=3.28, cover=0.49</title></circle>
+<circle cx="514.4" cy="200.5" r="10.6" fill="#009E73" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>log — 26 MB, H=5.22, cover=0.73</title></circle>
+<circle cx="413.1" cy="271.1" r="10.6" fill="#0072B2" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>csv — 27 MB, H=4.03, cover=0.57</title></circle>
+<circle cx="548.8" cy="486.1" r="11.5" fill="#0072B2" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>sqlite — 48 MB, H=5.63, cover=0.09</title></circle>
+<circle cx="508.5" cy="373.7" r="11.6" fill="#56B4E9" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>monorepo — 51 MB, H=5.15, cover=0.34</title></circle>
+<circle cx="610.2" cy="409.2" r="11.8" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>exe — 62 MB, H=6.35, cover=0.26</title></circle>
+<circle cx="695.3" cy="526.0" r="12.3" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>weights — 91 MB, H=7.36, cover=0.00</title></circle>
+<circle cx="515.7" cy="152.0" r="13.8" fill="#009E73" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>nasa — 373 MB, H=5.24, cover=0.83</title></circle>
+<circle cx="749.1" cy="525.7" r="14.5" fill="#CC79A7" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>big — 725 MB, H=7.99, cover=0.00</title></circle>
+<circle cx="706.4" cy="490.8" r="14.5" fill="#0072B2" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>bts — 772 MB, H=7.49, cover=0.08</title></circle>
+<circle cx="509.0" cy="390.2" r="14.8" fill="#E69F00" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>enwik9 — 1000 MB, H=5.16, cover=0.30</title></circle>
+<circle cx="352.9" cy="227.2" r="14.9" fill="#009E73" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>ecoli — 1073 MB, H=3.31, cover=0.67</title></circle>
+<circle cx="416.7" cy="174.4" r="15.0" fill="#0072B2" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>noaa — 1331 MB, H=4.07, cover=0.78</title></circle>
+<circle cx="546.6" cy="136.1" r="15.2" fill="#56B4E9" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>clang — 1504 MB, H=5.60, cover=0.87</title></circle>
+<circle cx="554.2" cy="223.3" r="15.3" fill="#56B4E9" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>llvm — 1772 MB, H=5.69, cover=0.68</title></circle>
+<circle cx="415.2" cy="166.0" r="16.0" fill="#0072B2" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>noaa — 4069 MB, H=4.05, cover=0.80</title></circle>
+<text x="778" y="86" font-size="12" font-weight="700" fill="#1c2530">category</text>
+<circle cx="785" cy="104" r="7" fill="#E69F00" fill-opacity="0.82" stroke="#fff" stroke-width="1.2"/>
+<text x="800" y="108" font-size="12" fill="#1c2530">Prose</text>
+<circle cx="785" cy="128" r="7" fill="#56B4E9" fill-opacity="0.82" stroke="#fff" stroke-width="1.2"/>
+<text x="800" y="132" font-size="12" fill="#1c2530">Code &amp; Web</text>
+<circle cx="785" cy="152" r="7" fill="#009E73" fill-opacity="0.82" stroke="#fff" stroke-width="1.2"/>
+<text x="800" y="156" font-size="12" fill="#1c2530">Structured</text>
+<circle cx="785" cy="176" r="7" fill="#0072B2" fill-opacity="0.82" stroke="#fff" stroke-width="1.2"/>
+<text x="800" y="180" font-size="12" fill="#1c2530">Tabular / DB</text>
+<circle cx="785" cy="200" r="7" fill="#CC79A7" fill-opacity="0.82" stroke="#fff" stroke-width="1.2"/>
+<text x="800" y="204" font-size="12" fill="#1c2530">Binary &amp; Media</text>
+<text x="778" y="250" font-size="12" font-weight="700" fill="#1c2530">dot size ∝ file size</text>
+<circle cx="790" cy="272" r="4.5" fill="#6b7682" fill-opacity="0.35" stroke="#6b7682" stroke-width="1"/>
+<text x="812" y="276" font-size="11" fill="#6b7682">~4 MB</text>
+<circle cx="790" cy="302" r="9.5" fill="#6b7682" fill-opacity="0.35" stroke="#6b7682" stroke-width="1"/>
+<text x="812" y="306" font-size="11" fill="#6b7682">~50 MB</text>
+<circle cx="790" cy="332" r="16.0" fill="#6b7682" fill-opacity="0.35" stroke="#6b7682" stroke-width="1"/>
+<text x="812" y="336" font-size="11" fill="#6b7682">~4 GB</text>
+<text x="778" y="374" font-size="10.5" fill="#6b7682">ringed = large scale rung.</text>
+<text x="72" y="584" font-size="10.5" fill="#6b7682">Intrinsic, codec-free properties (measured from bytes alone). A third axis — repeat distance — and live rotation are at squishy.jackdanger.com.</text>
+</svg>

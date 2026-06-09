@@ -7,7 +7,7 @@
 S3_BUCKET ?= squishy-corpus
 AWS_VAULT ?=
 
-.PHONY: help all properties edition board calculate site deploy publish mint release coverage validate audit pii \
+.PHONY: help all properties edition board calculate map site deploy publish mint release coverage validate audit pii \
         baseline check test freeze
 
 help:
@@ -18,6 +18,7 @@ help:
 	@echo "  make board               — reference panel over the local core members"
 	@echo "  make calculate CMD=\"zstd -19 -c\" [VERIFY='--verify --decompress \"zstd -dc\"']"
 	@echo "                           — stream the FULL edition and compute the Squishy Score"
+	@echo "  make map                 — render the static coverage map (build/meta/coverage-map.svg)"
 	@echo "  make site                — render the explorer + coverage map (build/site)"
 	@echo "  make deploy              — build the site, push to S3, invalidate the CDN (live)"
 	@echo "  make publish [ARGS=…]    — stream the corpus into S3 working prefix (--plan/--check/--force)"
@@ -47,7 +48,12 @@ board:
 calculate:
 	uv run python scripts/squishy-calculate.py --cmd "$(CMD)" $(VERIFY)
 
-site:
+# Static coverage map (build/meta/coverage-map.svg) — the flat, citable companion
+# to the live 3D explorer; the README hero image. Zero deps, re-derives bit-for-bit.
+map:
+	uv run python scripts/coverage-map.py
+
+site: map
 	uv run --with pyarrow --with pandas python scripts/build-provenance.py
 
 # Build the site fresh, then push to S3 (origin only — never direct S3) and

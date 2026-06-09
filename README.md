@@ -1,19 +1,50 @@
 # Squishy
 
-**The 2026 compression corpus — one curated, representative set of real data:
-cite its Squishy Score to compare compression ratios, or use it as a regression
-battery when you're tuning a codec's speed and memory without changing its output.**
+**Squishy is the 2026 compression corpus: one curated set of real, redistributable
+files, chosen to span the full range of how data actually compresses. Run your
+codec over it to get a Squishy Score — a single, citable compression-ratio number.**
+
+![The Squishy coverage map: every corpus file plotted by byte entropy and repeat coverage, spread across the space rather than bunched in one corner](build/meta/coverage-map.svg)
+
+*Every file in the corpus, placed by how its bytes behave — the evidence that the
+set spans the space. That spread is what makes "I tested on Squishy" mean
+something. [How to read this →](#the-coverage-map)*
+
+### Start here
+
+| If you want to… | Go to |
+|---|---|
+| **Just get a number** for your codec | [Quickstart](#quickstart) |
+| **Decide whether to trust it** | [What Squishy believes](VALUES.md) · [the coverage map](#the-coverage-map) |
+| **Report or submit** a score | [`RULES.md`](RULES.md) |
+| **Curate or govern** an edition | [`GOVERNANCE.md`](GOVERNANCE.md) |
+
+## Quickstart
 
 ```
 git clone https://github.com/JackDanger/squishy-corpus && cd squishy-corpus
-uv run squishy-calculate --cmd "zstd -19 -c"     # streams the FULL corpus, scores your codec
-→ Squishy Score: <×>   # one number — but no value is citable until the v1.0 freeze + DOI
-# streams + verifies every file (fail-closed on any sha mismatch); resumable; cached
+uv run squishy-calculate --cmd "zstd -19 -c"   # streams + verifies the FULL corpus, scores your codec
+→ Squishy Score (draft): 4.15×   # real & reproducible NOW — citable once v1.0 freezes (DOI pending)
 ```
 
-> **No Squishy Score is citable yet.** The corpus is pre-freeze; the draft reference
-> board below has real, reproducible per-codec numbers over the small members, but the
-> single frozen edition number (and its Zenodo DOI) lands at v1.0. Don't cite a draft.
+You get a **real, reproducible number today**; a **citable** number at the v1.0
+freeze. We keep those two separate on purpose — labelling a draft a draft is
+[value #1](VALUES.md). The runner verifies every file against its published
+SHA-256 (fail-closed on any mismatch), caches results, and is resumable.
+[What the numbers mean →](#what-the-numbers-mean)
+
+## What the numbers mean
+
+| term | one line | reading |
+|---|---|---|
+| **Squishy Score** (`×`) | equal-vote quality index — geomean of per-file ratio, one vote per file | **higher is better**; a dimensionless index, **not** a bit rate |
+| **corpus bpb** | size-weighted physical rate — `8 · total compressed ÷ total input` | **lower is better**; the operational bits/byte the literature uses |
+| **kind** | a named member of the corpus (`dickens`, `log`, `weights`, …) | what you pick from when stress-testing |
+| **edition** | a frozen, dated, DOI-pinned file set (`Squishy-2026`) | what you cite — a number without one is meaningless |
+
+Score and bpb are **deliberate complements**: the Score weights every file
+equally (so no giant file can be gamed); bpb is the honest size-weighted rate.
+Both are always shown together.
 
 ## What is Squishy
 
@@ -21,7 +52,7 @@ Squishy is a successor to the Silesia corpus for 2026: a fixed set of **real,
 redistributable files**, each measured along a few intrinsic properties — *how
 random the bytes are, how repetitive, how far back the repeats sit, and how big
 the file is* — and deliberately chosen to **span that range** rather than pile up
-in one corner of it.
+in one corner of it. [What the project believes and why →](VALUES.md)
 
 One corpus, two jobs:
 
@@ -74,8 +105,10 @@ the whole.** We claim *coverage of the range*, not completeness; and these
 properties are the dimensions along which compressors are *known* to behave
 differently — they describe why each file is here, they don't *predict* a ratio.
 These four properties are why each file is here; they make the *file selection*
-representative. They are **not** a weight in the score. Explore it: the live map
-plots every artifact in 3D (size as the dot size) at
+representative. They are **not** a weight in the score. The [static coverage
+map](build/meta/coverage-map.svg) at the top plots every file by two of them
+(entropy × repeat coverage, dot area ∝ size); the live 3D explorer adds the third
+(repeat distance) and rotates, at
 [squishy.jackdanger.com](https://squishy.jackdanger.com) *(soon)*.
 
 ## The Squishy Score
