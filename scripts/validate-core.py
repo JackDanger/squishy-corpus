@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the 16-file core: format validity, non-degeneracy, and that no single
+"""Validate the 19-file core: format validity, non-degeneracy, and that no single
 file dominates the geometric-mean score. Run before freeze (part of verification).
 
 Checks per file:
@@ -18,11 +18,17 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 
 # (display -> (magic_predicate, human kind, incompressible?))
+# NOTE: every CORE display MUST have an entry here — main() looks up SNIFF[d] for
+# each core file, so a missing entry is a KeyError, not a skipped check. The
+# tests/test_roster_consistency.py::test_core_matches_sniff guard fails if this
+# roster drifts from scripts/squishy.py CORE.
 def _is(prefix): return lambda b: b.startswith(prefix)
+# Mach-O object magics (the macOS dSYM DWARF companion is a Mach-O file).
+_MACHO = (b"\xcf\xfa\xed\xfe", b"\xce\xfa\xed\xfe", b"\xfe\xed\xfa\xcf",
+          b"\xfe\xed\xfa\xce", b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca")
 SNIFF = {
     "dickens": (lambda b: sum(32 <= x < 127 or x in (9, 10, 13) for x in b[:256]) > 200, "text", False),
     "aozora":  (lambda b: b[:3] == b"\xef\xbb\xbf" or any(x & 0x80 for x in b[:64]), "utf-8 text", False),
-    "mail":    (lambda b: b[:5] == b"From " or b"\nFrom " in b[:4096] or b":" in b[:200], "mbox", False),
     "monorepo":(lambda b: len(b) > 512, "tar", False),   # tar: checked via tarfile below
     "minjs":   (lambda b: True, "minified js", False),
     "markup":  (lambda b: b"xml" in b[:512] or b"<" in b[:4096], "xml (tar)", False),
@@ -36,6 +42,10 @@ SNIFF = {
     "photo":   (_is(b"\xff\xd8\xff"), "jpeg", True),
     "movie":   (lambda b: b[4:8] == b"ftyp", "mp4", True),
     "weights": (lambda b: b[8:9] == b"{", "safetensors", True),
+    "symbols": (lambda b: b[:4] in _MACHO or b[:4] == b"\x7fELF", "DWARF (Mach-O/ELF)", False),
+    "wasm":    (_is(b"\x00asm"), "wasm", False),
+    "winexe":  (_is(b"MZ"), "PE (exe)", False),
+    "armexe":  (_is(b"\x7fELF"), "ELF (ARM64)", False),
 }
 
 
