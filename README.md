@@ -176,14 +176,17 @@ window sizes** — that's where long-range matching and large-window modelling s
 to matter, and where a future large-file codec earns its keep. Large members
 acquired (all PD / permissive, whole-file measured):
 
-- **`csv`** — NOAA GHCN-Daily, 1.33 GB (one year) **and 4.07 GB** (three years)
+- **`csv`** — NOAA GHCN-Daily, **4.07 GB** (2021–2023). This is the `csv`
+  *length* rung; it scales the human-scale `csv` kind cell (the 2024 slice) at
+  **disjoint years**, so the two share no bytes. (The 1.33 GB 2024-full file — a
+  strict prefix of the small slice — was dropped to an unscored diagnostic.)
 - **`monorepo`** — full LLVM source tree, 1.77 GB
 - **`archive`** — four clang release source trees concatenated, 1.50 GB: a real
   release-mirror/backup artifact (high repetition with duplicates hundreds of MB
   apart — the long-range corner nothing else covers)
-- **`genome`** — full E. coli run, 1.07 GB · **`text`** — enwik9, 1.0 GB ·
-  **`log`** — full NASA-HTTP Jul+Aug, 0.37 GB · **`parquet`** — US DOT airline
-  on-time, multi-year columnar
+- **`genome`** — full E. coli run, 1.07 GB · **`markup`** — enwik9, 1.0 GB
+  (Wikipedia XML, the `markup` length rung) · **`log`** — full NASA-HTTP Jul+Aug,
+  0.37 GB · **`parquet`** — US DOT airline on-time, multi-year columnar
 
 `json` and `sqlite` stay single-size: their byte-property region is already
 represented (by `log` and `csv` respectively) and the size axis is carried by the
@@ -229,13 +232,13 @@ csv-4 GB 12.6×, clang-archive 17.5×) — long-range matching at scale shows up
 per-file ratios.
 
 The table below is the **fast panel over the small members only** (draft) — handy
-for ranking codecs quickly; the full panel over the complete edition is the
+for ranking codecs quickly; the full panel over the complete edition (the **26
+scored cells** declared in [`build/meta/schema.json`](build/meta/schema.json)) is the
 expensive periodic computation. Every codec build is pinned in
-[`build/tools.lock`](build/tools.lock). This panel covers the **15-member draft
-core** and predates the 4 new Binary & Media additions (`symbols`, `wasm`,
-`winexe`, `armexe`); once those bytes are published and re-scored with the pinned
-codec builds the new members (including the very compressible `symbols`) will
-fold into the panel.
+[`build/tools.lock`](build/tools.lock). This panel predates the 4 new Binary & Media
+cells (`symbols`, `wasm`, `winexe`, `armexe`) and the large rungs; once those bytes
+are published and re-scored with the pinned codec builds the full roster folds into
+the panel.
 
 | codec | Squishy Score (×) | corpus bpb (byte-weighted) |
 |-------|------------------:|---------------------------:|
@@ -276,10 +279,12 @@ Buck Bunny) is © Blender Foundation, CC-BY 3.0. The build system is [MIT](LICEN
 
 ---
 
-*Status: pre-1.0. The 19-member small core is assembled and scored; the 4 new
-Binary & Media members (`symbols`, `wasm`, `winexe`, `armexe`) are in the edition
-manifest but their bytes are pending upload to the public mirror — a complete
-streaming run will 404 on them until the next `make publish`. The size-spanning
-corpus and its score are being finalized; the edition **will be** frozen and
-DOI-minted at `v1.0.0`. Roadmap:
+*Status: pre-1.0. The scored roster is constituted as **26 cells** in
+[`build/meta/schema.json`](build/meta/schema.json) (19 small named members + 6 large
+rungs + the `archive` long-range member; the near-incompressible budget is 3). The 4
+newest Binary & Media cells (`symbols`, `wasm`, `winexe`, `armexe`) are in the manifest
+but their bytes are pending upload to the public mirror — a complete streaming run will
+404 on them until the next `make publish`, and the reference board still reflects the
+older small-member set. The complete-edition Squishy Score is computed once those bytes
+land; the edition **will be** frozen and DOI-minted at `v1.0.0`. Roadmap:
 [`plans/squishy-1.0-readiness.md`](plans/squishy-1.0-readiness.md).*

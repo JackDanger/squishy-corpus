@@ -308,20 +308,20 @@ def geomean(xs: list[float]) -> float:
 def scored_corpus(edition_path: Path | None = None) -> dict[str, dict[str, list[dict]]]:
     """The whole corpus, edition-driven (single source of truth) and grouped for the
     by-category / by-kind diagnostic re-slices: {category: {kind: [size-point, ...]}},
-    size-points sorted small→large. Reads build/meta/edition.json (category/kind/tier/
-    key/url/sha256/props per file). Every file we've placed on the intrinsic map (i.e.
-    measured — has an `entropy`) is scored, one vote each; there is no compressibility
-    gate. The only files left out are the unmeasured throughput-ladder fixtures (the
-    model-weight size ladder), which exist purely for speed/RAM testing and are not
-    corpus members for ratio. The grouping here only feeds the diagnostic tables, never
-    a score weight. Each kind's list is its size axis (one entry for single-size kinds,
-    several for kinds with load-bearing large rungs)."""
+    size-points sorted small→large. Reads build/meta/edition.json (category/kind/role/
+    cell/key/url/sha256/props per file). The scored roster is the set of cells declared
+    in build/meta/schema.json and stamped `scored:true` here — one vote each, no
+    compressibility gate. Files stamped `scored:false` are distributed diagnostics
+    (the model-weight throughput ladder, redundant/incompressible length rungs) and are
+    never corpus members for ratio. The grouping here only feeds the diagnostic tables,
+    never a score weight. Each kind's list is its size axis (one entry for single-size
+    kinds, several for kinds with a load-bearing large rung)."""
     path = edition_path or (REPO / "build" / "meta" / "edition.json")
     data = json.loads(path.read_text())
     out: dict[str, dict[str, list[dict]]] = {c: {} for c in CATEGORY_ORDER}
     for f in data.get("files", []):
         cat = f.get("category")
-        if cat not in out or "entropy" not in f:   # unmeasured throughput fixture → not corpus
+        if cat not in out or not f.get("scored"):   # diagnostic / non-cell → not in the score
             continue
         out[cat].setdefault(f.get("kind"), []).append(f)
     for cat in out:

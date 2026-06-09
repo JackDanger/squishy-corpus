@@ -36,17 +36,24 @@ A candidate core file must be **all** of:
 3. **Free of data that should not be public** (PII, secrets) — checked by
    `scripts/pii-scan.py` and human review.
 4. **Independent.** It must not share rows, vocabulary, or lineage with another
-   core file. (This is why the 2026 tabular trio was decoupled: `csv`, `parquet`,
-   and `sqlite` are now weather / taxi / nutrition, not three views of one dataset.)
+   `kind` cell. (This is why the 2026 tabular trio was decoupled: `csv`, `parquet`,
+   and `sqlite` are now weather / airline / nutrition, not three views of one dataset.)
+   A larger size rung of an *existing* kind is the one allowed exception — it is a
+   `length` cell, declared as such in `build/meta/schema.json`, and re-samples its
+   kind's data on purpose (capped at one per kind).
 5. **Memorable.** You can name it in a sentence. The core stays small enough that
    a person can hold all of it in their head.
 
-The core stays balanced across the five categories (Prose, Code & Web,
-Structured, Tabular/DB, Binary & Media) with a small, declared near-incompressible
-budget (2026: 3 of 19 — photo, movie, weights). Binary & Media intentionally
-carries heterogeneous, independent executable formats (Hugo/ELF, fd/PE,
-hyperfine/ARM64, SQLite/Wasm, Lua/DWARF) — five distinct programs, satisfying
-the independence rule; categories organize, they don't weight.
+The scored roster is constituted cell-by-cell in
+[`build/meta/schema.json`](../build/meta/schema.json) — each cell is one vote, with a
+**role** (`kind` / `length` / `incompressible`) and declared **budgets**: ≤2 votes per
+kind, a small near-incompressible budget (2026: 3 — photo, movie, weights), and a
+per-category vote count. `tests/test_schema.py` fails the build if the live roster
+drifts from those budgets, so balance and independence are enforced by code, not just
+discipline. (Known tension flagged in the schema for the next edition: Binary & Media
+sits at the high end of the category envelope after the 2026 executable expansion —
+Hugo/ELF, fd/PE, hyperfine/ARM64, SQLite/Wasm, Lua/DWARF, five distinct programs — while
+Prose sits at the floor.) Categories organize; they don't weight.
 
 ## Curating the next edition
 

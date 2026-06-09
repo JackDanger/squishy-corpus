@@ -49,9 +49,17 @@ the rest is on your honor and is checkable by anyone who re-runs you.
      earn a sliver by genuinely squeezing them, but can't win on them.
    - **One vote per file means file *count* is the only weight** (a kind sampled at
      two sizes votes twice). The formula has no knob; balance is enforced by
-     *curation* — the edition keeps the per-kind file count even and every member
-     structurally independent (Rule: no two scored members may share a source or
-     lineage, so correlated near-duplicates can't stack votes).
+     *curation*, and curation is itself constituted and tested: the scored roster is
+     declared cell-by-cell in [`build/meta/schema.json`](build/meta/schema.json), where
+     each cell has a **role** — `kind` (the human-scale backbone), `length` (a
+     deliberate larger re-sample of a kind, probing long-range matching), or
+     `incompressible`. **Independence rule:** no two `kind` cells may share a source or
+     lineage, so correlated near-duplicates can't stack votes. A `length` cell is
+     *exempt* — it re-samples its kind's data at a larger size on purpose — but is
+     capped at **one per kind** (≤2 votes per kind) and bound to the cell it scales.
+     The near-incompressible budget (`photo`, `movie`, `weights`) and the per-category
+     vote count are likewise declared budgets in the schema, and `tests/test_schema.py`
+     fails the build if the live roster drifts from them.
 5. **The number is versioned, and the tool is provenanced like the data.** A Squishy
    Score is a property of *(codec, setting, codec-version, codec-argv, corpus-edition)*.
    Every published score records the **exact tool that produced it** — its release

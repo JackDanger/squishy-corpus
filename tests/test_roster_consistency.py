@@ -107,9 +107,10 @@ def test_core_matches_file_properties():
 
 
 def test_core_matches_edition():
+    """The small named members (under corpus/) are exactly CORE, and all are scored."""
     ed = _read_json("edition.json")
-    keys = {f["key"] for f in ed["files"] if f["tier"] == "core"}
-    disp = {f["display"] for f in ed["files"] if f["tier"] == "core"}
+    keys = {f["key"] for f in ed["files"] if f["key"].startswith("corpus/")}
+    disp = {f["display"] for f in ed["files"] if f["key"].startswith("corpus/")}
     assert keys == _core_keys(), f"edition core keys ⇄ CORE drift: {keys ^ _core_keys()}"
     assert disp == _core_displays(), f"edition core displays ⇄ CORE drift: {disp ^ _core_displays()}"
 
@@ -118,7 +119,7 @@ def test_edition_category_matches_core():
     ed = _read_json("edition.json")
     core_cat = {d: cat for cat, files in sq.CORE.items() for (d, _s, _n) in files}
     for f in ed["files"]:
-        if f["tier"] == "core":
+        if f["key"].startswith("corpus/"):
             assert f["category"] == core_cat[f["display"]], (
                 f"{f['display']}: edition category {f['category']!r} ≠ CORE {core_cat[f['display']]!r}")
 
@@ -198,12 +199,14 @@ def test_category_order_matches_palette_and_core():
 # ── scale-kind → category map: coverage-map vs build-edition-manifest ───────────
 
 def test_scale_category_maps_agree():
-    bemod = _load("bem2_roster", "scripts/build-edition-manifest.py")
-    shared = set(cm.KIND_CATEGORY) & set(bemod.SCALE_CATEGORY)
+    """coverage-map's kind→category colouring must agree with schema.json (the roster's
+    category source of truth) for every kind they share."""
+    schema = _read_json("schema.json")
+    kind_cat = {c["kind"]: c["category"] for c in schema["cells"]}
+    shared = set(cm.KIND_CATEGORY) & set(kind_cat)
     for k in shared:
-        assert cm.KIND_CATEGORY[k] == bemod.SCALE_CATEGORY[k], (
-            f"scale kind {k!r}: coverage-map {cm.KIND_CATEGORY[k]!r} ≠ "
-            f"build-edition {bemod.SCALE_CATEGORY[k]!r}")
+        assert cm.KIND_CATEGORY[k] == kind_cat[k], (
+            f"kind {k!r}: coverage-map {cm.KIND_CATEGORY[k]!r} ≠ schema {kind_cat[k]!r}")
 
 
 def test_coverage_map_colours_every_scale_kind():

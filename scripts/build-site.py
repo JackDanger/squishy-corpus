@@ -154,8 +154,13 @@ def cube_data(sq, props, scale=None) -> dict:
     edp = REPO / "build/meta/edition.json"
     if edp.exists():
         for f in json.loads(edp.read_text()).get("files", []):
-            k = (f.get("display") or f.get("name") or "").replace(".parquet", "").replace(".safetensors", "")
-            ed[k] = f
+            # Index by BOTH display and name: the cube's `entries` are keyed by display
+            # for core members but by filename for the scale rungs, and a scored cell's
+            # display is now its cell id (e.g. "monorepo-L"), not its filename — so match
+            # on either to keep every point's category/license/links.
+            for raw in (f.get("display"), f.get("name")):
+                if raw:
+                    ed[raw.replace(".parquet", "").replace(".safetensors", "")] = f
     K = props["block_bytes"]
     entries = dict(props["files"])                      # core (measured)
     if scale:

@@ -1,6 +1,8 @@
-"""Guards build/meta/edition.json against drift: it must list exactly the CORE
-files (plus scale tier), every file URL-addressable + sha256-pinned, base-relative
-keys composing with base_url, and never a retired-corpus path."""
+"""Guards build/meta/edition.json against drift: its scored cells must be exactly the
+small named CORE members plus the schema's large rungs, every file URL-addressable +
+sha256-pinned, base-relative keys composing with base_url, and never a retired-corpus
+path. (The scored roster itself is constituted in build/meta/schema.json and guarded by
+test_roster_consistency.py.)"""
 import importlib.util
 import json
 from pathlib import Path
@@ -20,10 +22,14 @@ def _manifest():
 
 
 def test_core_files_all_present_exactly():
+    """Every small named CORE member appears as a scored cell (CORE = the human-scale
+    members under corpus/; large rungs and `archive` live under scale/)."""
     m = _manifest()
     core_displays = {d for files in sq.CORE.values() for (d, _s, _n) in files}
-    manifest_core = {f["display"] for f in m["files"] if f["tier"] == "core"}
+    manifest_core = {f["display"] for f in m["files"] if f["key"].startswith("corpus/")}
     assert manifest_core == core_displays, f"manifest core ≠ CORE: {manifest_core ^ core_displays}"
+    assert all(f["scored"] for f in m["files"] if f["key"].startswith("corpus/")), \
+        "a corpus/ named member is not scored"
 
 
 def test_every_file_is_addressable_and_pinned():
@@ -32,7 +38,8 @@ def test_every_file_is_addressable_and_pinned():
         assert f["sha256"] and len(f["sha256"]) == 64, f"{f['name']}: bad sha256"
         assert f["url"] == f"{m['base_url']}/{f['key']}", f"{f['name']}: url≠base/key"
         assert f["size_bytes"] and f["size_bytes"] > 0, f"{f['name']}: no size"
-        assert f["tier"] in ("core", "scale")
+        assert isinstance(f["scored"], bool)
+        assert f["role"] in ("kind", "length", "incompressible", "diagnostic")
 
 
 def test_no_retired_corpus_paths():
