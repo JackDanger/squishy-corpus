@@ -66,37 +66,24 @@ random the bytes are, how repetitive, how far back the repeats sit, and how big
 the file is* — and deliberately chosen to **span that range** rather than pile up
 in one corner of it. [What the project believes and why →](VALUES.md)
 
-One corpus, two jobs:
+**One corpus, two jobs — and the three people it's for:**
 
-- **Measure ratio.** Run your compressor over the whole corpus and you get a
-  **Squishy Score** — one number, a geometric-mean compression ratio, citable and
-  pinned to a frozen edition (SHA-pinned, Zenodo DOI). You recompute it when you
-  change your *algorithm*, not on every commit. If you're researching better
-  ratios, this is your scoreboard.
+- **Measure ratio** — for *the ratio researcher* innovating on how small files
+  get. Run your compressor over the whole corpus for a **Squishy Score**: one
+  geometric-mean number, citable and pinned to a frozen edition. You recompute it
+  when you change your *algorithm*, not every commit — it's your scoreboard across
+  editions.
+- **Test behavior** — for *the implementer hardening a codec* (say, a faster
+  gzip-compatible encoder that emits the *same bytes*). Its Score barely moves
+  from stock, so the value is a representative battery of real inputs to catch
+  **time / CPU / memory regressions**. Because the files span byte structure *and*
+  size (tens of MB to multi-GB), "I tested on Squishy" means "across the real
+  diversity of inputs a compressor sees," not "on a random pile."
+- **Cite & reproduce** — for *the archivist or paper author* who needs a fixed,
+  provenanced, DOI-frozen dataset they can name and others can reproduce exactly.
 
-- **Test behavior.** Most compression work *isn't* about ratio. If you're making
-  an existing codec faster, leaner, or more parallel, you need a representative
-  battery of real inputs to catch **time / CPU / memory regressions** — and
-  confidence the battery actually covers the cases that behave differently.
-  Because Squishy's artifacts are placed to span byte structure *and* size (from
-  tens of MB to multi-GB), "I tested on Squishy" means "I tested across the real
-  diversity of inputs a compressor sees," not "I tested on a random pile."
-
-Both jobs rest on the *same* property: the corpus is a **diverse, representative**
-set, and the [coverage map](#the-coverage-map) is the evidence of that diversity.
-Whether you're picking one artifact to stress-test or scoring your whole codec,
-you're relying on the same thing — that these files cover the space.
-
-## Who it's for
-
-- **The ratio researcher** — innovating on how small files get. Cites the Squishy
-  Score as a stable benchmark across editions.
-- **The implementer hardening a codec** — e.g. a faster gzip-compatible encoder
-  that outputs the *same bytes*. Its Squishy Score barely moves from stock gzip;
-  the value is a diverse, principled test set to guard against speed/CPU/memory
-  regressions.
-- **The archivist / citation user** — needs a fixed, provenanced, DOI-frozen
-  dataset they can name in a paper and others can reproduce exactly.
+All three rest on the *same* property: the corpus is **diverse and
+representative**, and the [coverage map](#the-coverage-map) is the evidence.
 
 ## The coverage map
 
@@ -113,14 +100,13 @@ compressor performs):
 - **how big** — file size
 
 The files are **sparse in this space — not a dense grid — but representative of
-the whole.** We claim *coverage of the range*, not completeness; and these
-properties are the dimensions along which compressors are *known* to behave
-differently — they describe why each file is here, they don't *predict* a ratio.
-These four properties are why each file is here; they make the *file selection*
-representative. They are **not** a weight in the score. The [static coverage
-map](build/meta/coverage-map.svg) at the top plots every file by two of them
-(entropy × repeat coverage, dot area ∝ log size); the live 3D explorer adds the third
-(repeat distance) and rotates, at
+the whole**: we claim *coverage of the range*, not completeness. These are the
+dimensions along which compressors are *known* to behave differently, so they
+explain **why each file is here** and make the selection representative — they
+describe the file, they don't *predict* its ratio, and they are **not** a weight
+in the score. The [map at the top](build/meta/coverage-map.svg) plots two of them
+(entropy × repeat coverage, dot area ∝ log size); the live 3D explorer adds the
+third (repeat distance) and rotates, at
 [squishy.jackdanger.com](https://squishy.jackdanger.com) *(soon)*.
 
 ## The Squishy Score
@@ -146,10 +132,8 @@ map](build/meta/coverage-map.svg) at the top plots every file by two of them
   from 1.00× to 1.05× earns that; it just can't *win* on them.) The only thing left
   out is the unmeasured model-weight **throughput ladder** (a speed/RAM fixture, not a
   ratio corpus member).
-- Reported as **"×"** (2 decimals) — a dimensionless quality index, **not** a bit
-  rate. Always shown beside the **corpus bpb (byte-weighted)** = 8 · total
-  compressed ÷ total input (3 decimals), the operational rate; the two are
-  deliberate complements (equal-per-file vs size-weighted).
+- Reported as **"×"** (2 decimals), always beside the **corpus bpb** (3 decimals)
+  — see [What the numbers mean](#what-the-numbers-mean) for how the two complement.
 - **Whole-corpus and periodic.** It's expensive and meant to be *stable* — you run
   it when you change your algorithm, not per commit. The corpus may be tens of GB.
 - **Lossless round-trip required**; **speed is not in the score** (it isn't
@@ -218,8 +202,8 @@ mirror with `--base`.
 addressable by name in the edition manifest
 ([`build/meta/edition.json`](build/meta/edition.json): per-file HTTPS URL + SHA-256
 + size + kind) — and check the [coverage map](#the-coverage-map) for
-representativeness. A run over fewer than all files prints per-file ratios for your
-own regression diffing, **not a Squishy Score**.
+representativeness. A partial run prints per-file ratios for your own regression
+diffs, [not a Squishy Score](#the-squishy-score).
 **Already have the bytes?** `squishy bench --cmd "…"` is the same runner's
 local-bytes path (both `squishy-calculate` and `squishy bench` are implemented in
 `scripts/squishy.py`).
@@ -248,16 +232,12 @@ expensive periodic computation. Every codec build is pinned in
 | bzip2 -9 | 3.98× | 3.278 |
 | gzip -9 | 3.23× | 3.495 |
 
-The **Squishy Score** (×) is the geometric mean of the per-file ratio over every
-file — one vote per file, including the near-incompressible media (which score ~1.0×
-and lower every codec's number near-equally) — a dimensionless quality index, *not* a
-bit rate (don't derive bpb from it). The **corpus bpb** is the byte-weighted
-operational rate over the whole corpus (8 · total compressed ÷ total input). They're
-deliberate complements: the score weights every file equally (anti-gaming); corpus
-bpb is the size-weighted physical number. Only **mainstream, version-pinned,
-installable** codecs are on the reproducible reference board; high-ratio
-context-mixing codecs (zpaq/cmix/paq) are submitter-reported on the leaderboard, since
-a hand-carried binary can't be reproduced bit-for-bit by a third party.
+Columns are the **Squishy Score** (×, equal-vote) and **corpus bpb**
+(byte-weighted) — see [What the numbers mean](#what-the-numbers-mean). Only
+**mainstream, version-pinned, installable** codecs are on the reproducible board;
+high-ratio context-mixing codecs (zpaq/cmix/paq) are submitter-reported on the
+leaderboard, since a hand-carried binary can't be reproduced bit-for-bit by a
+third party.
 
 ## Editions & permanence
 
