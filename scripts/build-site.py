@@ -27,6 +27,10 @@ WHATIS = {
  "parquet": "U.S. airline on-time flight records (Bureau of Transportation Statistics) — stored column-wise as Apache Parquet.",
  "sqlite": "USDA's nutrition database — foods, nutrients, and portions across 17 related tables (SR Legacy).",
  "exe": "A compiled Linux executable — the Hugo static-site generator.",
+ "symbols": "DWARF debug symbols from a Lua 5.4.8 build compiled with -g (a debug-info file, not a runnable program).",
+ "wasm": "The SQLite engine compiled to WebAssembly — stack-machine bytecode.",
+ "winexe": "The fd file-finder as a Windows PE executable.",
+ "armexe": "The hyperfine benchmarking tool as an ARM64 Linux executable.",
  "photo": "NASA's “Blue Marble” — Earth photographed from Apollo 17.",
  "movie": "A clip from the open film Big Buck Bunny (H.264 video).",
  "weights": "The trained weights of a small neural network (safetensors).",
@@ -122,6 +126,7 @@ SHORT = {
     "dickens": "Dickens", "aozora": "Aozora", "monorepo": "LLVM", "minjs": "Plotly.js",
     "markup": "Shakespeare", "json": "Earthquakes", "log": "NASA log", "genome": "E. coli",
     "csv": "Weather", "parquet": "Airline", "sqlite": "USDA foods", "exe": "Hugo",
+    "symbols": "Lua DWARF", "wasm": "SQLite/Wasm", "winexe": "fd (PE)", "armexe": "hyperfine (ARM64)",
     "photo": "Blue Marble", "movie": "Big Buck Bunny", "weights": "MiniLM",
     "noaa-ghcn-daily-2024-full.csv": "Weather ’24", "noaa-ghcn-daily-2021-2023.csv": "Weather ’21–23",
     "big-buck-bunny-1080p.mov": "Big Buck Bunny HD", "ecoli-DRR002013-full.fastq": "E. coli (full)",
@@ -274,7 +279,8 @@ def preview(display, st, name):
         if display == "parquet": return parquet_table(p)
         if display == "sqlite":  return sqlite_table(p)
         if display == "weights": return weights_table(p)
-        if display == "exe":     return hexdump(p)
+        if display in ("exe", "winexe", "armexe", "wasm", "symbols"):
+            return hexdump(p)
         if display == "json":    return quake_map(p) + txt_excerpt(p, 2, 200)
         if display == "monorepo": return tar_excerpt(p, ".cpp")
         if display == "markup":   return tar_excerpt(p, ".xml")

@@ -158,7 +158,17 @@ provenanced** (sources, licenses, SHA-256 in
 | **Code & Web** | `monorepo` (LLVM/clang source) · `minjs` (Plotly.js, minified) · `markup` (Bosak Shakespeare XML) |
 | **Structured** | `json` (USGS earthquakes) · `log` (NASA-HTTP server log) · `genome` (E. coli FASTQ) |
 | **Tabular / DB** | `csv` (NOAA daily weather) · `parquet` (US DOT airline on-time) · `sqlite` (USDA nutrition DB) |
-| **Binary & Media** | `exe` (Hugo binary) · `photo` (NASA "Blue Marble" JPEG) · `movie` (Big Buck Bunny) · `weights` (a Transformer's safetensors) |
+| **Binary & Media** | `exe` (Hugo binary) · `symbols` (Lua DWARF debug-info) · `wasm` (SQLite→WebAssembly) · `winexe` (fd, Windows PE) · `armexe` (hyperfine, ARM64 ELF) · `photo` (NASA "Blue Marble" JPEG) · `movie` (Big Buck Bunny) · `weights` (a Transformer's safetensors) |
+
+Binary & Media now spans five compiled/executable formats — Linux ELF (`exe`),
+Windows PE (`winexe`), ARM64 ELF (`armexe`), WebAssembly (`wasm`), and DWARF
+debug-info (`symbols`) — chosen because compiled artifacts compress very
+differently by ISA, format, and symbol content. `symbols` (entropy 4.54) fills
+the low-entropy/high-text binary corner that the category previously lacked;
+`wasm` is stack-machine bytecode; `winexe` adds the PE format and `armexe` the
+ARM64 ISA.
+This is intrinsic-property coverage, not category weighting — categories
+organize, they never weight the score.
 
 The size axis is real: people compress 40 MB files *and* multi-GB ones, so the
 corpus carries **large members (0.3–4 GB+) that extend well past today's codec
@@ -221,7 +231,11 @@ per-file ratios.
 The table below is the **fast panel over the small members only** (draft) — handy
 for ranking codecs quickly; the full panel over the complete edition is the
 expensive periodic computation. Every codec build is pinned in
-[`build/tools.lock`](build/tools.lock).
+[`build/tools.lock`](build/tools.lock). This panel covers the **15-member draft
+core** and predates the 4 new Binary & Media additions (`symbols`, `wasm`,
+`winexe`, `armexe`); once those bytes are published and re-scored with the pinned
+codec builds the new members (including the very compressible `symbols`) will
+fold into the panel.
 
 | codec | Squishy Score (×) | corpus bpb (byte-weighted) |
 |-------|------------------:|---------------------------:|
@@ -262,7 +276,10 @@ Buck Bunny) is © Blender Foundation, CC-BY 3.0. The build system is [MIT](LICEN
 
 ---
 
-*Status: pre-1.0. The small core is assembled, verified, and scored; the
-size-spanning corpus and its score are being finalized; the edition **will be**
-frozen and DOI-minted at `v1.0.0`. Roadmap:
+*Status: pre-1.0. The 19-member small core is assembled and scored; the 4 new
+Binary & Media members (`symbols`, `wasm`, `winexe`, `armexe`) are in the edition
+manifest but their bytes are pending upload to the public mirror — a complete
+streaming run will 404 on them until the next `make publish`. The size-spanning
+corpus and its score are being finalized; the edition **will be** frozen and
+DOI-minted at `v1.0.0`. Roadmap:
 [`plans/squishy-1.0-readiness.md`](plans/squishy-1.0-readiness.md).*

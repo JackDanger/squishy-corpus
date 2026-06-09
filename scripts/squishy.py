@@ -71,6 +71,10 @@ CORE: dict[str, list[tuple[str, str, str]]] = {
         ("photo",   "corpus", "photo.jpg"),       # pre-compressed image (PD-USGov-NASA) [incompressible]
         ("movie",   "corpus", "movie.mp4"),       # pre-compressed video (CC-BY)  [incompressible]
         ("weights", "corpus", "weights.safetensors"),  # model-weight shard (Apache) [incompressible]
+        ("symbols", "corpus", "symbols.dwarf"),   # DWARF debug-symbols companion (MIT)
+        ("wasm",    "corpus", "engine.wasm"),     # WebAssembly bytecode (Public Domain)
+        ("winexe",  "corpus", "winexe.exe"),      # Windows PE32+ x86-64 executable (MIT/Apache-2.0)
+        ("armexe",  "corpus", "armexe.elf"),      # ARM64 Linux ELF executable (MIT)
     ],
 }
 BOUNDS = [("modern", "random-1M")]  # synthetic/incompressible — never in headline

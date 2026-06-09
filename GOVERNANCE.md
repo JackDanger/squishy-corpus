@@ -43,7 +43,10 @@ A candidate core file must be **all** of:
 
 The core stays balanced across the five categories (Prose, Code & Web,
 Structured, Tabular/DB, Binary & Media) with a small, declared near-incompressible
-budget (2026: 3 of 15 — photo, movie, weights).
+budget (2026: 3 of 19 — photo, movie, weights). Binary & Media intentionally
+carries heterogeneous, independent executable formats (Hugo/ELF, fd/PE,
+hyperfine/ARM64, SQLite/Wasm, Lua/DWARF) — five distinct programs, satisfying
+the independence rule; categories organize, they don't weight.
 
 ## Curating the next edition
 

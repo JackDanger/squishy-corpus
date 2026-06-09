@@ -44,8 +44,9 @@ never in the headline.
 ### 4. Representative, not just big
 
 Files are placed to **span** the space of how data compresses — random vs.
-repetitive, near vs. far-range repeats, tens of MB to multi-GB — not piled into
-one easy corner. That spread is the whole basis for "I tested on Squishy" meaning
+repetitive, near vs. far-range repeats, tens of MB to multi-GB, real formats
+(e.g. five executable/compiled forms spanning ELF, PE, ARM64, Wasm, and DWARF)
+— not piled into one easy corner. That spread is the whole basis for "I tested on Squishy" meaning
 something, and it's something you can *see*, not just take on faith.
 
 > *See it:* the [coverage map](build/meta/coverage-map.svg) (and the live 3D

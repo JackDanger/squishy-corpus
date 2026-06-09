@@ -36,29 +36,33 @@
 <text x="62" y="82.0" font-size="11" fill="#6b7682" text-anchor="end">1.0</text>
 <text x="411" y="568" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle">how random  →  entropy (bits / byte)</text>
 <text x="22" y="302" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle" transform="rotate(-90 22 302)">how repetitive  →  repeat coverage</text>
-<circle cx="535.6" cy="483.5" r="4.5" fill="#56B4E9" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>minjs — 4 MB, H=5.47, cover=0.09</title></circle>
-<circle cx="746.1" cy="525.7" r="7.8" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>photo — 7 MB, H=7.95, cover=0.00</title></circle>
-<circle cx="514.4" cy="373.1" r="8.4" fill="#56B4E9" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>markup — 8 MB, H=5.22, cover=0.34</title></circle>
-<circle cx="479.1" cy="480.0" r="9.3" fill="#E69F00" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>aozora — 12 MB, H=4.80, cover=0.10</title></circle>
-<circle cx="465.7" cy="515.8" r="9.3" fill="#E69F00" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>dickens — 12 MB, H=4.65, cover=0.02</title></circle>
-<circle cx="748.0" cy="526.0" r="9.4" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>movie — 13 MB, H=7.98, cover=0.00</title></circle>
-<circle cx="500.2" cy="212.9" r="9.6" fill="#009E73" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>json — 14 MB, H=5.05, cover=0.70</title></circle>
-<circle cx="704.8" cy="490.9" r="10.2" fill="#0072B2" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>parquet — 21 MB, H=7.47, cover=0.08</title></circle>
-<circle cx="350.1" cy="306.7" r="10.6" fill="#009E73" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>genome — 26 MB, H=3.28, cover=0.49</title></circle>
-<circle cx="514.4" cy="200.5" r="10.6" fill="#009E73" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>log — 26 MB, H=5.22, cover=0.73</title></circle>
-<circle cx="413.1" cy="271.1" r="10.6" fill="#0072B2" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>csv — 27 MB, H=4.03, cover=0.57</title></circle>
-<circle cx="548.8" cy="486.1" r="11.5" fill="#0072B2" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>sqlite — 48 MB, H=5.63, cover=0.09</title></circle>
-<circle cx="508.5" cy="373.7" r="11.6" fill="#56B4E9" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>monorepo — 51 MB, H=5.15, cover=0.34</title></circle>
-<circle cx="610.2" cy="409.2" r="11.8" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>exe — 62 MB, H=6.35, cover=0.26</title></circle>
-<circle cx="695.3" cy="526.0" r="12.3" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>weights — 91 MB, H=7.36, cover=0.00</title></circle>
-<circle cx="515.7" cy="152.0" r="13.8" fill="#009E73" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>log 0.4GB — 373 MB, H=5.24, cover=0.83</title></circle>
-<circle cx="749.1" cy="525.7" r="14.5" fill="#CC79A7" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>movie 1080p — 725 MB, H=7.99, cover=0.00</title></circle>
-<circle cx="706.4" cy="490.8" r="14.5" fill="#0072B2" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>parquet 0.8GB — 772 MB, H=7.49, cover=0.08</title></circle>
-<circle cx="509.0" cy="390.2" r="14.8" fill="#E69F00" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>enwik9 — 1000 MB, H=5.16, cover=0.30</title></circle>
-<circle cx="352.9" cy="227.2" r="14.9" fill="#009E73" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>genome 1GB — 1073 MB, H=3.31, cover=0.67</title></circle>
-<circle cx="416.7" cy="174.4" r="15.0" fill="#0072B2" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>csv 1yr — 1331 MB, H=4.07, cover=0.78</title></circle>
-<circle cx="546.6" cy="136.1" r="15.2" fill="#56B4E9" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>archive 1.5GB — 1504 MB, H=5.60, cover=0.87</title></circle>
-<circle cx="554.2" cy="223.3" r="15.3" fill="#56B4E9" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>monorepo 1.8GB — 1772 MB, H=5.69, cover=0.68</title></circle>
+<circle cx="553.6" cy="518.9" r="4.5" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>wasm — 1 MB, H=5.68, cover=0.02</title></circle>
+<circle cx="456.6" cy="482.6" r="6.3" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>symbols — 1 MB, H=4.54, cover=0.10</title></circle>
+<circle cx="629.5" cy="476.4" r="6.7" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>armexe — 1 MB, H=6.58, cover=0.11</title></circle>
+<circle cx="535.6" cy="483.5" r="9.2" fill="#56B4E9" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>minjs — 4 MB, H=5.47, cover=0.09</title></circle>
+<circle cx="602.8" cy="433.1" r="9.4" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>winexe — 4 MB, H=6.26, cover=0.21</title></circle>
+<circle cx="746.1" cy="525.7" r="10.1" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>photo — 7 MB, H=7.95, cover=0.00</title></circle>
+<circle cx="514.4" cy="373.1" r="10.4" fill="#56B4E9" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>markup — 8 MB, H=5.22, cover=0.34</title></circle>
+<circle cx="479.1" cy="480.0" r="10.9" fill="#E69F00" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>aozora — 12 MB, H=4.80, cover=0.10</title></circle>
+<circle cx="465.7" cy="515.8" r="10.9" fill="#E69F00" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>dickens — 12 MB, H=4.65, cover=0.02</title></circle>
+<circle cx="748.0" cy="526.0" r="11.0" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>movie — 13 MB, H=7.98, cover=0.00</title></circle>
+<circle cx="500.2" cy="212.9" r="11.1" fill="#009E73" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>json — 14 MB, H=5.05, cover=0.70</title></circle>
+<circle cx="704.8" cy="490.9" r="11.6" fill="#0072B2" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>parquet — 21 MB, H=7.47, cover=0.08</title></circle>
+<circle cx="350.1" cy="306.7" r="11.8" fill="#009E73" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>genome — 26 MB, H=3.28, cover=0.49</title></circle>
+<circle cx="514.4" cy="200.5" r="11.8" fill="#009E73" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>log — 26 MB, H=5.22, cover=0.73</title></circle>
+<circle cx="413.1" cy="271.1" r="11.8" fill="#0072B2" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>csv — 27 MB, H=4.03, cover=0.57</title></circle>
+<circle cx="548.8" cy="486.1" r="12.4" fill="#0072B2" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>sqlite — 48 MB, H=5.63, cover=0.09</title></circle>
+<circle cx="508.5" cy="373.7" r="12.5" fill="#56B4E9" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>monorepo — 51 MB, H=5.15, cover=0.34</title></circle>
+<circle cx="610.2" cy="409.2" r="12.7" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>exe — 62 MB, H=6.35, cover=0.26</title></circle>
+<circle cx="695.3" cy="526.0" r="13.0" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>weights — 91 MB, H=7.36, cover=0.00</title></circle>
+<circle cx="515.7" cy="152.0" r="14.2" fill="#009E73" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>log 0.4GB — 373 MB, H=5.24, cover=0.83</title></circle>
+<circle cx="749.1" cy="525.7" r="14.8" fill="#CC79A7" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>movie 1080p — 725 MB, H=7.99, cover=0.00</title></circle>
+<circle cx="706.4" cy="490.8" r="14.8" fill="#0072B2" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>parquet 0.8GB — 772 MB, H=7.49, cover=0.08</title></circle>
+<circle cx="509.0" cy="390.2" r="15.0" fill="#E69F00" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>enwik9 — 1000 MB, H=5.16, cover=0.30</title></circle>
+<circle cx="352.9" cy="227.2" r="15.1" fill="#009E73" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>genome 1GB — 1073 MB, H=3.31, cover=0.67</title></circle>
+<circle cx="416.7" cy="174.4" r="15.2" fill="#0072B2" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>csv 1yr — 1331 MB, H=4.07, cover=0.78</title></circle>
+<circle cx="546.6" cy="136.1" r="15.3" fill="#56B4E9" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>archive 1.5GB — 1504 MB, H=5.60, cover=0.87</title></circle>
+<circle cx="554.2" cy="223.3" r="15.4" fill="#56B4E9" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>monorepo 1.8GB — 1772 MB, H=5.69, cover=0.68</title></circle>
 <circle cx="415.2" cy="166.0" r="16.0" fill="#0072B2" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>csv 3yr — 4069 MB, H=4.05, cover=0.80</title></circle>
 <text x="778" y="86" font-size="12" font-weight="700" fill="#1c2530">category</text>
 <circle cx="785" cy="104" r="7" fill="#E69F00" fill-opacity="0.82" stroke="#fff" stroke-width="1.2"/>

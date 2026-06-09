@@ -465,7 +465,7 @@ against `edition.json`; zpaq removed from the reproducible panel.
 - [x] **`freeze.sh` would have frozen 61 GB of retired junk.** It did
   `cp draft/ → v1.0/ --recursive` (1,984 objects); ~98% is retired byte-property-cube
   build output (`individual/`, `bundle/`, `bundles/`, `negative/`, `bench/`). Fixed:
-  the freeze now copies an **allowlist of only the v1.0 product** (32 objects: 15
+  the freeze now copies an **allowlist of only the v1.0 product** (36 objects: 19
   core + 3 scale weights + LICENSES + provenance + meta) with a dry-run + confirm.
 - [x] **Scale weight shipped with no provenance.** The bucket had three weights
   (`135m`, `0.5b`, `1.5b`) but `LICENSE-MANIFEST.csv` listed only two — the
@@ -476,7 +476,7 @@ against `edition.json`; zpaq removed from the reproducible panel.
 - [x] **`build/meta/NOTICE` mis-attributed `csv`/`sqlite` to NYC TLC** after the
   swap → fixed: split into NOAA (csv, PD-USGov), NYC-TLC (parquet only), USDA
   (sqlite, PD-USGov). (Closed 2026-05-29.)
-- [x] **`PRE-FREEZE-VERIFICATION.md` regenerated** against the real 15-file core
+- [x] **`PRE-FREEZE-VERIFICATION.md` regenerated** against the real 19-file core
   (NOAA/USDA tabular, 2 counsel items, current green checks). (Closed 2026-05-29.)
 - [x] **Runner fails *open* on missing checksums** — FIXED 2026-06-08.
   `verify_core_checksums()` now verifies every present core file against the sha256 in

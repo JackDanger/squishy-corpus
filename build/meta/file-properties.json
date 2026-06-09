@@ -151,6 +151,46 @@
       "block_bytes": 16,
       "hash": "block-int128-exact",
       "category": "Binary & Media"
+    },
+    "symbols": {
+      "size": 1077965,
+      "entropy": 4.538,
+      "coverage": 0.0969,
+      "match_distance": 3328,
+      "match_distance_p90": 62278,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Binary & Media"
+    },
+    "wasm": {
+      "size": 868202,
+      "entropy": 5.683,
+      "coverage": 0.0158,
+      "match_distance": 272,
+      "match_distance_p90": 21769,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Binary & Media"
+    },
+    "winexe": {
+      "size": 4060672,
+      "entropy": 6.263,
+      "coverage": 0.2074,
+      "match_distance": 1232,
+      "match_distance_p90": 130918,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Binary & Media"
+    },
+    "armexe": {
+      "size": 1176560,
+      "entropy": 6.578,
+      "coverage": 0.1108,
+      "match_distance": 1024,
+      "match_distance_p90": 122752,
+      "block_bytes": 16,
+      "hash": "block-int128-exact",
+      "category": "Binary & Media"
     }
   }
 }
