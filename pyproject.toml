@@ -4,7 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "squishy"
-version = "0.1.0"
+# The single source of truth for the package version (squishy.__version__ derives
+# from it). Pre-1.0 by design — the docs commit to "no citable Squishy Score until
+# the v1.0 freeze + DOI", so 1.0.0 is reserved for that frozen edition.
+version = "0.3.0"
 description = "The 2026 compression corpus and citable Squishy Score"
 readme = "README.md"
 requires-python = ">=3.11"

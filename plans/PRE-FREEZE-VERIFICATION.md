@@ -1,5 +1,12 @@
 # Squishy-2026 — pre-freeze verification report
 
+> ⚠️ **STALE — regenerate at freeze.** This snapshot describes the **15-member**
+> core. The core is now **19** (4 Binary & Media additions: `symbols`, `wasm`,
+> `winexe`, `armexe`), whose bytes are not yet published to the mirror. Every
+> count and result below (`15/15`, the file table, the tarball size) must be
+> re-run and regenerated against the 19-member core — with the new members'
+> bytes published — as part of the freeze. Do not trust these numbers as-is.
+
 The agent-runnable verification is complete and green. This is the evidence for
 the owner sign-offs (#17) and the freeze trigger (#18). Re-run any command to
 reproduce. (Regenerated 2026-05-29 after the NYC-taxi decoupling: `csv`→NOAA,

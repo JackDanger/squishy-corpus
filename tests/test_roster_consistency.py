@@ -240,3 +240,22 @@ def test_panel_tools_are_recorded_in_tools_lock():
         tools.add(line.split()[0])
     missing = set(sq.PANEL_TOOL.values()) - tools
     assert not missing, f"panel codecs missing from tools.lock: {missing}"
+
+
+# ── package version: one source of truth (pyproject), no drift ──────────────────
+
+def test_version_is_single_source_of_truth():
+    """squishy.__version__ derives from pyproject.toml; there must be no second,
+    hand-maintained version literal that can drift (e.g. __init__ once said 2.0.0
+    while pyproject said 0.1.0)."""
+    import tomllib
+
+    sqpkg = _load("sq_pkg_version", "squishy/__init__.py")
+    pyproject = tomllib.loads((REPO / "pyproject.toml").read_text())["project"]["version"]
+    assert sqpkg.__version__ == pyproject, (
+        f"squishy.__version__ ({sqpkg.__version__}) != pyproject version ({pyproject}) — "
+        f"run `uv sync`/reinstall, or remove a stray hard-coded __version__"
+    )
+    # sane semver-ish (N.N.N), so a typo can't slip through
+    parts = pyproject.split(".")
+    assert len(parts) == 3 and all(p.isdigit() for p in parts), f"not a clean MAJOR.MINOR.PATCH: {pyproject}"
