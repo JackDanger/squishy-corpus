@@ -1,6 +1,6 @@
 {
   "edition": "Squishy-2026-DRAFT",
-  "generated_utc": "2026-06-09T23:13:24Z",
+  "generated_utc": "2026-06-10T03:00:24Z",
   "base_url": "https://squishy.jackdanger.com",
   "note": "Per-file addressable inventory. `scored:true` files are the corpus cells (one vote each in the Squishy Score; roster defined by build/meta/schema.json); `scored:false` files are distributed diagnostics (throughput ladder, incompressible/redundant rungs) that never enter the score. Fetch any file by its url and verify against sha256.",
   "n_files": 31,
@@ -23,7 +23,11 @@
       "url": "https://squishy.jackdanger.com/corpus/dickens",
       "license": "Public-Domain",
       "source_url": "https://www.gutenberg.org (modern PG editions, body sliced between START/END markers, all PG refs removed)",
-      "origin": "minted"
+      "origin": "minted",
+      "entropy": 4.646,
+      "coverage": 0.0228,
+      "match_distance": 859936,
+      "match_distance_p90": 6753120
     },
     {
       "name": "aozora.txt",
@@ -40,7 +44,11 @@
       "url": "https://squishy.jackdanger.com/corpus/aozora.txt",
       "license": "Public-Domain",
       "source_url": "https://www.aozora.gr.jp/index_pages/person148.html",
-      "origin": "minted"
+      "origin": "minted",
+      "entropy": 4.804,
+      "coverage": 0.1027,
+      "match_distance": 1089640,
+      "match_distance_p90": 5661721
     },
     {
       "name": "monorepo.tar",
@@ -57,7 +65,11 @@
       "url": "https://squishy.jackdanger.com/corpus/monorepo.tar",
       "license": "Apache-2.0-LLVM",
       "source_url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.0/clang-19.1.0.src.tar.xz",
-      "origin": "upstream"
+      "origin": "upstream",
+      "entropy": 5.151,
+      "coverage": 0.34,
+      "match_distance": 20384,
+      "match_distance_p90": 6352657
     },
     {
       "name": "llvm-project-19.1.0.src.tar",
@@ -96,7 +108,11 @@
       "url": "https://squishy.jackdanger.com/corpus/minjs.min.js",
       "license": "MIT",
       "source_url": "https://cdn.plot.ly/plotly-2.27.0.min.js",
-      "origin": "upstream"
+      "origin": "upstream",
+      "entropy": 5.47,
+      "coverage": 0.0948,
+      "match_distance": 33200,
+      "match_distance_p90": 676544
     },
     {
       "name": "markup.xml",
@@ -113,7 +129,11 @@
       "url": "https://squishy.jackdanger.com/corpus/markup.xml",
       "license": "Freely-distributable",
       "source_url": "https://www.ibiblio.org/bosak/xml/eg/shaks200.zip",
-      "origin": "minted"
+      "origin": "minted",
+      "entropy": 5.22,
+      "coverage": 0.3414,
+      "match_distance": 14000,
+      "match_distance_p90": 1172067
     },
     {
       "name": "enwik9.txt",
@@ -173,7 +193,11 @@
       "url": "https://squishy.jackdanger.com/corpus/data.json",
       "license": "Public-Domain",
       "source_url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minmagnitude=4.5",
-      "origin": "minted"
+      "origin": "minted",
+      "entropy": 5.053,
+      "coverage": 0.6988,
+      "match_distance": 12112,
+      "match_distance_p90": 434972
     },
     {
       "name": "access.log",
@@ -190,7 +214,11 @@
       "url": "https://squishy.jackdanger.com/corpus/access.log",
       "license": "Public-Domain",
       "source_url": "https://ita.ee.lbl.gov/traces/NASA_access_log_Jul95.gz",
-      "origin": "upstream"
+      "origin": "upstream",
+      "entropy": 5.22,
+      "coverage": 0.7266,
+      "match_distance": 20768,
+      "match_distance_p90": 1485496
     },
     {
       "name": "nasa-http-jul-aug-1995.log",
@@ -229,7 +257,11 @@
       "url": "https://squishy.jackdanger.com/corpus/ecoli.fastq",
       "license": "Public-Domain",
       "source_url": "https://ftp.sra.ebi.ac.uk/vol1/fastq/DRR002/DRR002013/DRR002013_1.fastq.gz",
-      "origin": "upstream"
+      "origin": "upstream",
+      "entropy": 3.281,
+      "coverage": 0.4896,
+      "match_distance": 16,
+      "match_distance_p90": 12816
     },
     {
       "name": "ecoli-DRR002013-full.fastq",
@@ -268,7 +300,11 @@
       "url": "https://squishy.jackdanger.com/corpus/data.csv",
       "license": "Public-Domain-USGov",
       "source_url": "https://www.ncei.noaa.gov/pub/data/ghcn/daily/by_year/2024.csv.gz",
-      "origin": "minted"
+      "origin": "minted",
+      "entropy": 4.025,
+      "coverage": 0.5689,
+      "match_distance": 151584,
+      "match_distance_p90": 7588704
     },
     {
       "name": "noaa-ghcn-daily-2021-2023.csv",
@@ -307,7 +343,11 @@
       "url": "https://squishy.jackdanger.com/corpus/data.parquet",
       "license": "Public-Domain-USGov",
       "source_url": "https://transtats.bts.gov/PREZIP/On_Time_Reporting_Carrier_On_Time_Performance_1987_present_2024_1.zip",
-      "origin": "minted"
+      "origin": "minted",
+      "entropy": 7.467,
+      "coverage": 0.0784,
+      "match_distance": 293120,
+      "match_distance_p90": 801120
     },
     {
       "name": "bts-ontime-2022-2024.parquet",
@@ -346,7 +386,11 @@
       "url": "https://squishy.jackdanger.com/corpus/data.sqlite",
       "license": "Public-Domain-USGov",
       "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
-      "origin": "minted"
+      "origin": "minted",
+      "entropy": 5.626,
+      "coverage": 0.0891,
+      "match_distance": 4096,
+      "match_distance_p90": 94416
     },
     {
       "name": "tool.bin",
@@ -363,7 +407,11 @@
       "url": "https://squishy.jackdanger.com/corpus/tool.bin",
       "license": "Apache-2.0",
       "source_url": "https://github.com/gohugoio/hugo/releases/download/v0.162.1/hugo_extended_0.162.1_linux-amd64.tar.gz",
-      "origin": "upstream"
+      "origin": "upstream",
+      "entropy": 6.351,
+      "coverage": 0.2608,
+      "match_distance": 2672,
+      "match_distance_p90": 582272
     },
     {
       "name": "symbols.dwarf",
@@ -464,7 +512,11 @@
       "url": "https://squishy.jackdanger.com/corpus/photo.jpg",
       "license": "Public-Domain",
       "source_url": "https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg",
-      "origin": "minted"
+      "origin": "minted",
+      "entropy": 7.954,
+      "coverage": 0.0007,
+      "match_distance": 16,
+      "match_distance_p90": 1616
     },
     {
       "name": "movie.mp4",
@@ -481,7 +533,11 @@
       "url": "https://squishy.jackdanger.com/corpus/movie.mp4",
       "license": "CC-BY-3.0",
       "source_url": "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4",
-      "origin": "upstream"
+      "origin": "upstream",
+      "entropy": 7.976,
+      "coverage": 0.0,
+      "match_distance": 24704,
+      "match_distance_p90": 729049
     },
     {
       "name": "weights.safetensors",
@@ -498,7 +554,11 @@
       "url": "https://squishy.jackdanger.com/corpus/weights.safetensors",
       "license": "Apache-2.0",
       "source_url": "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/model.safetensors",
-      "origin": "upstream"
+      "origin": "upstream",
+      "entropy": 7.355,
+      "coverage": 0.0001,
+      "match_distance": 224,
+      "match_distance_p90": 4331
     },
     {
       "name": "big-buck-bunny-1080p.mov",
