@@ -40,6 +40,10 @@ REPO = Path(__file__).resolve().parent.parent
 BUCKET = os.environ.get("S3_BUCKET", "squishy-corpus")
 SOURCE_PREFIX = os.environ.get("S3_SOURCE_PREFIX", "source")   # our source-of-record (minted authority)
 WORK_PREFIX = os.environ.get("S3_PREFIX", "draft")             # working/served corpus
+# The CloudFront distribution that serves the working prefix at squishy.jackdanger.com.
+# Its origin path is /draft, so a published key `corpus/x` is public at `/corpus/x` —
+# the invalidation paths below are the PUBLIC paths (leading slash, no draft/ prefix).
+CF_DISTRIBUTION_ID = os.environ.get("CF_DISTRIBUTION_ID", "E2UVD5LCNEUNSU")
 UA = {"User-Agent": "squishy-corpus/1.0 (+https://github.com/JackDanger/squishy-corpus)"}
 CHUNK = 1 << 22  # 4 MiB streaming reads
 
@@ -141,6 +145,26 @@ def put_local(local: Path, bucket: str, key: str, sha: str, ctype: str, cache: b
     ok = s3_cp([str(local), f"s3://{bucket}/{key}", "--metadata", f"sha256={sha}",
                 "--content-type", ctype, "--checksum-algorithm", "SHA256", *cc], "UPLOAD")
     return ok and s3_sha(bucket, key) == sha
+
+
+def invalidate_cdn(public_paths: list[str], dist_id: str = CF_DISTRIBUTION_ID) -> bool:
+    """Invalidate the just-published paths on CloudFront so the new bytes are served
+    immediately instead of after the edge TTL. `public_paths` are the public-facing
+    paths (e.g. /corpus/dickens) — the distribution's /draft origin path is added by
+    CloudFront, so we must NOT include the draft/ prefix here. Past a handful of paths
+    a single /* wildcard is cheaper and simpler than enumerating them."""
+    if not public_paths:
+        return True
+    args = ["/*"] if len(public_paths) > 12 else sorted(set(public_paths))
+    r = subprocess.run(["aws", "cloudfront", "create-invalidation", "--distribution-id", dist_id,
+                        "--paths", *args, "--query", "Invalidation.Id", "--output", "text"],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        print(f"  CDN invalidation FAILED ({dist_id}): {r.stderr.strip()[:200]}", file=sys.stderr)
+        return False
+    print(f"  CDN invalidation {r.stdout.strip()} created for "
+          f"{'/* (all paths)' if args == ['/*'] else f'{len(args)} path(s)'}")
+    return True
 
 
 def copy_s3(bucket: str, src_key: str, dst_key: str, sha: str, ctype: str) -> bool:
@@ -302,8 +326,11 @@ def do_mint(files, bucket, force):
 
 
 def do_publish(files, bucket, prefix, force):
-    """Populate the working prefix: upstream → fetch+verify; minted → copy from source/."""
+    """Populate the working prefix: upstream → fetch+verify; minted → copy from source/.
+    Anything actually (re)written to the SERVED prefix is then invalidated on CloudFront,
+    so the new bytes go live immediately rather than after the edge TTL expires."""
     nskip = nput = nfail = nneed = 0
+    written: list[str] = []                                  # keys we (re)wrote this run
     for f in files:
         key, want, rec = f["key"], f["sha256"], rec_of(f["key"])
         dst_key = f"{prefix}/{key}"
@@ -318,6 +345,7 @@ def do_publish(files, bucket, prefix, force):
             ok = copy_s3(bucket, src_key, dst_key, want, ct)
             print(f"  ✓ copy {key}  (source/ → {prefix}/)" if ok else f"  FAIL copy {key}")
             nput += ok; nfail += (not ok)
+            if ok: written.append(key)
         else:                                                # upstream → fetch + verify
             with tempfile.TemporaryDirectory() as d:
                 dst = Path(d) / Path(key).name
@@ -330,9 +358,15 @@ def do_publish(files, bucket, prefix, force):
                     nfail += 1; continue
                 if put_local(dst, bucket, dst_key, want, ct, cache=True):
                     print(f"  ✓ up   {key}  ({nbytes/1e6:.1f} MB, sha ✓)"); nput += 1
+                    written.append(key)
                 else:
                     nfail += 1
     print(f"\n— publish[{prefix}]: skipped={nskip} written={nput} needs-mint={nneed} failed={nfail}")
+    # Only the served working prefix sits behind the CDN; a release/other prefix doesn't.
+    if written and prefix == WORK_PREFIX:
+        invalidate_cdn([f"/{k}" for k in written])
+    elif written:
+        print(f"  (no CDN invalidation: prefix {prefix!r} is not the served {WORK_PREFIX!r} prefix)")
     return 1 if (nfail or nneed) else 0
 
 

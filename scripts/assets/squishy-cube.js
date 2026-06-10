@@ -23,7 +23,7 @@
  *
  *   SquishyCube.mount(canvasEl, data, {legendEl, tooltipEl, statusEl})
  */
-(function (global) {
+(function(global) {
   "use strict";
 
   var REDUCED = global.matchMedia && global.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -32,7 +32,7 @@
 
   function esc(s) {
     s = s == null ? "" : String(s);
-    return s.replace(/[&<>"]/g, function (c) {
+    return s.replace(/[&<>"]/g, function(c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
     });
   }
@@ -58,13 +58,13 @@
   // hex → rgb, and a fog mixer toward the background as points recede.
   function hexRGB(h) {
     h = h.replace("#", "");
-    if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
-    return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
   }
   function mix(c1, c2, t) {
-    return "rgb(" + Math.round(c1[0]+(c2[0]-c1[0])*t) + "," +
-                    Math.round(c1[1]+(c2[1]-c1[1])*t) + "," +
-                    Math.round(c1[2]+(c2[2]-c1[2])*t) + ")";
+    return "rgb(" + Math.round(c1[0] + (c2[0] - c1[0]) * t) + "," +
+      Math.round(c1[1] + (c2[1] - c1[1]) * t) + "," +
+      Math.round(c1[2] + (c2[2] - c1[2]) * t) + ")";
   }
 
   // light theme — matches the page background (#fafafa). Fog recedes toward FAR.
@@ -78,7 +78,7 @@
   }
   function shortSize(mb) {
     return mb >= 1000 ? (mb / 1000).toFixed(1) + " GB" : mb >= 1 ? mb.toFixed(1) + " MB"
-         : (mb * 1000).toFixed(0) + " KB";
+      : (mb * 1000).toFixed(0) + " KB";
   }
 
   function mount(canvas, data, opts) {
@@ -86,10 +86,10 @@
     var ctx = canvas.getContext("2d");
     var cats = data.categories;          // {name: "#rrggbb"}
     var ax = data.axes;                  // {x:{label,min,max,log,unit}, y:…, z:…}
-    var catRGB = {}; Object.keys(cats).forEach(function (k) { catRGB[k] = hexRGB(cats[k]); });
+    var catRGB = {}; Object.keys(cats).forEach(function(k) { catRGB[k] = hexRGB(cats[k]); });
 
     // pre-normalize every point into the unit cube once. y is negated (screen-down).
-    var pts = data.points.map(function (d) {
+    var pts = data.points.map(function(d) {
       return {
         d: d,
         c: [normalize(d.x, ax.x), -normalize(d.y, ax.y), -normalize(d.z, ax.z)],
@@ -159,16 +159,16 @@
     function drawGizmo() {
       var faint = "rgba(0,0,0,0.07)", line = "rgba(0,0,0,0.22)";
       // floor grid (coverage = 0 plane) — z lines and x lines
-      TZ.forEach(function (t) {
+      TZ.forEach(function(t) {
         var nz = -normalize(t.v, ax.z);
         seg([-1, 1, nz], [1, 1, nz], faint, 1);
       });
-      TX.forEach(function (t) {
+      TX.forEach(function(t) {
         var nx = normalize(t.v, ax.x);
         seg([nx, 1, -1], [nx, 1, 1], faint, 1);
       });
       // back wall (z=+1): coverage rising, entropy across — horizontal coverage lines
-      TY.forEach(function (t) {
+      TY.forEach(function(t) {
         var ny = -normalize(t.v, ax.y);
         seg([-1, ny, 1], [1, ny, 1], faint, 1);
       });
@@ -182,14 +182,14 @@
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.font = "12px ui-monospace,Menlo,monospace";
       ctx.fillStyle = "rgba(40,46,54,0.78)";
-      TX.forEach(function (t) {            // entropy, back-bottom edge
+      TX.forEach(function(t) {            // entropy, back-bottom edge
         var p = project([normalize(t.v, ax.x), 1, 1]); ctx.fillText(t.label, p.x, p.y + 13);
       });
-      TZ.forEach(function (t) {            // repeat distance (log), left-bottom edge
+      TZ.forEach(function(t) {            // repeat distance (log), left-bottom edge
         var p = project([-1, 1, -normalize(t.v, ax.z)]); ctx.fillText(t.label, p.x - 8, p.y + 11);
       });
       ctx.textAlign = "right";
-      TY.forEach(function (t) {            // repetition, back-left vertical edge
+      TY.forEach(function(t) {            // repetition, back-left vertical edge
         var p = project([-1, -normalize(t.v, ax.y), 1]); ctx.fillText(t.label, p.x - 9, p.y);
       });
 
@@ -233,16 +233,16 @@
       drawGizmo();
 
       // project + painter-sort back→front
-      var sp = pts.map(function (p, i) { var s = project(p.c); s.i = i; return s; })
-                  .sort(function (a, b) { return a.z - b.z; });
+      var sp = pts.map(function(p, i) { var s = project(p.c); s.i = i; return s; })
+        .sort(function(a, b) { return a.z - b.z; });
 
       // floor shadows first (all of them, so dots overlay cleanly)
-      sp.forEach(function (s) {
+      sp.forEach(function(s) {
         var p = pts[s.i]; var rad = dotRadius(p, false) * s.f;
         drawShadow(s, rad, depthOf(s.z));
       });
 
-      sp.forEach(function (s) {
+      sp.forEach(function(s) {
         var p = pts[s.i], isH = hover === p || focusIdx === s.i;
         var depth = depthOf(s.z);
         var rad = dotRadius(p, isH) * s.f;
@@ -264,25 +264,27 @@
         sg.addColorStop(0, "rgba(255,255,255," + (0.55 * depth).toFixed(2) + ")");
         sg.addColorStop(0.5, "rgba(255,255,255,0)");
         ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, 7); ctx.fill();
-        if (isH) { ctx.globalAlpha = 1; ctx.strokeStyle = "#1c2530"; ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(s.x, s.y, rad + 3, 0, 7); ctx.stroke(); }
+        if (isH) {
+          ctx.globalAlpha = 1; ctx.strokeStyle = "#1c2530"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(s.x, s.y, rad + 3, 0, 7); ctx.stroke();
+        }
         s.rad = rad;
       });
 
       // labels last, decluttered: show only the focused/hovered + the largest few,
       // and suppress labels that would collide.
       var labelled = [], placed = [];
-      var order = sp.slice().sort(function (a, b) { return pts[b.i].d.r - pts[a.i].d.r; });
-      order.forEach(function (s) {
+      var order = sp.slice().sort(function(a, b) { return pts[b.i].d.r - pts[a.i].d.r; });
+      order.forEach(function(s) {
         var p = pts[s.i], isH = hover === p || focusIdx === s.i;
         if (!isH && labelled.length >= 8) return;
         var lx = s.x + s.rad + 4, ly = s.y + 4;
-        var collide = placed.some(function (q) { return Math.abs(q.x - lx) < 70 && Math.abs(q.y - ly) < 13; });
+        var collide = placed.some(function(q) { return Math.abs(q.x - lx) < 70 && Math.abs(q.y - ly) < 13; });
         if (collide && !isH) return;
         placed.push({ x: lx, y: ly }); labelled.push({ s: s, isH: isH });
       });
       ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-      labelled.forEach(function (L) {
+      labelled.forEach(function(L) {
         var s = L.s, p = pts[s.i], depth = depthOf(s.z);
         ctx.globalAlpha = L.isH ? 1 : 0.4 + 0.55 * depth;
         ctx.font = (L.isH ? "bold " : "600 ") + "12.5px -apple-system,Segoe UI,sans-serif";
@@ -299,7 +301,7 @@
 
     function tooltipHTML(d) {
       var sw = '<i style="display:inline-block;width:.6rem;height:.6rem;border-radius:50%;vertical-align:middle;' +
-               'background:' + (cats[d.cat] || "#9aa") + '"></i>';
+        'background:' + (cats[d.cat] || "#9aa") + '"></i>';
       var links = [];
       if (d.source_url) links.push('<a href="' + esc(d.source_url) + '" target="_blank" rel="noopener">source ↗</a>');
       if (d.url) links.push('<a href="' + esc(d.url) + '" target="_blank" rel="noopener">download ↗</a>');
@@ -344,7 +346,7 @@
     }
     // keep the card open while the pointer is inside it, so its links are clickable
     if (opts.tooltipEl) {
-      opts.tooltipEl.addEventListener("pointerenter", function () {
+      opts.tooltipEl.addEventListener("pointerenter", function() {
         if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
       });
       opts.tooltipEl.addEventListener("pointerleave", hideTip);
@@ -359,10 +361,10 @@
       var a = pointers[id[0]], b = pointers[id[1]];
       return Math.hypot(a.x - b.x, a.y - b.y);
     }
-    canvas.addEventListener("pointerdown", function (e) {
+    canvas.addEventListener("pointerdown", function(e) {
       pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
       auto = false; canvas.focus();
-      try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) { }
       var n = Object.keys(pointers).length;
       if (n >= 2) { drag = null; pinchBase = pinchSpan(); }   // second finger → pinch, stop rotating
       else { drag = [e.clientX, e.clientY]; }
@@ -375,7 +377,7 @@
     }
     canvas.addEventListener("pointerup", endDrag);
     canvas.addEventListener("pointercancel", endDrag);
-    canvas.addEventListener("pointermove", function (e) {
+    canvas.addEventListener("pointermove", function(e) {
       if (pointers[e.pointerId]) pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
       if (Object.keys(pointers).length >= 2) {            // pinch-to-zoom
         var span = pinchSpan();
@@ -393,18 +395,18 @@
         showTip(h);
       }
     });
-    canvas.addEventListener("pointerleave", function () {
+    canvas.addEventListener("pointerleave", function() {
       // delay hide so the pointer can travel into the card to use its links
       if (!drag) { if (hideTimer) clearTimeout(hideTimer); hideTimer = setTimeout(hideTip, 260); }
     });
-    canvas.addEventListener("wheel", function (e) {
+    canvas.addEventListener("wheel", function(e) {
       e.preventDefault(); auto = false;
       // multiplicative zoom toward/away — exponential so each notch feels even
       zoom = clamp(zoom * Math.exp(-e.deltaY * 0.0015), MINZ, MAXZ); draw();
     }, { passive: false });
 
     // ── keyboard accessibility ──
-    canvas.addEventListener("keydown", function (e) {
+    canvas.addEventListener("keydown", function(e) {
       var k = e.key, used = true;
       if (k === "ArrowLeft") yaw -= 0.12;
       else if (k === "ArrowRight") yaw += 0.12;
@@ -424,14 +426,14 @@
     });
 
     // reset button (if present) + a public reset
-    if (opts.resetEl) opts.resetEl.addEventListener("click", function () {
+    if (opts.resetEl) opts.resetEl.addEventListener("click", function() {
       yaw = HOME.yaw; pitch = HOME.pitch; dist = HOME.dist; zoom = 1; auto = !REDUCED; focusIdx = -1; draw();
     });
 
     // ── legend ──
     if (opts.legendEl) {
       var lg = '<span class="lg" style="color:#666">colour = kind:</span>';
-      lg += Object.keys(cats).map(function (k) {
+      lg += Object.keys(cats).map(function(k) {
         return '<span class="lg"><i style="background:' + cats[k] + '"></i>' + k + "</span>";
       }).join("");
       lg += '<span class="lg"><i class="dotbig"></i><i class="dotsm"></i>dot size = file size (MB → GB)</span>';
@@ -442,26 +444,26 @@
     var running = true;
     function tick() {
       if (!running) return;
-      if (auto) { yaw += 0.0022; draw(); }
+      if (auto) { yaw += 0.0004; draw(); }
       requestAnimationFrame(tick);
     }
     var ro = (typeof ResizeObserver !== "undefined")
-      ? new ResizeObserver(function () { resize(); draw(); }) : null;
-    if (ro) ro.observe(canvas); else global.addEventListener("resize", function () { resize(); draw(); });
+      ? new ResizeObserver(function() { resize(); draw(); }) : null;
+    if (ro) ro.observe(canvas); else global.addEventListener("resize", function() { resize(); draw(); });
 
     resize(); draw();
     if (REDUCED) { /* static frame, no orbit */ } else tick();
 
     // pause auto-orbit when offscreen (perf + battery)
     if (typeof IntersectionObserver !== "undefined") {
-      new IntersectionObserver(function (es) {
+      new IntersectionObserver(function(es) {
         running = es[0].isIntersecting;
         if (running && !REDUCED) tick();
       }).observe(canvas);
     }
 
     return {
-      reset: function () { yaw = HOME.yaw; pitch = HOME.pitch; dist = HOME.dist; zoom = 1; auto = !REDUCED; draw(); },
+      reset: function() { yaw = HOME.yaw; pitch = HOME.pitch; dist = HOME.dist; zoom = 1; auto = !REDUCED; draw(); },
     };
   }
 

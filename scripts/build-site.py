@@ -60,6 +60,40 @@ def render_assets(core):
 def esc(s): return html.escape(str(s))
 
 
+def cat_anchor(cat: str) -> str:
+    """Stable in-page anchor id for a category heading (e.g. 'Tabular / DB' → cat-tabular-db)."""
+    return "cat-" + re.sub(r"[^a-z0-9]+", "-", cat.lower()).strip("-")
+
+
+def human_bytes(n) -> str:
+    n = float(n or 0)
+    if n >= 1e9: return f"{n/1e9:.2f} GB"
+    if n >= 1e6: return f"{n/1e6:.1f} MB"
+    if n >= 1e3: return f"{n/1e3:.0f} KB"
+    return f"{int(n)} B"
+
+
+def metrics_strip(pm: dict | None, size: int) -> str:
+    """The card's at-a-glance stat row: the three intrinsic byte axes the explorer
+    plots — entropy, repetition, repeat distance — plus the file's size. The three
+    axis swatches are colour-matched to the hero's axis key (m-e/m-r/m-d). `pm` is the
+    file's file-properties / scale-properties entry (None ⇒ only size is shown)."""
+    cells = []
+    if pm:
+        dist = pm.get("match_distance_p90", pm.get("match_distance", 0))
+        cells += [
+            ("m-e", "entropy", f"{pm['entropy']:.2f}", "bits per byte (0–8): how random the bytes look"),
+            ("m-r", "repetition", f"{pm['coverage']*100:.1f}%", "share of 16-byte blocks with an earlier exact copy"),
+            ("m-d", "repeat distance", human_bytes(dist), "how far back those repeats sit (90th percentile)"),
+        ]
+    cells.append(("m-s", "size", human_bytes(size), "uncompressed size of the file"))
+    lis = "".join(
+        f'<li class="{cls}" title="{esc(tip)}"><span class="mv">{esc(v)}</span>'
+        f'<span class="ml">{esc(label)}</span></li>'
+        for cls, label, v, tip in cells)
+    return f'<ul class="metrics">{lis}</ul>'
+
+
 def table(rows, head=None):
     h = "<tr>" + "".join(f"<th>{esc(c)}</th>" for c in head) + "</tr>" if head else ""
     body = "".join("<tr>" + "".join(f"<td>{esc(c)}</td>" for c in r) + "</tr>" for r in rows)
@@ -271,10 +305,13 @@ def quake_map(p, cap=2500):
             f'<div class="cap">{len(pts):,} epicenters plotted (lng/lat)</div>')
 
 
-def preview(display, st, name):
+def preview(display, st, name, url=""):
     p = REPO / "build" / "raw" / st / name
     if not p.exists():
-        return "<p>(file not present locally)</p>"
+        # The bytes are always served; this checkout just may not hold them. Link, don't apologise.
+        return (f'<p class="cap">Peek-inside builds from a local copy. '
+                f'<a href="{esc(url)}" download>Download <code>{esc(name)}</code> ↓</a></p>'
+                if url else '<p class="cap">Preview unavailable in this checkout.</p>')
     try:
         if display == "photo":
             return '<img class="shot" src="photo.jpg" alt="NASA Blue Marble">'
@@ -306,6 +343,18 @@ def main() -> int:
     man = {r["core_slot"]: r for r in csv.DictReader((REPO / "build/meta/LICENSE-MANIFEST.csv").open())}
     sj = json.loads((REPO / "build/meta/squishy-scores.json").read_text()) if (REPO / "build/meta/squishy-scores.json").exists() else {"panel": {}}
 
+    # Edition manifest = the source of truth for what we SERVE: every member's public
+    # download URL and size. We key it by display (core) and by name (scale) so a card
+    # always links to the live file and shows its real size, whether or not the bytes
+    # happen to be present locally. file-properties / scale-properties give the per-file
+    # byte-axis metrics shown on each card.
+    edf = json.loads((REPO / "build/meta/edition.json").read_text()).get("files", [])
+    ed_by_disp = {f["display"]: f for f in edf if f.get("display")}
+    ed_by_name = {f["name"]: f for f in edf if f.get("name")}
+    props = json.loads((REPO / "build/meta/file-properties.json").read_text())
+    sp = REPO / "build/meta/scale-properties.json"
+    scale = json.loads(sp.read_text()) if sp.exists() else {"files": {}}
+
     # tools: scalable list of (label, flag, squishy, bpb, categories, per_file)
     tools = []
     for codec, r in sj.get("panel", {}).items():
@@ -332,10 +381,12 @@ def main() -> int:
     for d, st, nm in core:
         maxr[d] = max((t["pf"].get(d, 0) for t in tools), default=1) or 1
     for cat, files in sq.CORE.items():
-        cards += f'<h2>{esc(cat)}</h2>'
+        cards += f'<h2 id="{esc(cat_anchor(cat))}">{esc(cat)}</h2>'
         for d, st, nm in files:
-            n += 1; m = man.get(d, {})
-            sz = (REPO / "build/raw" / st / nm).stat().st_size if (REPO / "build/raw" / st / nm).exists() else 0
+            n += 1; m = man.get(d, {}); e = ed_by_disp.get(d, {}); pm = props["files"].get(d)
+            size = (pm or {}).get("size") or int(e.get("size_bytes") or 0)
+            url = e.get("url", ""); src_url = e.get("source_url") or m.get("source_url", "")
+            license_ = e.get("license") or m.get("license", "?")
             # compression bars per tool@version (sorted, scalable)
             bars = ""
             for t in sorted(tools, key=lambda x: -(x["pf"].get(d, 0))):
@@ -345,11 +396,15 @@ def main() -> int:
                 bars += (f"<div class='bar'><span class='bl'>{esc(t['label'])} {esc(t['flag'])}</span>"
                          f"<span class='bt'><span class='bf' style='width:{w:.0f}%'></span></span>"
                          f"<span class='bv'>{r:.2f}×</span></div>")
-            cards += f'''<section class="card">
-  <div class="dh"><span class="num">{n}</span><h3><code>{d}</code></h3><span class="sz">{sz/1e6:.1f} MB · {esc(m.get('license','?'))}</span></div>
+            dl = f'<a class="dl" href="{esc(url)}" download>download <code>{esc(nm)}</code> ↓</a>' if url else ""
+            src = f'<a href="{esc(src_url)}">source ↗</a>' if src_url else ""
+            cards += f'''<section class="card" id="file-{esc(d)}">
+  <div class="dh"><span class="num">{n}</span><h3><code>{esc(d)}</code></h3>
+    <span class="sz">{esc(human_bytes(size))} · {esc(license_)}</span></div>
   <p class="what">{WHATIS.get(d,'')}</p>
-  <div class="prev">{preview(d, st, nm)}</div>
-  <div class="src"><a href="{esc(m.get('source_url',''))}">source ↗</a></div>
+  <div class="prev">{preview(d, st, nm, url)}</div>
+  {metrics_strip(pm, size)}
+  <div class="src">{dl}{' · ' if dl and src else ''}{src}</div>
   <details class="cmp"><summary>compression — {len(tools)} tools</summary>{bars}</details>
 </section>'''
     # ── The scale tier: large members of the one corpus ────────────────────
@@ -361,24 +416,26 @@ def main() -> int:
                   '<p class="cap">The same kinds of data at gigabyte scale, where long-range '
                   'matching and big compression windows start to matter. Still being assembled.</p>')
         for r in sorted(extra, key=lambda r: int(r["size_bytes"])):
-            nm = r["name"]
+            nm = r["name"]; e = ed_by_name.get(nm, {}); pm = scale["files"].get(nm)
+            size = (pm or {}).get("size") or int(r["size_bytes"])
+            url = e.get("url", "")
             local = next((p for p in REPO.glob(f"build/raw/*/{nm}") if p.exists()), None)
             prev = preview_safetensors(local) if (local and nm.endswith(".safetensors")) else ""
-            what = scale_what(nm)
-            cards += f'''<section class="card">
+            what = SCALE_DESC.get(nm) or scale_what(nm)
+            dl = f'<a class="dl" href="{esc(url)}" download>download ↓</a> · ' if url else ""
+            cards += f'''<section class="card" id="file-{esc(re.sub(r"[^a-z0-9]+","-",nm.lower()).strip("-"))}">
   <div class="dh"><span class="num">scale</span><h3><code>{esc(nm)}</code></h3>
-    <span class="sz">{int(r['size_bytes'])/1e6:.0f} MB · {esc(r['license'])}</span></div>
-  <p class="what">{what}</p>
+    <span class="sz">{esc(human_bytes(size))} · {esc(r['license'])}</span></div>
+  <p class="what">{esc(what)}</p>
   {prev}
-  <div class="src">sha256 <code>{esc(r['sha256'][:16])}…</code> · <a href="{esc(r['source_url'])}">source ↗</a></div>
+  {metrics_strip(pm, size)}
+  <div class="src">{dl}sha256 <code>{esc(r['sha256'][:16])}…</code> · <a href="{esc(r['source_url'])}">source ↗</a></div>
 </section>'''
 
-    # 3D cube: built from INTRINSIC byte properties (file-properties.json), inlined
-    # + shipped as a data file; the maintainable renderer source is copied in.
-    props = json.loads((REPO / "build/meta/file-properties.json").read_text())
-    sp = REPO / "build/meta/scale-properties.json"
-    scale = json.loads(sp.read_text()) if sp.exists() else None
-    cube = cube_data(sq, props, scale)
+    # 3D cube: built from the INTRINSIC byte properties loaded above (file-properties.json
+    # + scale-properties.json), inlined + shipped as a data file; the maintainable renderer
+    # source is copied in.
+    cube = cube_data(sq, props, scale if scale["files"] else None)
     (OUT / "cube-data.json").write_text(json.dumps(cube, indent=2))
     import shutil
     shutil.copyfile(ASSETS / "squishy-cube.js", OUT / "squishy-cube.js")
@@ -404,6 +461,21 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
  .num{{color:#aaa;font-variant-numeric:tabular-nums}} .sz{{margin-left:auto;color:#777;font-size:.85rem}}
  .what{{margin:.3rem 0 .6rem;font-size:1.02rem}}
  .prev{{margin:.4rem 0}} .src{{font-size:.82rem}} a{{color:#0a5fa5}}
+ .src .dl{{font-weight:600}}
+ .card{{scroll-margin-top:1rem}} h2{{scroll-margin-top:1rem}}
+ :target.card{{box-shadow:0 0 0 2px #2c6e9b}}
+ .lede a{{color:inherit;text-decoration:underline;text-decoration-color:#b9c6d2;
+   text-underline-offset:2px}}
+ .lede a:hover{{text-decoration-color:#0a5fa5;color:#0a5fa5}}
+ ul.metrics{{display:flex;flex-wrap:wrap;gap:.4rem;margin:.55rem 0 .5rem;padding:0;list-style:none}}
+ ul.metrics li{{flex:1 1 0;min-width:5rem;background:#f7f9fb;border:1px solid #e7eaee;
+   border-radius:8px;padding:.4rem .3rem;text-align:center;cursor:help}}
+ ul.metrics .mv{{display:block;font-size:1.02rem;font-weight:650;
+   font-variant-numeric:tabular-nums;line-height:1.2}}
+ ul.metrics .ml{{display:block;font-size:.66rem;color:#888;text-transform:uppercase;
+   letter-spacing:.03em;margin-top:.15rem}}
+ ul.metrics .m-e .mv{{color:#b23a6b}} ul.metrics .m-r .mv{{color:#1f8a5a}}
+ ul.metrics .m-d .mv{{color:#2a6f9e}} ul.metrics .m-s .mv{{color:#333}}
  pre.txt,pre.hex{{background:#f6f8fa;border:1px solid #e2e2e2;border-radius:6px;padding:.6rem;overflow:auto;font-size:.78rem;max-height:230px;margin:.2rem 0}}
  pre.run{{background:#0d1117;color:#e6edf3;border-radius:8px;padding:.85rem 1rem;font-size:.95rem;overflow:auto;margin:.4rem 0 .3rem;border:0}}
  .head{{display:flex;justify-content:space-between;align-items:baseline;gap:1rem}}
@@ -471,14 +543,17 @@ TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
   <h1>Squishy</h1>
   <a href="https://github.com/JackDanger/squishy-corpus">GitHub ↗</a>
 </div>
-<p class="tag">One number for how well a compressor does on real data.</p>
-<p class="lede">Squishy is a fixed set of real files: novels, source code, server logs,
-genome reads, weather tables, databases, executables, a photo, a film clip, the weights
-of a neural network. They range from a few megabytes to a few gigabytes, and every one
-is freely redistributable, with its source and checksum published. Run your compressor
+<p class="lede">A corpus of realistic stuff you might compress.
+Squishy is a fixed set of real files: <a href="#file-dickens">novels</a>,
+<a href="#file-monorepo">source code</a>, <a href="#file-log">server logs</a>,
+<a href="#file-genome">genome reads</a>, <a href="#file-csv">weather tables</a>,
+<a href="#file-sqlite">databases</a>, <a href="#file-exe">executables</a>,
+<a href="#file-photo">a photo</a>, <a href="#file-movie">a film clip</a>, the
+<a href="#file-weights">weights of a neural network</a>. They range from a few
+megabytes to a few gigabytes, and every one
+is freely redistributable, with its source and checksum published. Run any compressor
 over the set and you get a single Squishy Score you can cite and compare. It's a
 successor to the <a href="https://sun.aei.polsl.pl/~sdeor/index.php?page=silesia">Silesia</a> corpus.</p>
-
 <section class="hero" aria-labelledby="coverage-h">
 <h2 id="coverage-h">The shape of the corpus</h2>
 <p>Each dot is one file, placed by three measurements of its bytes. No compressor is
@@ -498,10 +573,7 @@ involved in the placement.</p>
   <div class="tip" id="cubetip" role="status"></div>
 </div>
 <div class="legend" id="cubelegend"></div>
-<p class="cap">Color is the kind of data; dot size is file size. The dots in the
-random, nothing-repeats corner are already-compressed media — the photo, the film,
-the model weights. They barely shrink, but people compress them anyway, so they
-count too. The corpus is chosen so the dots spread across the whole space instead
+<p class="cap">Color is the kind of data. The corpus is chosen so the dots spread across the whole space instead
 of piling up in one corner.</p>
 <p class="hint">Drag to rotate · scroll to zoom · hover a dot for details · keyboard: arrows rotate, +/− zoom, 0 resets, Enter steps through.</p>
 <p id="cube-status" class="sr-only" role="status" aria-live="polite"></p>
@@ -509,6 +581,8 @@ of piling up in one corner.</p>
 {coverage_table}
 </details>
 </section>
+
+<p class="tag">The <strong>Squishy Score</strong> is the geomean of compression across all files - a stable number reference number.</p>
 
 <h2>Score your tool</h2>
 <p>Give it any compressor that reads stdin and writes stdout, such as
