@@ -50,7 +50,7 @@ def measure(path: Path) -> dict:
     # Recurrence key per K=16 byte block. EXACT mode carries the block's full 128-bit
     # value as two uint64 halves (no collisions). For files above EXACT_MAX the two
     # halves + sort index would not fit comfortably in RAM, so we fall back to a single
-    # mixed uint64 key (collision rate ~n^2/2^64 ≈ 0.003 blocks even at 4 GB — i.e.
+    # mixed uint64 key (expected collisions ~n^2/2^65 ≈ 0.002 blocks even at 4 GB — i.e.
     # effectively exact) at half the memory. Either way every byte is read (whole-file).
     EXACT_MAX = 2_500_000_000
     exact = n <= EXACT_MAX
@@ -134,7 +134,9 @@ def _measure_dict(path: Path) -> dict:
         "entropy": round(float(entropy), 3),
         "coverage": round(covered / nblocks, 4) if nblocks else 0.0,
         "match_distance": int(statistics.median(dists)) if dists else K,
-        "match_distance_p90": int(statistics.quantiles(dists, n=10)[8]) if len(dists) > 10 else (max(dists) if dists else K),
+        # method="inclusive" matches np.quantile's default linear interpolation,
+        # so this fallback reports the same p90 as measure()'s numpy path.
+        "match_distance_p90": int(statistics.quantiles(dists, n=10, method="inclusive")[8]) if len(dists) > 10 else (max(dists) if dists else K),
         "block_bytes": K, "hash": HASH,
     }
 

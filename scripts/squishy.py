@@ -124,6 +124,18 @@ PANEL_ARGV = {
     "brotli -11": "brotli -q 11 -c",
 }
 
+# Canonical decompressor per reference codec — kept beside PANEL_ARGV so the
+# compress and decompress halves of the panel can never drift apart. Used by
+# calculate-all to round-trip-verify every complete-edition run.
+PANEL_DECOMP = {
+    "gzip -9":   "gzip -dc",
+    "bzip2 -9":  "bzip2 -dc",
+    "zstd -19":  "zstd -dc",
+    "zstd -22":  "zstd -dc",
+    "xz -9":     "xz -dc",
+    "brotli -11": "brotli -dc",
+}
+
 
 def _validate_core() -> None:
     """Guard against duplicate core entries (a silent way to double-weight a file)."""

@@ -134,6 +134,9 @@ def compress_size(cmd: str, path: Path) -> tuple[int, float]:
             op = os.path.join(d, "out")
             run = cmd.replace("{in}", inp).replace("{out}", op)
             proc = subprocess.run(run, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            if proc.returncode != 0:
+                # a crashed codec may leave a partial {out} file — never score it
+                return 0, time.perf_counter() - t0
             if "{out}" in cmd:
                 sizes = [os.path.getsize(os.path.join(d, f)) for f in os.listdir(d) if f != "input"]
                 size = max(sizes) if sizes else len(proc.stdout)
@@ -195,6 +198,8 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", help="emit the full result as JSON")
     ap.add_argument("--fresh", action="store_true", help="ignore cached per-file results (still reuse verified bytes)")
     args = ap.parse_args()
+    if not args.cmd.strip():
+        ap.error('--cmd is empty — pass a compressor command, e.g. --cmd "zstd -19 -c"')
     if args.verify and not args.decompress:
         ap.error("--verify requires --decompress \"<cmd>\"")
 
@@ -245,7 +250,7 @@ def main() -> int:
             sys.exit(f"FATAL: codec produced {size_c} bytes for {name}.")
         ratio = size_in / size_c
         pf[name] = {"in_sha": sha, "size_in": size_in, "size_comp": size_c,
-                    "ratio": round(ratio, 6), "kind": pt.get("kind"), "category": pt.get("category"),
+                    "ratio": ratio, "kind": pt.get("kind"), "category": pt.get("category"),
                     "verified": bool(verified) if verified is not None else None}
         state.update({"edition": EDITION, "cmd": args.cmd, "codec_version": ver,
                       "base": args.base, "per_file": pf, "updated": time.time()})
@@ -260,10 +265,14 @@ def main() -> int:
     score = res["squishy_score"]
     cat_scores = res["categories"]
     complete = res["complete"]
+    # Only current roster members count: the cache may still hold entries for files
+    # a later edition.json dropped, and those must not leak into the totals/output.
+    roster = {pt["name"] for pt in points}
+    scored = {n: v for n, v in pf.items() if n in roster}
     # byte-weighted corpus bpb (the operational rate) — the Squishy Score is a
     # dimensionless quality index, NOT a bit rate; never derive bpb from it.
-    tot_in = sum(pf[n]["size_in"] for n in pf)
-    tot_out = sum(pf[n]["size_comp"] for n in pf)
+    tot_in = sum(v["size_in"] for v in scored.values())
+    tot_out = sum(v["size_comp"] for v in scored.values())
     corpus_bpb = round(8.0 * tot_out / tot_in, 3) if tot_in else None
     # One corpus, one number: the Squishy Score prints ONLY on a complete edition run
     # (every scored size-point — core AND the large rungs).
@@ -271,8 +280,8 @@ def main() -> int:
         done, total = res["n_done"], res["n_scored"]
         print(f"\n  partial run ({done}/{total} files) — per-file ratios for your "
               f"own regression use; NOT a Squishy Score.")
-        for n in pf:
-            print(f"    {n:<34} {pf[n]['ratio']:5.2f}×")
+        for n, v in scored.items():
+            print(f"    {n:<34} {v['ratio']:5.2f}×")
     else:
         print(f"\n  Squishy Score: {score:.2f}×   [{res['n_scored']} files, core+scale]  "
               f"(plain geomean of per-file ratios — one vote per file)")
@@ -294,7 +303,7 @@ def main() -> int:
                           "corpus_bpb": corpus_bpb,
                           "total_in_bytes": tot_in, "total_out_bytes": tot_out,
                           "categories": cat_scores, "kinds": res["kinds"],
-                          "per_file": pf, "round_trip_verified": bool(args.verify)}, indent=2))
+                          "per_file": scored, "round_trip_verified": bool(args.verify)}, indent=2))
     return 0
 
 

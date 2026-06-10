@@ -1,6 +1,6 @@
 {
   "edition": "Squishy-2026-DRAFT",
-  "generated_utc": "2026-06-09T23:06:40Z",
+  "generated_utc": "2026-06-10T05:25:07Z",
   "n_files": 31,
   "n_scored_size_points": 26,
   "scored_set_fingerprint": "39915f30abc59ac1980c785d82c8a27753320c41cbe0976f9cde1156e5914cee",
@@ -41,7 +41,7 @@
     "codec": "zstd -19 -c",
     "codec_version": "*** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***",
     "squishy_score": 4.71,
-    "corpus_bpb": 1.066,
+    "corpus_bpb": 1.119,
     "tool_provenance": {
       "tool": "zstd",
       "argv": "zstd -19 -c",
@@ -62,7 +62,7 @@
       "machine": "arm64",
       "processor": "arm",
       "python": "3.14.4",
-      "recorded_utc": "2026-06-09T23:06:40Z"
+      "recorded_utc": "2026-06-10T05:25:07Z"
     }
   }
 }

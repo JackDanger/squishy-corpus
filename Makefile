@@ -7,7 +7,7 @@
 S3_BUCKET ?= squishy-corpus
 AWS_VAULT ?=
 
-.PHONY: help all properties edition board calculate map site deploy publish mint release coverage validate audit pii \
+.PHONY: help all properties edition board calculate calculate-all map site deploy publish mint release coverage validate audit pii \
         baseline check test freeze
 
 help:
@@ -18,6 +18,7 @@ help:
 	@echo "  make board               — reference panel over the local core members"
 	@echo "  make calculate CMD=\"zstd -19 -c\" [VERIFY='--verify --decompress \"zstd -dc\"']"
 	@echo "                           — stream the FULL edition and compute the Squishy Score"
+	@echo "  make calculate-all       — complete-edition board: every installed panel codec, in parallel"
 	@echo "  make map                 — render the static coverage map (build/meta/coverage-map.svg)"
 	@echo "  make site                — render the explorer + coverage map (build/site)"
 	@echo "  make deploy              — build the site, push to S3, invalidate the CDN (live)"
@@ -46,7 +47,13 @@ board:
 #   make calculate CMD="zstd -19 -c"
 #   make calculate CMD="xz -9 -c" VERIFY="--verify --decompress 'xz -dc'"
 calculate:
+	@test -n "$(CMD)" || { echo 'usage: make calculate CMD="zstd -19 -c" [VERIFY='"'"'--verify --decompress "zstd -dc"'"'"']'; exit 2; }
 	uv run python scripts/squishy-calculate.py --cmd "$(CMD)" $(VERIFY)
+
+# Complete-edition board: every reference-panel codec installed on this machine,
+# round-trip verified, run in parallel; writes build/meta/squishy-board-complete.json.
+calculate-all:
+	uv run python scripts/calculate-all.py
 
 # Static coverage map (build/meta/coverage-map.svg) — the flat, citable companion
 # to the live 3D explorer; the README hero image. Zero deps, re-derives bit-for-bit.
@@ -95,7 +102,7 @@ validate:
 	uv run python scripts/validate-core.py
 
 audit:
-	uv run python scripts/audit-distribution.py --prefix draft
+	uv run python scripts/audit-distribution.py
 
 pii:
 	uv run python scripts/pii-scan.py

@@ -20,12 +20,12 @@
     "machine": "arm64",
     "processor": "arm",
     "python": "3.14.4",
-    "recorded_utc": "2026-06-09T23:13:45Z"
+    "recorded_utc": "2026-06-10T06:06:10Z"
   },
   "squishy_score": 4.71,
-  "corpus_bpb": 1.066,
-  "total_in_bytes": 12324537777,
-  "total_out_bytes": 1642495297,
+  "corpus_bpb": 1.119,
+  "total_in_bytes": 10993098035,
+  "total_out_bytes": 1537939525,
   "categories": {
     "Prose": 4.0666,
     "Code & Web": 7.1454,
@@ -70,7 +70,6 @@
     "ecoli.fastq": 7.520303,
     "ecoli-DRR002013-full.fastq": 7.606404,
     "data.csv": 12.19738,
-    "noaa-ghcn-daily-2024-full.csv": 12.734254,
     "noaa-ghcn-daily-2021-2023.csv": 12.570838,
     "data.parquet": 1.806059,
     "bts-ontime-2022-2024.parquet": 1.830366,

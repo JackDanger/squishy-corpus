@@ -1,6 +1,6 @@
 {
   "edition": "Squishy-2026-DRAFT",
-  "generated_utc": "2026-06-10T03:00:24Z",
+  "generated_utc": "2026-06-10T05:40:27Z",
   "base_url": "https://squishy.jackdanger.com",
   "note": "Per-file addressable inventory. `scored:true` files are the corpus cells (one vote each in the Squishy Score; roster defined by build/meta/schema.json); `scored:false` files are distributed diagnostics (throughput ladder, incompressible/redundant rungs) that never enter the score. Fetch any file by its url and verify against sha256.",
   "n_files": 31,

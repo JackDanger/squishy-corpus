@@ -9,7 +9,7 @@
     "machine": "arm64",
     "processor": "arm",
     "python": "3.14.4",
-    "recorded_utc": "2026-06-10T00:46:29Z"
+    "recorded_utc": "2026-06-10T06:06:10Z"
   },
   "missing": [],
   "status": "DRAFT \u2014 partial board over the small core members only. The large size rungs are scored in the periodic whole-corpus computation; until then this is NOT a citable Squishy Score. Each row is a property of (corpus, codec, codec_version, codec_command), reproducible for the pinned build.",
