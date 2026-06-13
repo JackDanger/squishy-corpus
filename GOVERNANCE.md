@@ -22,6 +22,44 @@ score definition + coverage-map rationale in [`plans/squishy-score.md`](plans/sq
   *current* recommendation. A codec that overfit one edition visibly stops winning
   on the next — that decay is a feature.
 
+## Versioning: the edition *is* the version
+
+There is no semver on the data. The dated edition name (`Squishy-2026`) is the
+version, the [Zenodo](https://zenodo.org) DOI is its permanence anchor, and the
+freeze is carried by the matching git tag (`Squishy-2026`) and the immutable S3
+prefix (`s3://squishy-corpus/2026/`). There is deliberately **no "Squishy 1.0"** —
+immutable bytes never get a `1.1`, so a semver would only invite "where's 2.0?".
+The next version is simply the next dated edition (e.g. `Squishy-2030`). Semver is
+reserved for the **tooling** (the `squishy` package), which is versioned
+independently of any edition; a score's provenance tuple records the *codec* and
+*edition*, never the runner's version.
+
+## Errata & withdrawal (recourse without mutation)
+
+"Never edited" means the bytes, SHA-256s, and DOI of a published edition are never
+silently changed — not that there is no recourse when a defect (e.g. a license
+problem on one file) surfaces after freeze. Because the Squishy Score is a flat
+geomean, dropping or swapping any file moves *every* score, so a file can never be
+quietly removed while still calling the result `Squishy-2026`. The defined paths:
+
+- **Append-only errata.** Every published edition carries an `ERRATA` record
+  (repo + the Zenodo version record). Defects are documented there; nothing is
+  deleted in place.
+- **Distribution-only defect** (we can no longer host a file, but it remains
+  independently fetchable by its pinned SHA-256 and the math is unaffected): record
+  it in errata, point to upstream. The edition stays citable.
+- **Score-affecting defect** (a file must actually be replaced or removed): this
+  forces a **new dated edition** — a point edition `Squishy-2026.1` if it is a
+  correction of the same year's set, or the next scheduled edition — with the file
+  changed and the reference panel **recomputed**. The defective edition is marked
+  *superseded/withdrawn, with the reason*, and stays in the historical record so old
+  citations remain interpretable.
+
+This is exactly why the unit of change is the *edition*, not an in-place edit: a
+yank has graceful vocabulary ("issue the next dated edition"), and the public S3
+copy is therefore locked in **governance** mode at most — never compliance mode,
+which would trap us with a known-defective artifact we legally could not fix.
+
 ## What a file must be to enter the core
 
 A candidate core file must be **all** of:

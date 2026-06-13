@@ -1,0 +1,41 @@
+MIT License
+===========
+
+This file carries the MIT permission text that applies to the MIT-licensed
+binaries distributed in Squishy-2026. The MIT permission terms are verbatim
+identical across projects; only the copyright line differs, so the per-project
+copyright notices are listed here and also in NOTICE. All copies of these terms
+and the copyright notices below travel together in this distribution, satisfying
+"the above copyright notice and this permission notice shall be included in all
+copies."
+
+Copyright notices for the MIT-licensed members:
+  • symbols  — Lua 5.4.8:        Copyright (c) 1994–2024 Lua.org, PUC-Rio.
+  • winexe   — fd 10.4.2:         Copyright (c) 2017– David Peter and fd contributors.
+                                  (fd is dual-licensed MIT OR Apache-2.0; see Apache-2.0.txt.)
+  • armexe   — hyperfine 1.20.0:  Copyright (c) 2018 David Peter.
+
+NOTE (owner attestation before freeze): these terms are the standard MIT text; the
+canonical upstream LICENSE-MIT files ship inside the pinned source archives recorded
+in LICENSE-MANIFEST.csv. Confirm the upstream copyright lines above against those
+archives before the irreversible Squishy-2026 freeze.
+
+-------------------------------------------------------------------------------
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

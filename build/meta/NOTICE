@@ -43,6 +43,21 @@ weights   — sentence-transformers/all-MiniLM-L6-v2 (Apache-2.0). License text:
 json      — USGS earthquake catalog (M4.5+, 2010–2024), U.S. Geological Survey.
             Public domain (U.S. Government work).
 
+Executable-format binaries (Binary & Media — each a distinct, independent program):
+exe       — Hugo v0.162.1 extended, Apache-2.0 (© The Hugo Authors). Linux x86-64
+            ELF. Full text: LICENSES/Apache-2.0.txt; statically-linked third-party
+            modules enumerated in LICENSES/tool.bin.THIRD-PARTY.txt.
+symbols   — Lua 5.4.8, MIT (© 1994–2024 Lua.org, PUC-Rio). Compiled with -g; the
+            DWARF debug-info companion. MIT terms: LICENSES/MIT.txt.
+wasm      — SQLite 3.53.02 engine compiled to WebAssembly. Public domain — the
+            SQLite authors dedicate the code to the public domain (no rights
+            reserved; sqlite.org/copyright.html).
+winexe    — fd 10.4.2 (sharkdp), MIT OR Apache-2.0 (© 2017– David Peter and fd
+            contributors). Windows PE32+ x86-64. LICENSES/MIT.txt or
+            LICENSES/Apache-2.0.txt (dual-licensed; either applies).
+armexe    — hyperfine 1.20.0 (sharkdp), MIT (© 2018 David Peter). ARM64 Linux ELF.
+            MIT terms: LICENSES/MIT.txt.
+
 Large size-rungs (members of the one corpus; same provenance as their kind unless
 noted), plus non-scored diagnostics:
 csv (large)      — NOAA GHCN-Daily full years 2021–2023 + 2024 (PD-USGov), concatenated.

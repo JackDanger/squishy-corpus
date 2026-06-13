@@ -40,6 +40,13 @@ REPO = Path(__file__).resolve().parent.parent
 RAW = REPO / "build" / "raw"
 IND = REPO / "build" / "individual"
 
+# The edition identity — the SINGLE source of truth for the dataset version. Squishy
+# editions are dated, not semver'd: the year IS the version (next is the next dated
+# edition, e.g. Squishy-2030), and the freeze is carried by the git tag + Zenodo DOI +
+# the S3 prefix, never by a "1.0" on the data. Every script that stamps an edition
+# string reads it from here so DRAFT→frozen is one atomic change, never a find/replace.
+EDITION = "Squishy-2026"
+
 # The Squishy corpus (small members present; large rungs pending): real,
 # provenanced files across 5 categories.
 # Entries: (display, set, filename). Raw bytes at build/raw/<set>/<filename>;
@@ -606,7 +613,7 @@ def main() -> int:
             missing = sorted(set(next(iter(results.values()))["missing"]))
             args.json.write_text(json.dumps({
                 "score_definition": "geomean of per-file compression ratio over the whole corpus (one vote per file; no weighting, no threshold)",
-                "edition": "Squishy-2026-DRAFT",
+                "edition": EDITION,
                 "corpus_files": n_core,
                 "missing": missing,
                 "status": ("DRAFT — NOT CITABLE. Partial board: small members only, "

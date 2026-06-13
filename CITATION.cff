@@ -13,7 +13,7 @@ authors:
   - family-names: Danger
     given-names: Jack
 version: "Squishy-2026"
-# TODO(freeze): set date-released to the actual v1.0.0 freeze date.
+# TODO(freeze): set date-released to the actual Squishy-2026 freeze date.
 date-released: 2026-01-01
 license-url: "https://github.com/JackDanger/squishy-corpus/blob/main/build/meta/LICENSE-MANIFEST.csv"
 url: "https://github.com/JackDanger/squishy-corpus"
@@ -23,7 +23,7 @@ keywords:
   - corpus
   - data compression
   - lossless
-# At v1.0.0 freeze, zenodo-deposit.py mints the DOI; fill BOTH lines below with the
+# At the Squishy-2026 freeze, zenodo-deposit.py mints the DOI; fill BOTH lines below with the
 # concrete record so citations resolve to the immutable Zenodo deposit, not the
 # mutable repo (then drop these comments):
 # identifiers:

@@ -27,11 +27,11 @@ spot, which is what makes "I tested on Squishy" mean something.
 ```
 git clone https://github.com/JackDanger/squishy-corpus && cd squishy-corpus
 uv run squishy-calculate --cmd "zstd -19 -c"   # streams + verifies the FULL corpus, scores your codec
-→ Squishy Score (draft): N.NN×   # real & reproducible NOW — citable once v1.0 freezes (DOI pending)
+→ Squishy Score (draft): N.NN×   # real & reproducible NOW — citable once Squishy-2026 freezes (DOI pending)
 ```
 
-You get a **real, reproducible number today**; a **citable** number lands at the
-v1.0 freeze. We keep those two separate on purpose — labelling a draft a draft is
+You get a **real, reproducible number today**; a **citable** number lands when
+Squishy-2026 freezes. We keep those two separate on purpose — labelling a draft a draft is
 [value #1](VALUES.md). The runner verifies every file against its published
 SHA-256 (fail-closed on any mismatch), caches results, and is resumable.
 
@@ -50,7 +50,7 @@ SHA-256 (fail-closed on any mismatch), caches results, and is resumable.
 | **ratio** | a single file's `uncompressed ÷ compressed` | **higher is better**; `3×` means it shrank to a third |
 | **corpus bpb** | size-weighted physical rate — `8 · total compressed ÷ total input` | **lower is better**; the operational bits/byte the literature uses |
 | **kind** | a named member of the corpus (`dickens`, `log`, `weights`, …) | what you pick from when stress-testing |
-| **edition** | a frozen, dated, DOI-pinned file set (`Squishy-2026`, freezes at v1.0) | what you cite — a number without one is meaningless |
+| **edition** | a frozen, dated, DOI-pinned file set (`Squishy-2026`; the dated name *is* the version — no semver on the data) | what you cite — a number without one is meaningless |
 
 Score and bpb are **deliberate complements**, always shown together: the Score
 weights every file equally (so no giant file can be gamed); bpb is the honest
@@ -211,6 +211,38 @@ closed), caches verified bytes + per-file results, and is **resumable** and
 **idempotent** (same codec + bytes ⇒ the same number, instantly). Point it at any
 mirror with `--base`.
 
+**Bulk-fetch the whole corpus (no scoring):**
+
+```bash
+squishy-calculate --download-only                # fetch + sha-verify every file into cache
+```
+
+Streams and verifies every file in the edition roster against its published SHA-256,
+then exits — no codec needed, no scoring done.  Resumable: already-cached and
+verified files are skipped.  Use this to pre-populate the cache before scoring, or
+to mirror the corpus for archival purposes.
+
+**Air-gap / offline scoring:** run `--download-only` on the networked host first,
+then copy the cache directory to the offline host:
+
+```bash
+# On the networked host:
+squishy-calculate --download-only --cache /tmp/squishy-cache
+rsync -a /tmp/squishy-cache offline-host:/data/squishy-cache
+
+# On the offline host (no network access needed — all bytes are already verified):
+squishy-calculate --cmd "zstd -19 -c" --cache /data/squishy-cache
+```
+
+The cache is content-addressed and self-verifying: scoring re-checks every file's
+SHA-256 before use, so an offline run is as trustworthy as an online one.
+The default cache path is `$SQUISHY_CACHE` or `~/.cache/squishy/Squishy-2026`.
+
+**Archival / citation:** the Zenodo DOI is the permanent citable record.  It names
+the edition by its `scored_set_fingerprint` — a stable, timestamp-independent SHA-256
+of the scored roster (names, hashes, kinds, categories).  To verify which fingerprint
+a DOI covers, check the deposit description or `build/meta/baseline.json`.
+
 **For CI / dev,** pull whatever files stress your code — each is individually
 addressable by name in the edition manifest
 ([`build/meta/edition.json`](build/meta/edition.json): per-file HTTPS URL + SHA-256
@@ -279,12 +311,12 @@ Buck Bunny) is © Blender Foundation, CC-BY 3.0. The build system is [MIT](LICEN
 
 ---
 
-*Status: pre-1.0. The scored roster is constituted as **26 cells** in
+*Status: pre-freeze draft. The scored roster is constituted as **26 cells** in
 [`build/meta/schema.json`](build/meta/schema.json) (19 small named members + 6 large
 rungs + the `archive` long-range member; the near-incompressible budget is 3). The 4
 newest Binary & Media cells (`symbols`, `wasm`, `winexe`, `armexe`) are in the manifest
 but their bytes are pending upload to the public mirror — a complete streaming run will
 404 on them until the next `make publish`, and the reference board still reflects the
 older small-member set. The complete-edition Squishy Score is computed once those bytes
-land; the edition **will be** frozen and DOI-minted at `v1.0.0`. Roadmap:
-[`plans/squishy-1.0-readiness.md`](plans/squishy-1.0-readiness.md).*
+land; the edition **will be** frozen and DOI-minted as `Squishy-2026`. Roadmap:
+[`plans/squishy-2026-readiness.md`](plans/squishy-2026-readiness.md).*

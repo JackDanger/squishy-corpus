@@ -30,7 +30,13 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 BASE = "https://squishy.jackdanger.com"
-EDITION = "Squishy-2026-DRAFT"
+
+
+def _squishy():
+    """Load the scoring core for the canonical EDITION string (single source of truth)."""
+    s = importlib.util.spec_from_file_location("sq", REPO / "scripts" / "squishy.py")
+    m = importlib.util.module_from_spec(s); s.loader.exec_module(m)
+    return m
 
 
 def _props(measured: dict) -> dict:
@@ -125,7 +131,8 @@ def main() -> int:
 
     scored = [f for f in files if f["scored"]]
     out = {
-        "edition": EDITION,
+        "edition": _squishy().EDITION,
+        "schema_version": schema.get("schema_version"),
         "generated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "base_url": BASE,
         "note": ("Per-file addressable inventory. `scored:true` files are the corpus "

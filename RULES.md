@@ -129,7 +129,7 @@ The pipeline (`scripts/publish-corpus.py`, `make mint|publish|release`) enforces
 `mint` seeds `source/` for every minted member (generating the ones we can reproduce,
 promoting the rest from an existing copy); `publish` populates the working corpus
 (upstream re-fetched + sha-verified, minted server-side-copied from `source/`); and a
-**release copies the frozen edition into `<edition>/` (e.g. `v1.0/`) — minted straight
+**release copies the frozen edition into `<edition>/` (the edition year, e.g. `2026/`) — minted straight
 from `source/`, upstream re-fetched to prove it still reproduces.** Nothing is ever
 uploaded whose sha256 doesn't match the manifest. A minted member with no copy in
 `source/` blocks the release (we never freeze bytes we can't stand behind).

@@ -155,7 +155,7 @@ numeric, narrow, integer-heavy weather) and replace the other two with structura
   or scientific-sensor series under a permissive/PD license) → dense decimal-float
   bytes, near-incompressible columns, different again.
 These two need acquire + measure + SHA before they enter the manifest — tracked in
-`plans/squishy-1.0-readiness.md`.
+`plans/squishy-2026-readiness.md`.
 
 **Size-sampling rule:** add a large rung **only where redundancy grows with
 length** — that's where window size and long-range matching change which codec
@@ -209,4 +209,4 @@ board is a **partial run over those small members** (large rungs pending), not y
 a Squishy Score. The size-spanning corpus is being assembled (load-bearing large
 rungs per kind) and the Score computed over the complete edition before it freezes.
 No Squishy Score is cited until then. See `RULES.md` and
-`plans/squishy-1.0-readiness.md`.
+`plans/squishy-2026-readiness.md`.

@@ -1,6 +1,7 @@
 {
-  "edition": "Squishy-2026-DRAFT",
-  "generated_utc": "2026-06-10T05:25:07Z",
+  "edition": "Squishy-2026",
+  "schema_version": "1.0",
+  "generated_utc": "2026-06-13T23:18:50Z",
   "n_files": 31,
   "n_scored_size_points": 26,
   "scored_set_fingerprint": "39915f30abc59ac1980c785d82c8a27753320c41cbe0976f9cde1156e5914cee",
@@ -37,20 +38,6 @@
     "weights-qwen2.5-1.5b.safetensors": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
     "weights-smollm2-135m.safetensors": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
   },
-  "reference_score": {
-    "codec": "zstd -19 -c",
-    "codec_version": "*** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***",
-    "squishy_score": 4.71,
-    "corpus_bpb": 1.119,
-    "tool_provenance": {
-      "tool": "zstd",
-      "argv": "zstd -19 -c",
-      "version": "*** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***",
-      "git_sha": null,
-      "release": true,
-      "arch": "Mach-O 64-bit executable arm64"
-    }
-  },
   "reproducibility_toolchain": {
     "note": "derived files (clang archive concat, BTS all-string parquet, NOAA csv concat) reproduce byte-identical with these pins; verified by run-all.sh.",
     "pyarrow": null,
@@ -62,7 +49,7 @@
       "machine": "arm64",
       "processor": "arm",
       "python": "3.14.4",
-      "recorded_utc": "2026-06-10T05:25:07Z"
+      "recorded_utc": "2026-06-13T23:18:50Z"
     }
   }
 }

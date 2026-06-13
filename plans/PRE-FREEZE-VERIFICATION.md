@@ -3,7 +3,7 @@
 > ⚠️ **STALE — regenerate at freeze.** This snapshot describes the **15-member**
 > core. The core is now **19** (4 Binary & Media additions: `symbols`, `wasm`,
 > `winexe`, `armexe`), whose bytes are not yet published to the mirror. Every
-> count and result below (`15/15`, the file table, the tarball size) must be
+> count and result below (`15/15`, the file table, per-file sizes) must be
 > re-run and regenerated against the 19-member core — with the new members'
 > bytes published — as part of the freeze. Do not trust these numbers as-is.
 
@@ -23,7 +23,7 @@ reproduce. (Regenerated 2026-05-29 after the NYC-taxi decoupling: `csv`→NOAA,
 | PII / secret scan | `uv run python scripts/pii-scan.py` | no credential findings; `csv` clean, `sqlite` only numeric false-positives |
 | Distribution audit | `uv run python scripts/audit-distribution.py` | **17/17 objects** size + sha256 (x-amz-meta) + public ✓ |
 | Provenance | `build/meta/LICENSE-MANIFEST.csv` | 15/15 core rows (source, license, sha256) |
-| Canonical bytes (F1) | `draft/squishy-2026.tar` (419 MB, 15/15) + `CHECKSUMS.sha256` | published, audited |
+| Canonical bytes (F1) | `edition.json` manifest + `CHECKSUMS.sha256` (per-file; no combined tarball — bulk fetch via `--download-only`) | published, audited |
 | Round-trip (losslessness) | `squishy bench --cmd "<c>" --verify --decompress "<d>"` / `squishy-calculate --verify` | available per codec; refuses a score on mismatch |
 | Verification pass-4 (cross-impl) | `uv run python scripts/verify-pass4.py` | **PASS** — stdlib zlib/bz2/lzma reproduce the gzip/bzip2/xz board within **0.05%** (tol 2%) |
 | Size convergence | `uv run python scripts/size-convergence.py` | byte-stream files converge (large ≤3.5%); structured n/a (need row-boundary subset) |
@@ -76,15 +76,19 @@ These need human judgment — the agent cannot do them:
    the pinned-CLI gzip/bzip2/xz board within 0.05%. Artifact:
    `build/meta/verification-pass4.json`. (No human action needed.)
 
-## Freeze (#18) — owner, irreversible
+## Freeze — owner, irreversible (OWNER/CRED-GATED)
 
-1. Copy `s3://squishy-corpus/draft/` → the pristine `s3://squishy-corpus/v1.0/`.
-2. Tag `v1.0.0`; optionally S3 Object-Lock (governance) the released objects.
-3. Mint the **Zenodo DOI** (rotated token, env var only) over the core tarball +
-   manifest + checksums + LICENSE-MANIFEST + NOTICE; record the git tag/commit so
-   the regeneratable tier is covered. Update CITATION.cff (real date + DOI).
+1. `make release EDITION=2026` — copies the verified per-file set (allowlist, not
+   recursive) from `draft/` to the pristine `s3://squishy-corpus/2026/`; optionally
+   apply S3 Object-Lock (governance mode) to the released objects.
+2. Git tag `Squishy-2026`; push tag.
+3. Mint the **Zenodo DOI** (`scripts/zenodo-deposit.py`; rotated token, env var only)
+   over the per-file manifest + checksums + LICENSE-MANIFEST + NOTICE; record the git
+   tag/commit so the regeneratable tier is covered. Update CITATION.cff (real date +
+   DOI). **No combined tarball** — the Zenodo deposit is per-file; bulk fetch is
+   `squishy-calculate --download-only`.
 4. Cross-region / Glacier backup copy.
-5. Recompute + publish the final board; regenerate the explorer; announce.
+5. Recompute + publish the final board (`make calculate-all`); regenerate the explorer; announce.
 
 ## Notes for the record
 

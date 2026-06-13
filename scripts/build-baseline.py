@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """Emit build/meta/baseline.json — the committed golden record the whole pipeline is
-verified against. It pins, for the current edition:
+verified against. It pins, for the current edition, ONLY edition-immutable facts:
   • the sha256 of every corpus file (from edition.json),
-  • the sha256 of edition.json itself,
-  • the reference codec's complete-edition Squishy Score + provenance,
+  • the scored-set fingerprint (names/shas/kinds/categories),
   • the toolchain versions that make derived files reproduce byte-for-byte.
+
+It deliberately does NOT pin any codec's Squishy Score: a score is a measurement of
+(codec, version, argv) and changes when a codec ships a new release, so freezing one
+here would make the immutable golden record go stale the day zstd updates. Codec
+scores live with the boards (build/meta/squishy-score-complete.json / squishy-scores.json),
+each fully version-stamped and re-run when codecs move.
 
 `scripts/run-all.sh` regenerates everything from scratch and diffs against this file,
 so "end-to-end verification" is an equality check, not an eyeball. Re-run this only
@@ -48,22 +53,14 @@ def main() -> int:
           for f in sorted(ed["files"], key=lambda x: x["name"])]
     scored_set_fingerprint = hashlib.sha256(json.dumps(fp, sort_keys=True).encode()).hexdigest()
 
-    ref = {}
-    cp = REPO / "build/meta/squishy-score-complete.json"
-    if cp.exists():
-        d = json.loads(cp.read_text())
-        ref = {"codec": d.get("codec"), "codec_version": d.get("codec_version"),
-               "squishy_score": d.get("squishy_score"), "corpus_bpb": d.get("corpus_bpb"),
-               "tool_provenance": d.get("tool_provenance")}
-
     baseline = {
         "edition": ed.get("edition"),
+        "schema_version": ed.get("schema_version"),
         "generated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "n_files": len(files),
         "n_scored_size_points": sum(len(p) for ks in sq.scored_corpus().values() for p in ks.values()),
         "scored_set_fingerprint": scored_set_fingerprint,
         "files_sha256": files,
-        "reference_score": ref,
         "reproducibility_toolchain": {
             "note": "derived files (clang archive concat, BTS all-string parquet, NOAA csv concat) "
                     "reproduce byte-identical with these pins; verified by run-all.sh.",
@@ -74,8 +71,7 @@ def main() -> int:
     }
     dst = REPO / "build/meta/baseline.json"
     dst.write_text(json.dumps(baseline, indent=2) + "\n")
-    print(f"wrote {dst}: {len(files)} files pinned, scored-set {scored_set_fingerprint[:12]}, "
-          f"reference {ref.get('codec')} = {ref.get('squishy_score')}×")
+    print(f"wrote {dst}: {len(files)} files pinned, scored-set {scored_set_fingerprint[:12]}")
     return 0
 
 

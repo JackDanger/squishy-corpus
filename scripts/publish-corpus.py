@@ -17,7 +17,7 @@ Every member is one of two ORIGINS:
 Three prefixes in one bucket:
   source/   — write-once source-of-record for every MINTED member (our authority)
   draft/    — the working/served corpus (what the live site fetches)
-  <edition>/— a frozen release (e.g. v1.0), copied from source/ (minted) + upstream (re-fetched)
+  <edition>/— a frozen release (the edition year, e.g. 2026), copied from source/ (minted) + upstream (re-fetched)
 
 Modes:
   --plan              offline: print each member's origin + acquisition method (no AWS)
@@ -411,7 +411,7 @@ def main() -> int:
     ap.add_argument("--plan", action="store_true")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--mint", action="store_true")
-    ap.add_argument("--release", metavar="EDITION", help="freeze into this prefix, e.g. v1.0")
+    ap.add_argument("--release", metavar="EDITION", help="freeze into this prefix, the edition year, e.g. 2026")
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--only", action="append", default=[])
     a = ap.parse_args()

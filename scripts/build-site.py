@@ -440,6 +440,28 @@ def main() -> int:
     import shutil
     shutil.copyfile(ASSETS / "squishy-cube.js", OUT / "squishy-cube.js")
 
+    # Stage the SERVED metadata into the site build so the single deploy path
+    # (deploy-site.sh pushes build/site → the draft prefix) keeps the public mirror
+    # current. Without this the CDN's CHECKSUMS.sha256 / edition.json silently go
+    # stale (the bug that left the published manifest missing the 4 executables).
+    # These are exactly the meta files the freeze allowlist copies into the frozen
+    # edition, so the public mirror and the Zenodo deposit carry identical metadata.
+    META = REPO / "build" / "meta"
+    served_meta = [
+        "edition.json", "schema.json", "baseline.json", "CHECKSUMS.sha256",
+        "LICENSE-MANIFEST.csv", "NOTICE", "squishy-scores.json",
+        "file-properties.json", "scale-properties.json", "size-convergence.json",
+        "verification-pass4.json",
+    ]
+    for name in served_meta:
+        src = META / name
+        if src.exists():
+            shutil.copyfile(src, OUT / name)
+        else:
+            print(f"  ⚠ served meta missing, not staged: {name}")
+    if (META / "LICENSES").is_dir():
+        shutil.copytree(META / "LICENSES", OUT / "LICENSES", dirs_exist_ok=True)
+
     page = TEMPLATE.format(lbhead=lbhead, lb=lb, cards=cards, n=n, ntools=len(tools),
                            coverage_table=coverage_table(cube))
     page = page.replace("/*CUBE_DATA*/", json.dumps(cube, separators=(",", ":")))

@@ -1,13 +1,13 @@
-# Squishy 1.0 — Readiness Plan
+# Squishy-2026 — Readiness Plan
 
-What must be true before `Squishy-2026` v1.0.0 is **bulletproof**: the right
-data, verified four independent ways, distributed correctly, and permanent
-enough to cite for 20 years.
+What must be true before the **Squishy-2026 freeze** is **bulletproof**: the
+right data, verified four independent ways, distributed correctly, and
+permanent enough to cite for 20 years.
 
-> v1.0.0 is **frozen forever**. Once tagged + DOI'd, the bytes never change.
-> Everything below is the gate to earning that freeze. Until then, anything
-> published (currently under `s3://squishy-corpus/v1.0/`) is **DRAFT** and must
-> not be advertised as citable.
+> **The Squishy-2026 freeze is forever.** Once tagged `Squishy-2026` + DOI'd,
+> the bytes never change. Everything below is the gate to earning that freeze.
+> Until then, anything published (currently under `s3://squishy-corpus/draft/`)
+> is **DRAFT** and must not be advertised as citable.
 
 Status legend: `[ ]` todo · `[~]` partial/exists-verify · `[x]` done.
 Companion: `plans/squishy-score.md` (the score definition).
@@ -32,8 +32,8 @@ archivist · IP lawyer · newcomer) reviewed the repo. Consensus: strong foundat
   them straight into the edition). `mint` seeds `source/` (regenerating the
   reproducible ones — clang-archive, bts-parquet — and promoting the rest from an
   existing copy); a minted member with no `source/` copy **blocks the freeze**. This is
-  the concrete mechanism behind "`v1.0/` is the immutable frozen copy." **Owner-run
-  (needs creds):** `make mint` → `make publish` → `make release EDITION=v1.0`.
+  the concrete mechanism behind "`2026/` is the immutable frozen copy." **Owner-run
+  (needs creds):** `make mint` → `make publish` → `make release EDITION=2026`.
   The HuggingFace weights are now **pinned to immutable commit revisions**
   (`resolve/<sha>/model.safetensors`), verified to reproduce the recorded sha256, so all
   four moved minted → **upstream** (re-fetchable). Partition is now 15 upstream / 12
@@ -65,8 +65,10 @@ archivist · IP lawyer · newcomer) reviewed the repo. Consensus: strong foundat
   CC-BY-SA, MPL, NYC-TLC). *(lawyer, archivist)*
 
 **P1**
-- [ ] **Deterministic tarball** (`--sort=name --owner=0 --group=0 --numeric-owner
-  --mtime=@0`) — current tar bakes uid/gid/mtime → SHA not reproducible. *(archivist)*
+- [x] **No combined tarball — DECIDED.** Distribution is per-file via the edition
+  manifest (per-file HTTPS URL + SHA-256 in `edition.json`); `build-tarball.sh` was
+  deleted. Bulk fetch is `squishy-calculate --download-only` (resumable, verifies all
+  files). *(archivist)*
 - [ ] **Pin derived-file recipes as code** (`scripts/build-corpus/<name>.sh`, tool
   versions pinned, CI-assert SHA==CHECKSUMS) + pin mutable sources (NOAA `by_year`
   overwritten yearly; HF `resolve/main` moving ref) to immutable snapshots. *(archivist)*
@@ -87,7 +89,7 @@ archivist · IP lawyer · newcomer) reviewed the repo. Consensus: strong foundat
 **P2 — hygiene**
 - [ ] delete `scripts/score.py` (untangle from Makefile) + the duplicate `missing =`
   line in `squishy.py`; README install/clone instructions (hero isn't on PATH);
-  `×`/`x` + 4.4/4.44 consistency; soften "authoritative" pre-1.0; `bench`-vs-`calculate`
+  `×`/`x` + 4.4/4.44 consistency; soften "authoritative" pre-freeze; `bench`-vs-`calculate`
   table; replace the coverage-map "(soon)" dead link; NYC-TLC database-right note.
 
 ---
@@ -154,15 +156,17 @@ An Opus advisor reviewed this plan. Headlines:
 
 **FATALS (must fix before freeze):**
 - **F1 — canonical input bytes aren't in the release.** **RESOLVED (decision):**
-  ship the core bytes **uncompressed**, with `sha256(raw)` per file + a one-shot
-  uncompressed core tarball; those exact bytes are the denominator-of-record.
-  Rejected the "store gzip + `Content-Encoding: gzip` transparent-decompress"
-  option: S3 sends that header un-negotiated, so plain curl/wget/most HTTP
-  clients receive gzipped bytes verbatim while browsers decompress → delivery is
-  client-dependent and `sha256(raw)` only verifies for some clients. Storage
-  saving on the small core is negligible. (If transfer cost ever matters, use
-  CloudFront *negotiated* auto-compression over raw objects — not stored
-  Content-Encoding.) Still blocks freeze until the raw core is published.
+  ship the core bytes **uncompressed**, with `sha256(raw)` per file; those exact
+  bytes are the denominator-of-record.  Rejected the "store gzip +
+  `Content-Encoding: gzip` transparent-decompress" option: S3 sends that header
+  un-negotiated, so plain curl/wget/most HTTP clients receive gzipped bytes
+  verbatim while browsers decompress → delivery is client-dependent and
+  `sha256(raw)` only verifies for some clients. Storage saving on the small core
+  is negligible. (If transfer cost ever matters, use CloudFront *negotiated*
+  auto-compression over raw objects — not stored Content-Encoding.) **No
+  combined tarball** — distribution is per-file via the edition manifest
+  (`edition.json`); bulk fetch is `squishy-calculate --download-only`. Still
+  blocks freeze until the raw files are published.
 - **F2 — reference-board numbers depend on codec version.** `brotli 1.2.0` vs a
   future `brotli 2.x` gives a different number for the same corpus. **Fixed in
   code:** `squishy-scores.json` now stamps `codec_version` per row and is labeled
@@ -170,9 +174,9 @@ An Opus advisor reviewed this plan. Headlines:
 - **F3 — validate before public.** PII/license/format checks must pass before
   bytes are public. *(Initial pass run: no credential patterns; ratios sane.
   Full per-file + the 4 new files still pending.)*
-- **F4 — `v1.0/` must be pristine until the freeze.** **DONE:** in-flight draft
-  moved to `s3://squishy-corpus/draft/`; all `v1.0/` versions purged. First write
-  to `v1.0/` will be the release.
+- **F4 — `2026/` must be pristine until the freeze.** **DONE:** in-flight draft
+  moved to `s3://squishy-corpus/draft/`; all stale prefixes purged. First write
+  to `s3://squishy-corpus/2026/` will be the `make release EDITION=2026` run.
 
 **Cut as over-engineering:** sealed holdout (implies a 20-yr leaderboard
 *service* — keep dated editions instead); S3 Object Lock in compliance mode (a
@@ -196,9 +200,10 @@ small + downloadable). See Phase 1a.
    (today's numbers are for the wrong, 30-file set — draft only).
 2. Decide & ship the canonical raw bytes-of-record (F1).
 3. PII + license + format-band validation on the draft *before* any public byte (F3).
-4. Upload to `draft/`; run the 4 verification passes; only on all-green does the
-   first write to `v1.0/` happen — immediately followed by the **Zenodo deposit**
-   (which IS the permanence + disaster-recovery, not an afterthought).
+4. Upload to `draft/`; run the 4 verification passes; only on all-green does
+   `make release EDITION=2026` copy the freeze into `s3://squishy-corpus/2026/`
+   — immediately followed by the **Zenodo deposit** (which IS the permanence +
+   disaster-recovery, not an afterthought).
 
 **Single most important thing:** freeze the canonical *input* bytes and
 version-stamp every published number (F1+F2) — without both, no citation
@@ -210,8 +215,9 @@ reproduces and the 20-year premise voids.
 
 These are decided. Listed for the record, not for re-litigation.
 
-- [x] **Prefix:** draft lives at `draft/`; `v1.0/` reserved & pristine for the
-  freeze (done — v1.0/ purged of all versions).
+- [x] **Prefix:** draft lives at `s3://squishy-corpus/draft/`; the freeze lands
+  at `s3://squishy-corpus/2026/` (the edition year, not a semver). All stale
+  prefixes purged.
 - [x] **Named core = 16 files** (advisor-locked) + Squishy-Extended. See
   `squishy-score.md` for the table.
 - [x] **Edition & cadence:** `Squishy-2026`, ~4-year refresh.
@@ -221,7 +227,7 @@ These are decided. Listed for the record, not for re-litigation.
   dated editions handle overfitting instead).
 - [x] **Object Lock:** governance mode at most, applied AT freeze — not a
   pre-freeze gate (compliance mode would block fixing a discovered problem).
-- [x] **CDN/custom domain:** POST-1.0 (not needed given manifest-of-URIs
+- [x] **CDN/custom domain:** post-freeze (not needed given manifest-of-URIs
   delivery; add only if egress bills bite).
 
 ---
@@ -364,9 +370,9 @@ encoding; sqlite `VACUUM` + `page_size`; CSV `\n` + UTF-8), not just bytes.
   manifest excludes them; downloaders are warned.
 - [ ] **Security audit:** only `GetObject` is public (no list, no put, no config);
   no credentials anywhere in artifacts; consider MFA-delete on versioning.
-- [ ] **Disaster recovery:** the frozen 1.0.0 is backed up beyond one bucket —
-  Zenodo deposit + a cross-region or Glacier copy. A deleted bucket must not
-  destroy the corpus.
+- [ ] **Disaster recovery:** the frozen Squishy-2026 edition is backed up beyond
+  one bucket — Zenodo deposit + a cross-region or Glacier copy. A deleted bucket
+  must not destroy the corpus.
 - [ ] **Cost:** storage + projected egress estimate; a billing alarm. CDN if egress
   is a concern.
 
@@ -374,11 +380,10 @@ encoding; sqlite `VACUUM` + `page_size`; CSV `\n` + UTF-8), not just bytes.
 
 ## Phase 5 — Permanence & citation (cited for 20 years)
 
-- [ ] **Zenodo deposit + DOI** for the frozen named core (one-shot tarball +
-  manifest + checksums + license manifest). The canonical citation target.
+- [ ] **Zenodo deposit + DOI** for the frozen named core (per-file manifest +
+  checksums + license manifest + all distributed data files). The canonical
+  citation target. No combined tarball — bulk fetch via `squishy-calculate --download-only`.
 - [ ] **`CITATION.cff`** and a "How to cite" snippet.
-- [ ] **One-shot core tarball** (`squishy-2026.tar`, like `silesia.tar`) so
-  the cited set downloads in one command.
 - [ ] **README** (corpus overview, the score, categories, file table, licenses,
   how to run, version policy).
 - [ ] **LICENSE-MANIFEST.csv**: per file — source URL, sha256, license, license
@@ -389,7 +394,7 @@ encoding; sqlite `VACUUM` + `page_size`; CSV `\n` + UTF-8), not just bytes.
 ## Phase 6 — Tooling & adoption
 
 - [~] **One-command runner** (`scripts/squishy.py`): `board` + live `bench --cmd`.
-  Harden for 1.0: fetch the DOI-pinned corpus if absent, hash-verify every file
+  Harden for freeze: fetch the DOI-pinned corpus if absent, hash-verify every file
   before scoring, handle codecs that need file args (not just stdin/stdout),
   print the rules + tool versions, exit non-zero on any missing/altered file.
 - [ ] **Package the runner** (pipx/uv tool or a single static script) so
@@ -444,8 +449,8 @@ notes.
 
 ## Phase 9 — Release
 
-- [ ] Freeze the named core; tag `v1.0.0`; publish to `v1.0/` (immutable,
-  Object-Locked); Zenodo DOI minted.
+- [ ] **Owner-run (needs creds):** `make release EDITION=2026` → publishes to
+  `s3://squishy-corpus/2026/` (immutable, Object-Locked); git tag `Squishy-2026`; Zenodo DOI minted.
 - [ ] CHANGELOG / release notes including the Phase-8 sign-offs.
 - [ ] Announce only after Phases 1–8 are green.
 
@@ -462,11 +467,12 @@ now **resolved** (2026-06-08): streaming `--verify` round-trips; checksums fail 
 against `edition.json`; zpaq removed from the reproducible panel.
 
 ### P0 — found during the owner's representativeness review (2026-05-29)
-- [x] **`freeze.sh` would have frozen 61 GB of retired junk.** It did
-  `cp draft/ → v1.0/ --recursive` (1,984 objects); ~98% is retired byte-property-cube
-  build output (`individual/`, `bundle/`, `bundles/`, `negative/`, `bench/`). Fixed:
-  the freeze now copies an **allowlist of only the v1.0 product** (36 objects: 19
-  core + 3 scale weights + LICENSES + provenance + meta) with a dry-run + confirm.
+- [x] **`freeze.sh` / old release script would have frozen 61 GB of retired junk.**
+  It did `cp draft/ → 2026/ --recursive` (1,984 objects); ~98% is retired
+  byte-property-cube build output (`individual/`, `bundle/`, `bundles/`,
+  `negative/`, `bench/`). Fixed: the release step now copies an **allowlist of
+  only the edition product** (36 objects: 19 core + 3 scale weights + LICENSES +
+  provenance + meta) with a dry-run + confirm.
 - [x] **Scale weight shipped with no provenance.** The bucket had three weights
   (`135m`, `0.5b`, `1.5b`) but `LICENSE-MANIFEST.csv` listed only two — the
   `qwen2.5-0.5b` file had no manifest row. Added (Qwen2.5-0.5B, Apache-2.0, sha+size);
@@ -497,7 +503,7 @@ against `edition.json`; zpaq removed from the reproducible panel.
   `bpb` to 3, computed from full-precision per-file sizes; ties at that precision
   are ties. (Closed 2026-05-29; also fixed a stale 2/3/3/3/3 → 2/3/3/3/4 balance.)
 
-### P1 — should fix before 1.0
+### P1 — should fix before freeze
 - [~] **Verify decompression (round-trip).** Done for the streaming path:
   `squishy-calculate --verify --decompress "<cmd>"` round-trips every file and
   refuses a score on any mismatch; `RULES.md` now requires lossless round-trip.
@@ -546,7 +552,8 @@ against `edition.json`; zpaq removed from the reproducible panel.
   byte against the published SHA-256 automatically, and the manifest/CHECKSUMS
   carry the hashes.
 - [~] **`CITATION.cff`** — DOI/identifiers structure + freeze-date TODO wired in
-  (concrete values are filled by `zenodo-deposit.py` / the owner at v1.0.0 freeze).
+  (concrete values filled by `zenodo-deposit.py` / the owner at the Squishy-2026
+  freeze; cite `Squishy-2026` + the Zenodo DOI).
 - [ ] **`GOVERNANCE.md`** — who curates `Squishy-2030`, how cross-edition
   overfitting is measured (publish per-codec ratio delta), deprecation policy.
 - [ ] **Make derived-file transforms reproducible** — pin the exact recipe for
@@ -579,4 +586,4 @@ against `edition.json`; zpaq removed from the reproducible panel.
   (D ≤ 1−R; C–K correlation 0.71 on naturals), K not scale-invariant, and no
   persona needed it. Superseded by the curated-realistic-set + Squishy Score.
   History in git + memory notes. The `parse_cwk.py` measurement is not wired into
-  the product and should not drive 1.0.
+  the product and should not drive the freeze.

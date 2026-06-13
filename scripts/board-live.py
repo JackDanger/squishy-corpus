@@ -45,7 +45,7 @@ def main() -> int:
                              "whole corpus (one vote per file; no weighting, no threshold; "
                              "dimensionless, NOT a bit rate). corpus_bpb = byte-weighted "
                              "8·total_out/total_in (operational rate)."),
-        "edition": "Squishy-2026-DRAFT",
+        "edition": sq.EDITION,
         "core_files": n_core,
         "host_provenance": sq.host_provenance(),       # machine/arch the scores ran on
         "missing": missing,

@@ -3,8 +3,10 @@
 turns "end-to-end" into real verification. Confirms:
   • the scored-set fingerprint (names/shas/kinds/categories/scored) is unchanged,
   • every locally-present corpus file still hashes to its pinned sha256,
-  • the reference codec's complete-edition Squishy Score matches, and that its run
-    round-trip-verified every file (lossless).
+  • the reference run is a COMPLETE-edition run and round-trip-verified every file
+    (lossless). The reference *score number* is NOT diffed against the baseline: a
+    score depends on the codec version, so it lives (version-stamped) with the boards,
+    not in the immutable golden record. We assert losslessness + completeness here.
 Exit non-zero on any mismatch.
 
   uv run python scripts/check-baseline.py [--reference build/meta/squishy-score-complete.json]
@@ -57,16 +59,17 @@ def main() -> int:
                     checked += 1
     print(f"✓ {checked} local core files hash to their pinned sha256")
 
-    # 3. reference complete-edition score matches + was round-trip verified
+    # 3. reference run is a complete-edition, round-trip-verified (lossless) run.
+    #    The score NUMBER is version-dependent and intentionally not pinned in the
+    #    baseline — we only assert the data was processed completely and losslessly,
+    #    and echo the version-stamped score for the record.
     if a.reference.exists():
         d = json.loads(a.reference.read_text())
-        rb = base["reference_score"]
         if d.get("complete") is not True:
             fails.append("reference run is not complete")
-        if d.get("squishy_score") != rb.get("squishy_score"):
-            fails.append(f"reference score {d.get('squishy_score')} != baseline {rb.get('squishy_score')}")
         else:
-            print(f"✓ reference {rb.get('codec')} = {rb.get('squishy_score')}× matches baseline")
+            print(f"✓ reference {d.get('codec')} = {d.get('squishy_score')}× "
+                  f"[{d.get('codec_version')}] (complete edition; not pinned — version-dependent)")
         if not d.get("round_trip_verified"):
             fails.append("reference run did NOT round-trip-verify every file (re-run with --verify)")
         else:

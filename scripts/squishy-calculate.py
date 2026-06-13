@@ -27,7 +27,6 @@ import argparse, hashlib, importlib.util, json, os, re, shutil, subprocess, sys,
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-EDITION = "Squishy-2026"
 DEFAULT_BASE = "https://squishy.jackdanger.com"
 
 
@@ -35,6 +34,9 @@ def load_squishy():
     s = importlib.util.spec_from_file_location("sq", REPO / "scripts" / "squishy.py")
     m = importlib.util.module_from_spec(s); s.loader.exec_module(m)
     return m
+
+
+EDITION = load_squishy().EDITION  # single source of truth: scripts/squishy.py:EDITION
 
 
 def sha256_file(p: Path) -> str:
@@ -188,18 +190,66 @@ def verify_roundtrip_file(comp_cmd: str, decomp_cmd: str, path: Path) -> tuple[b
         return ok, csize, time.perf_counter() - t0
 
 
+def _download_only(args) -> int:
+    """Fetch + sha-verify + cache every file in the edition roster.  Skips files that
+    are already cached and verified.  Prints per-file ✓/✗ and a final summary.
+    Resumable and idempotent: re-running after an interrupt picks up where it left off.
+    No codec or scoring work is done."""
+    sq = load_squishy()
+    cache = Path(args.cache); cache.mkdir(parents=True, exist_ok=True)
+    sc = sq.scored_corpus()
+    # All files in the edition (scored + diagnostics) from edition.json.
+    ed_path = sq.REPO / "build" / "meta" / "edition.json"
+    ed = json.loads(ed_path.read_text()) if ed_path.exists() else {}
+    all_points = ed.get("files", [])
+    if not all_points:
+        # Fall back to just the scored corpus if edition.json is absent.
+        all_points = [pt for ks in sc.values() for pts in ks.values() for pt in pts]
+    n_total = len(all_points)
+    print(f"{EDITION} · {n_total} files · download-only (fetch + sha-verify, no scoring)")
+    print(f"  base:  {args.base}\n  cache: {cache}")
+    n_ok = 0; n_fail = 0
+    for i, pt in enumerate(all_points, 1):
+        name = pt.get("name") or pt.get("key", "?")
+        key = pt.get("key")
+        sha = pt.get("sha256")
+        if not key or not sha:
+            print(f"  [{i:>2}/{n_total}] {name:<40} ✗  no key/sha256 in edition.json")
+            n_fail += 1; continue
+        dst = cache / key
+        if dst.exists() and sha256_file(dst) == sha:
+            print(f"  [{i:>2}/{n_total}] {name:<40} ✓  already cached")
+            n_ok += 1; continue
+        try:
+            ensure_file(args.base, key, sha, cache)
+            print(f"  [{i:>2}/{n_total}] {name:<40} ✓  fetched+verified")
+            n_ok += 1
+        except SystemExit as e:
+            print(f"  [{i:>2}/{n_total}] {name:<40} ✗  {e}")
+            n_fail += 1
+    print(f"\n{n_ok}/{n_total} verified, cache at {cache}")
+    return 0 if n_fail == 0 else 1
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(prog="squishy-calculate", description="Stream the Squishy corpus and compute a Squishy Score.")
-    ap.add_argument("--cmd", required=True, help='compressor command; stdin→stdout, or with {in}/{out}')
+    ap.add_argument("--cmd", default=None, help='compressor command; stdin→stdout, or with {in}/{out}')
     ap.add_argument("--base", default=os.environ.get("SQUISHY_BASE", DEFAULT_BASE), help="corpus base URL")
     ap.add_argument("--cache", default=os.environ.get("SQUISHY_CACHE", str(Path.home() / ".cache" / "squishy" / EDITION)))
     ap.add_argument("--verify", action="store_true", help="round-trip each file (requires --decompress)")
     ap.add_argument("--decompress", help="decompressor command for --verify; stdin→stdout or {in}/{out}")
     ap.add_argument("--json", action="store_true", help="emit the full result as JSON")
     ap.add_argument("--fresh", action="store_true", help="ignore cached per-file results (still reuse verified bytes)")
+    ap.add_argument("--download-only", action="store_true",
+                    help="fetch + sha-verify + cache every edition file; skip all codec/scoring work. "
+                         "Resumable: already-verified files are skipped. Use this to pre-populate the "
+                         "cache before an air-gapped scoring run.")
     args = ap.parse_args()
-    if not args.cmd.strip():
-        ap.error('--cmd is empty — pass a compressor command, e.g. --cmd "zstd -19 -c"')
+    if args.download_only:
+        return _download_only(args)
+    if not args.cmd or not args.cmd.strip():
+        ap.error('--cmd is required unless --download-only is set; '
+                 'e.g. --cmd "zstd -19 -c"')
     if args.verify and not args.decompress:
         ap.error("--verify requires --decompress \"<cmd>\"")
 

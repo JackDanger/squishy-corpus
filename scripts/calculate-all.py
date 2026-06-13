@@ -31,7 +31,6 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-EDITION = "Squishy-2026"
 BOARD = REPO / "build" / "meta" / "squishy-board-complete.json"
 
 
@@ -39,6 +38,9 @@ def load_squishy():
     s = importlib.util.spec_from_file_location("sq", REPO / "scripts" / "squishy.py")
     m = importlib.util.module_from_spec(s); s.loader.exec_module(m)
     return m
+
+
+EDITION = load_squishy().EDITION  # single source of truth: scripts/squishy.py:EDITION
 
 
 def run_one(label: str, argv: str, log: Path) -> dict:

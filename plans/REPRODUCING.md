@@ -28,10 +28,12 @@ Fetched-verbatim files (enwik9, genome FASTQ, NOAA single-year, USGS json, USDA
 sqlite, photo, movie, weights, minjs, markup) reproduce trivially from their pinned
 source URL + sha256 in `LICENSE-MANIFEST.csv` / `edition.json`.
 
-## The one-shot tarball
-Built at freeze with `scripts/build-tarball.sh <dir> squishy-2026.tar` (GNU tar,
-`--sort=name --owner=0 --group=0 --numeric-owner --mtime=@0`) so the citable archive
-has a fixed sha256 independent of the machine that built it.
+## Archival record (Zenodo DOI)
+The Zenodo deposit (`scripts/zenodo-deposit.py`) uploads `edition.json`, `schema.json`,
+`baseline.json`, `CHECKSUMS.sha256`, `LICENSE-MANIFEST.csv`, `NOTICE`,
+`squishy-scores.json`, and every distributed data file (from `build/raw/<key>`,
+derived from `edition.json`).  No combined tarball is distributed; the per-file
+Zenodo record + `squishy-calculate --download-only` is the one-command bulk fetch.
 
 ## End-to-end
 ```

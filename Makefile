@@ -24,7 +24,7 @@ help:
 	@echo "  make deploy              — build the site, push to S3, invalidate the CDN (live)"
 	@echo "  make publish [ARGS=…]    — stream the corpus into S3 working prefix (--plan/--check/--force)"
 	@echo "  make mint                — seed the source-of-record (source/) for MINTED members"
-	@echo "  make release EDITION=v1.0 — freeze into EDITION/: minted from source/, upstream re-fetched"
+	@echo "  make release EDITION=2026 — freeze into EDITION/: minted from source/, upstream re-fetched"
 	@echo "  make coverage            — print the 3-axis coverage summary"
 	@echo "  make baseline / check    — write / diff the golden baseline"
 	@echo "  make validate audit pii  — core validation, distribution audit, PII scan"
@@ -78,7 +78,7 @@ deploy: site
 #   aws-vault exec personal -- make publish ARGS=--check
 #   aws-vault exec personal -- make mint              # seed source-of-record (run before publish/release)
 #   aws-vault exec personal -- make publish           # populate the working (draft) corpus
-#   aws-vault exec personal -- make release EDITION=v1.0   # freeze the edition
+#   aws-vault exec personal -- make release EDITION=2026   # freeze the edition
 publish:
 	uv run --with pyarrow python scripts/publish-corpus.py $(ARGS)
 
@@ -86,7 +86,7 @@ mint:
 	uv run --with pyarrow python scripts/publish-corpus.py --mint $(ARGS)
 
 release:
-	@test -n "$(EDITION)" || { echo "usage: make release EDITION=v1.0"; exit 2; }
+	@test -n "$(EDITION)" || { echo "usage: make release EDITION=2026"; exit 2; }
 	uv run --with pyarrow python scripts/publish-corpus.py --release "$(EDITION)" $(ARGS)
 
 coverage:

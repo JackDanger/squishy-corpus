@@ -16,7 +16,7 @@ in the file rather than quietly drop the number. A draft is labelled a draft.
 
 > *See it:* the `DO_NOT_CITE` flag in
 > [`build/meta/squishy-score-complete.json`](build/meta/squishy-score-complete.json);
-> the pre-1.0 status note at the foot of the [README](README.md).
+> the pre-freeze status note at the foot of the [README](README.md).
 
 ### 2. Reproducible by anyone, forever
 
