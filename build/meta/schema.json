@@ -1,0 +1,67 @@
+{
+  "$comment": "The Squishy corpus CONSTITUTION — the shape of the score, separate from the bytes (build/meta/edition.json). With a flat geomean (one vote per file), the roster IS the formula, so the roster gets its own small formula here. This file changes RARELY (≈once per decade, reviewed hard); an edition only refills these cells with bytes. Every scored vote is a `cell`; anything distributed but NOT a cell (throughput ladder, incompressible length rungs, bounds fixtures) is a `diagnostic` and is structurally incapable of entering the score. Enforced by tests/test_roster_consistency.py and tests/test_edition_manifest.py.",
+  "schema_version": "1.0",
+  "$edition_note": "The constitution is edition-AGNOSTIC: it carries no edition string on purpose. One schema_version can outlive several dated editions (Squishy-2026, Squishy-2030, …); each edition records which schema_version it conformed to (see build/meta/edition.json). The edition identity's single source of truth is scripts/squishy.py:EDITION.",
+  "categories": ["Prose", "Code & Web", "Structured", "Tabular / DB", "Binary & Media"],
+
+  "roles": {
+    "kind": "The backbone: one human-scale exemplar per (category, kind). Kind cells MUST be mutually lineage-unique (no two share a source/lineage) — this is the anti-gaming independence rule.",
+    "length": "A deliberate re-sample of a kind at a much larger size, to probe long-range matching / large windows / parallel decode. Binds to its kind via `scales`; EXEMPT from lineage-uniqueness (it is supposed to share its kind's data shape). Must share the `kind` it scales; same lineage is preferred, a same-kind different-source rung is permitted (e.g. markup-L=enwik9). At most one length cell per kind.",
+    "incompressible": "A near-incompressible real exemplar (ratio ≈ 1.0). Capped and mechanism-diverse — it lowers every codec's headline by the same factor and so never changes the ranking; extra near-1.0 votes only compress the score's dynamic range, so the budget is small."
+  },
+
+  "budgets": {
+    "$comment": "These are the declared, tested invariants. A change here is a constitutional change, reviewed as such.",
+    "votes_per_kind_max": 2,
+    "length_cells_max": 8,
+    "incompressible_cells_max": 3,
+    "category_votes": {
+      "$comment": "Declared per-category vote count for this edition. The guard test fails if the live roster drifts from these. KNOWN TENSION (flagged for next-edition review): Binary & Media sits at the high end (8) after the 2026 executable-format expansion while Prose sits at the floor (2, no large rung yet). Accepted for Squishy-2026; revisit by either trimming the native-machine-code sub-cluster (exe/winexe/armexe are three ISA/format samples of one regime) or adding a large PD-prose rung.",
+      "Prose": 2,
+      "Code & Web": 6,
+      "Structured": 5,
+      "Tabular / DB": 5,
+      "Binary & Media": 8
+    }
+  },
+
+  "cells": [
+    {"id": "dickens",    "category": "Prose",          "kind": "dickens",  "role": "kind", "lineage": "dickens-pd-gutenberg",       "file": "dickens"},
+    {"id": "aozora",     "category": "Prose",          "kind": "aozora",   "role": "kind", "lineage": "aozora-soseki-pd",          "file": "aozora.txt"},
+
+    {"id": "monorepo",   "category": "Code & Web",      "kind": "monorepo", "role": "kind",   "lineage": "llvm-source",            "file": "monorepo.tar"},
+    {"id": "monorepo-L", "category": "Code & Web",      "kind": "monorepo", "role": "length", "scales": "monorepo", "lineage": "llvm-source", "file": "llvm-project-19.1.0.src.tar"},
+    {"id": "minjs",      "category": "Code & Web",      "kind": "minjs",    "role": "kind",   "lineage": "plotly-min-js",          "file": "minjs.min.js"},
+    {"id": "markup",     "category": "Code & Web",      "kind": "markup",   "role": "kind",   "lineage": "bosak-shakespeare-xml",  "file": "markup.xml"},
+    {"id": "markup-L",   "category": "Code & Web",      "kind": "markup",   "role": "length", "scales": "markup", "lineage": "enwik9-wikipedia-xml", "note": "permitted same-kind different-source length rung (no 1 GB Shakespeare exists; real-data rule forbids minting one)", "file": "enwik9.txt"},
+    {"id": "archive",    "category": "Code & Web",      "kind": "archive",  "role": "kind",   "lineage": "clang-release-mirror",   "note": "distinct kind: a release-mirror artifact (cross-version near-duplicates hundreds of MB apart) — the long-range-dedup corner. Shares the LLVM umbrella with monorepo but is different content (four release trees concatenated vs one dev tree); accepted as independent.", "file": "clang-releases-16-17-18-19.tar"},
+
+    {"id": "json",       "category": "Structured",      "kind": "json",     "role": "kind",   "lineage": "usgs-earthquakes",       "file": "data.json"},
+    {"id": "log",        "category": "Structured",      "kind": "log",      "role": "kind",   "lineage": "nasa-http-log",          "file": "access.log"},
+    {"id": "log-L",      "category": "Structured",      "kind": "log",      "role": "length", "scales": "log", "lineage": "nasa-http-log", "file": "nasa-http-jul-aug-1995.log"},
+    {"id": "genome",     "category": "Structured",      "kind": "genome",   "role": "kind",   "lineage": "ecoli-fastq",            "file": "ecoli.fastq"},
+    {"id": "genome-L",   "category": "Structured",      "kind": "genome",   "role": "length", "scales": "genome", "lineage": "ecoli-fastq", "file": "ecoli-DRR002013-full.fastq"},
+
+    {"id": "csv",        "category": "Tabular / DB",    "kind": "csv",      "role": "kind",   "lineage": "noaa-ghcn",              "note": "NOAA GHCN-Daily 2024 slice.", "file": "data.csv"},
+    {"id": "csv-L",      "category": "Tabular / DB",    "kind": "csv",      "role": "length", "scales": "csv", "lineage": "noaa-ghcn", "note": "NOAA GHCN-Daily 2021-2023 — DISJOINT years from the kind cell, so zero shared bytes (the 1.33 GB 2024-full file, a strict prefix of the slice, was dropped to a diagnostic).", "file": "noaa-ghcn-daily-2021-2023.csv"},
+    {"id": "parquet",    "category": "Tabular / DB",    "kind": "parquet",  "role": "kind",   "lineage": "bts-airline-ontime",     "file": "data.parquet"},
+    {"id": "parquet-L",  "category": "Tabular / DB",    "kind": "parquet",  "role": "length", "scales": "parquet", "lineage": "bts-airline-ontime", "file": "bts-ontime-2022-2024.parquet"},
+    {"id": "sqlite",     "category": "Tabular / DB",    "kind": "sqlite",   "role": "kind",   "lineage": "usda-fooddata",          "file": "data.sqlite"},
+
+    {"id": "exe",        "category": "Binary & Media",  "kind": "exe",      "role": "kind",          "lineage": "hugo-linux-elf",       "file": "tool.bin"},
+    {"id": "symbols",    "category": "Binary & Media",  "kind": "symbols",  "role": "kind",          "lineage": "lua-dwarf-debug",      "file": "symbols.dwarf"},
+    {"id": "wasm",       "category": "Binary & Media",  "kind": "wasm",     "role": "kind",          "lineage": "sqlite-wasm",          "file": "engine.wasm"},
+    {"id": "winexe",     "category": "Binary & Media",  "kind": "winexe",   "role": "kind",          "lineage": "fd-windows-pe",        "file": "winexe.exe"},
+    {"id": "armexe",     "category": "Binary & Media",  "kind": "armexe",   "role": "kind",          "lineage": "hyperfine-arm64-elf",  "file": "armexe.elf"},
+    {"id": "photo",      "category": "Binary & Media",  "kind": "photo",    "role": "incompressible","lineage": "nasa-blue-marble-jpeg","file": "photo.jpg"},
+    {"id": "movie",      "category": "Binary & Media",  "kind": "movie",    "role": "incompressible","lineage": "big-buck-bunny",       "file": "movie.mp4"},
+    {"id": "weights",    "category": "Binary & Media",  "kind": "weights",  "role": "incompressible","lineage": "smollm2-135m-instruct","file": "weights.safetensors"}
+  ],
+
+  "diagnostics": [
+    {"file": "noaa-ghcn-daily-2024-full.csv",      "kind": "csv",     "reason": "1.33 GB NOAA GHCN 2024-full — the small csv kind cell is a strict prefix of it (same bytes twice). Superseded as the length rung by the disjoint-years csv-L; kept distributed as an unscored extra."},
+    {"file": "big-buck-bunny-1080p.mov",           "kind": "movie",   "reason": "Incompressible length rung adds no ratio signal (ratio ≈ 1.0 like the kind cell); kept as a throughput/large-decode fixture, not a vote."},
+    {"file": "weights-qwen2.5-0.5b.safetensors",   "kind": "weights", "reason": "Model-weight throughput/RAM ladder — unmeasured speed fixture, never a ratio vote."},
+    {"file": "weights-qwen2.5-1.5b.safetensors",   "kind": "weights", "reason": "Model-weight throughput/RAM ladder — unmeasured speed fixture, never a ratio vote."}
+  ]
+}

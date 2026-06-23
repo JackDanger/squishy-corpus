@@ -1,10 +1,10 @@
 {
   "edition": "Squishy-2026",
   "schema_version": "1.0",
-  "generated_utc": "2026-06-13T23:18:50Z",
-  "n_files": 31,
+  "generated_utc": "2026-06-23T01:02:01Z",
+  "n_files": 30,
   "n_scored_size_points": 26,
-  "scored_set_fingerprint": "39915f30abc59ac1980c785d82c8a27753320c41cbe0976f9cde1156e5914cee",
+  "scored_set_fingerprint": "6ed7f40361f4a7df1644d9a8742b5ed286d97319af0a8a2c3224b0235f67c7cb",
   "files_sha256": {
     "dickens": "7312e776a3d7e5e25b7415116d3777c934f3c9c47fc153356ca16608d6428bc0",
     "aozora.txt": "c12106e76b22b238f43bcc62b26d6426192425e5f819d7406e2c2af7f8ef0237",
@@ -31,12 +31,11 @@
     "armexe.elf": "36b694487054adb4bd239fcff2d7cff6fdc96105bfcc6715dc5e7a60f8a21138",
     "photo.jpg": "51049ed4e34514880bfbe39d34e2dd2c56e31f55919e7f4f0b34ef1698cb9f50",
     "movie.mp4": "66a42e9789020213c4b3ebd86a471aeba4fc0d31fde9cea4fc09bd3c65b67619",
-    "weights.safetensors": "53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db",
+    "weights.safetensors": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
     "big-buck-bunny-1080p.mov": "dc2146a2b1172def56730143ad80cd1825b7fad15f1fc9c23a4e7d01a741ac11",
     "noaa-ghcn-daily-2024-full.csv": "70baf8b1fe8298890469202cd5c3859047d6345258b5bc70698214541d59b2b6",
     "weights-qwen2.5-0.5b.safetensors": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
-    "weights-qwen2.5-1.5b.safetensors": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
-    "weights-smollm2-135m.safetensors": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
+    "weights-qwen2.5-1.5b.safetensors": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee"
   },
   "reproducibility_toolchain": {
     "note": "derived files (clang archive concat, BTS all-string parquet, NOAA csv concat) reproduce byte-identical with these pins; verified by run-all.sh.",
@@ -49,7 +48,7 @@
       "machine": "arm64",
       "processor": "arm",
       "python": "3.14.4",
-      "recorded_utc": "2026-06-13T23:18:50Z"
+      "recorded_utc": "2026-06-23T01:02:01Z"
     }
   }
 }

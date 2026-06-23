@@ -37,7 +37,7 @@ movie     — "Big Buck Bunny" © copyright 2008, Blender Foundation /
             www.bigbuckbunny.org. Licensed under CC-BY 3.0
             (https://creativecommons.org/licenses/by/3.0/). This corpus includes a
             trimmed/transcoded 120-second excerpt (modified from the original).
-weights   — sentence-transformers/all-MiniLM-L6-v2 (Apache-2.0). License text:
+weights   — HuggingFaceTB/SmolLM2-135M-Instruct (Apache-2.0). License text:
             LICENSES/Apache-2.0.txt. (Weights as released; training-data
             provenance not warranted.)
 json      — USGS earthquake catalog (M4.5+, 2010–2024), U.S. Geological Survey.
@@ -71,8 +71,9 @@ text/enwik9      — first 1e9 bytes of an English Wikipedia XML dump (Hutter Pr
                    in the corpus; redistributed under those terms (attribution + share-alike).
 movie (1080p)    — "Big Buck Bunny" 1080p, © 2008 Blender Foundation, CC-BY 3.0 (full film).
                    Non-scored throughput/behaviour diagnostic.
-weights ladder   — SmolLM2-135M, Qwen2.5-0.5B, Qwen2.5-1.5B safetensors (Apache-2.0).
-                   Non-scored diagnostics. LICENSES/Apache-2.0.txt.
+weights ladder   — Qwen2.5-0.5B, Qwen2.5-1.5B safetensors (Apache-2.0). Non-scored
+                   diagnostics above the scored SmolLM2-135M weights cell.
+                   LICENSES/Apache-2.0.txt.
 
 exe third-party  — the Hugo binary bundles components under several licenses incl.
                    MPL-2.0; see LICENSES/tool.bin.THIRD-PARTY.txt and LICENSES/MPL-2.0.txt.

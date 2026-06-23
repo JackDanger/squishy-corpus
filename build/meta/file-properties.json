@@ -143,11 +143,11 @@
       "category": "Binary & Media"
     },
     "weights": {
-      "size": 90868376,
-      "entropy": 7.355,
+      "size": 269060552,
+      "entropy": 6.241,
       "coverage": 0.0001,
-      "match_distance": 224,
-      "match_distance_p90": 4331,
+      "match_distance": 1152,
+      "match_distance_p90": 3308544,
       "block_bytes": 16,
       "hash": "block-int128-exact",
       "category": "Binary & Media"

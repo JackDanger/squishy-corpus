@@ -77,7 +77,6 @@ RECIPES: dict[str, dict] = {
     # HuggingFace weights, pinned to an immutable commit revision (resolve/<sha>/…) so a
     # re-fetch reproduces the exact bytes → independently retrievable, not minted.
     "corpus/weights.safetensors":                      {"origin": "upstream", "how": "stream"},
-    "scale/weights/weights-smollm2-135m.safetensors":  {"origin": "upstream", "how": "stream"},
     "scale/weights/weights-qwen2.5-0.5b.safetensors":  {"origin": "upstream", "how": "stream"},
     "scale/weights/weights-qwen2.5-1.5b.safetensors":  {"origin": "upstream", "how": "stream"},
     # ── minted, but reproducible by OUR deterministic generator (mintable from scratch) ──

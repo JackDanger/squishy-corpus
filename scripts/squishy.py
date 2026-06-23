@@ -77,7 +77,7 @@ CORE: dict[str, list[tuple[str, str, str]]] = {
         ("exe",     "corpus", "tool.bin"),        # native binary (MIT/Apache)
         ("photo",   "corpus", "photo.jpg"),       # pre-compressed image (PD-USGov-NASA) [incompressible]
         ("movie",   "corpus", "movie.mp4"),       # pre-compressed video (CC-BY)  [incompressible]
-        ("weights", "corpus", "weights.safetensors"),  # model-weight shard (Apache) [incompressible]
+        ("weights", "corpus", "weights.safetensors"),  # SmolLM2-135M LLM weights (Apache) [incompressible]
         ("symbols", "corpus", "symbols.dwarf"),   # DWARF debug-symbols companion (MIT)
         ("wasm",    "corpus", "engine.wasm"),     # WebAssembly bytecode (Public Domain)
         ("winexe",  "corpus", "winexe.exe"),      # Windows PE32+ x86-64 executable (MIT/Apache-2.0)

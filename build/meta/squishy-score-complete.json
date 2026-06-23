@@ -20,18 +20,18 @@
     "machine": "arm64",
     "processor": "arm",
     "python": "3.14.4",
-    "recorded_utc": "2026-06-10T06:06:10Z"
+    "recorded_utc": "2026-06-23T01:02:01Z"
   },
-  "squishy_score": 4.71,
-  "corpus_bpb": 1.119,
-  "total_in_bytes": 10993098035,
-  "total_out_bytes": 1537939525,
+  "squishy_score": 4.74,
+  "corpus_bpb": 1.189,
+  "total_in_bytes": 11171290211,
+  "total_out_bytes": 1660135955,
   "categories": {
     "Prose": 4.0666,
     "Code & Web": 7.1454,
     "Structured": 11.36,
     "Tabular / DB": 4.8894,
-    "Binary & Media": 2.0163
+    "Binary & Media": 2.0622
   },
   "kinds": {
     "Prose/dickens": 3.6294,
@@ -53,7 +53,7 @@
     "Binary & Media/armexe": 2.3427,
     "Binary & Media/photo": 1.0144,
     "Binary & Media/movie": 1.0064,
-    "Binary & Media/weights": 1.0954
+    "Binary & Media/weights": 1.3115
   },
   "per_file": {
     "dickens": 3.62935,
@@ -81,6 +81,6 @@
     "armexe.elf": 2.3427,
     "photo.jpg": 1.014398,
     "movie.mp4": 1.006433,
-    "weights.safetensors": 1.09544
+    "weights.safetensors": 1.3115439275184968
   }
 }

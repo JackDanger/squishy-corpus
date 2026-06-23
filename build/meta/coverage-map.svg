@@ -54,7 +54,7 @@
 <circle cx="548.8" cy="486.1" r="12.4" fill="#0072B2" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>sqlite — 48 MB, H=5.63, cover=0.09</title></circle>
 <circle cx="508.5" cy="373.7" r="12.5" fill="#56B4E9" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>monorepo — 51 MB, H=5.15, cover=0.34</title></circle>
 <circle cx="610.2" cy="409.2" r="12.7" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>exe — 62 MB, H=6.35, cover=0.26</title></circle>
-<circle cx="695.3" cy="526.0" r="13.0" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>weights — 91 MB, H=7.36, cover=0.00</title></circle>
+<circle cx="600.9" cy="526.0" r="14.0" fill="#CC79A7" fill-opacity="0.82" stroke="#ffffff" stroke-width="1.2"><title>weights — 269 MB, H=6.24, cover=0.00</title></circle>
 <circle cx="515.7" cy="152.0" r="14.2" fill="#009E73" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>log 0.4GB — 373 MB, H=5.24, cover=0.83</title></circle>
 <circle cx="749.1" cy="525.7" r="14.8" fill="#CC79A7" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>movie 1080p — 725 MB, H=7.99, cover=0.00</title></circle>
 <circle cx="706.4" cy="490.8" r="14.8" fill="#0072B2" fill-opacity="0.82" stroke="#0d1418" stroke-width="1.6"><title>parquet 0.8GB — 772 MB, H=7.49, cover=0.08</title></circle>

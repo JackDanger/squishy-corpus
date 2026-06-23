@@ -1,79 +1,79 @@
 {
   "method": "independent stdlib re-score (zlib/bz2/lzma) vs the pinned-CLI board",
   "tolerance_pct": 2.0,
-  "worst_delta_pct": 0.05,
+  "worst_delta_pct": 0.63,
   "all_agree": true,
   "codecs": {
     "gzip -9": {
-      "stdlib_squishy": 3.26,
-      "cli_squishy": 3.26,
-      "worst_file_delta_pct": 0.05,
+      "stdlib_squishy": 3.063,
+      "cli_squishy": 3.062,
+      "worst_file_delta_pct": 0.63,
       "agrees": true,
       "per_file": {
         "dickens": {
           "stdlib_ratio": 2.6871,
-          "cli_ratio": 2.687,
-          "delta_pct": 0.0
+          "cli_ratio": 2.69,
+          "delta_pct": 0.11
         },
         "aozora": {
           "stdlib_ratio": 3.0019,
-          "cli_ratio": 3.002,
-          "delta_pct": 0.0
+          "cli_ratio": 3.004,
+          "delta_pct": 0.07
         },
         "monorepo": {
           "stdlib_ratio": 5.1836,
-          "cli_ratio": 5.184,
-          "delta_pct": 0.01
+          "cli_ratio": 5.185,
+          "delta_pct": 0.03
         },
         "minjs": {
           "stdlib_ratio": 3.314,
-          "cli_ratio": 3.314,
-          "delta_pct": 0.0
+          "cli_ratio": 3.313,
+          "delta_pct": 0.03
         },
         "markup": {
           "stdlib_ratio": 3.7115,
-          "cli_ratio": 3.711,
-          "delta_pct": 0.01
+          "cli_ratio": 3.714,
+          "delta_pct": 0.07
         },
         "json": {
           "stdlib_ratio": 9.4878,
-          "cli_ratio": 9.488,
-          "delta_pct": 0.0
+          "cli_ratio": 9.428,
+          "delta_pct": 0.63
         },
         "log": {
           "stdlib_ratio": 10.4024,
-          "cli_ratio": 10.402,
-          "delta_pct": 0.0
+          "cli_ratio": 10.362,
+          "delta_pct": 0.39
         },
         "genome": {
           "stdlib_ratio": 5.9709,
-          "cli_ratio": 5.971,
-          "delta_pct": 0.0
+          "cli_ratio": 5.974,
+          "delta_pct": 0.05
         },
         "csv": {
           "stdlib_ratio": 7.9555,
-          "cli_ratio": 7.956,
-          "delta_pct": 0.01
+          "cli_ratio": 7.947,
+          "delta_pct": 0.11
         },
         "parquet": {
-          "stdlib_ratio": 1.6758,
-          "cli_ratio": 1.676,
-          "delta_pct": 0.01
+          "stdlib_ratio": 1.4782,
+          "cli_ratio": 1.476,
+          "delta_pct": 0.15
         },
         "sqlite": {
           "stdlib_ratio": 3.7544,
-          "cli_ratio": 3.754,
-          "delta_pct": 0.01
+          "cli_ratio": 3.746,
+          "delta_pct": 0.22
         },
         "exe": {
           "stdlib_ratio": 2.999,
-          "cli_ratio": 2.999,
-          "delta_pct": 0.0
+          "cli_ratio": 2.993,
+          "delta_pct": 0.2
         },
         "photo": {
           "stdlib_ratio": 1.0033,
-          "cli_ratio": 1.003,
-          "delta_pct": 0.03
+          "cli_ratio": 1.005,
+          "delta_pct": 0.17
         },
         "movie": {
           "stdlib_ratio": 1.0025,
@@ -81,15 +81,35 @@
           "delta_pct": 0.05
         },
         "weights": {
-          "stdlib_ratio": 1.0927,
-          "cli_ratio": 1.093,
-          "delta_pct": 0.03
+          "stdlib_ratio": 1.2591,
+          "cli_ratio": 1.261,
+          "delta_pct": 0.15
+        },
+        "symbols": {
+          "stdlib_ratio": 2.906,
+          "cli_ratio": 2.902,
+          "delta_pct": 0.14
+        },
+        "wasm": {
+          "stdlib_ratio": 2.1619,
+          "cli_ratio": 2.159,
+          "delta_pct": 0.13
+        },
+        "winexe": {
+          "stdlib_ratio": 2.6743,
+          "cli_ratio": 2.676,
+          "delta_pct": 0.06
+        },
+        "armexe": {
+          "stdlib_ratio": 2.0217,
+          "cli_ratio": 2.026,
+          "delta_pct": 0.21
         }
       }
     },
     "bzip2 -9": {
-      "stdlib_squishy": 4.008,
-      "cli_squishy": 4.008,
+      "stdlib_squishy": 3.68,
+      "cli_squishy": 3.68,
       "worst_file_delta_pct": 0.04,
       "agrees": true,
       "per_file": {
@@ -139,9 +159,9 @@
           "delta_pct": 0.0
         },
         "parquet": {
-          "stdlib_ratio": 1.6607,
-          "cli_ratio": 1.661,
-          "delta_pct": 0.02
+          "stdlib_ratio": 1.5146,
+          "cli_ratio": 1.515,
+          "delta_pct": 0.03
         },
         "sqlite": {
           "stdlib_ratio": 4.7283,
@@ -164,16 +184,36 @@
           "delta_pct": 0.02
         },
         "weights": {
-          "stdlib_ratio": 1.0712,
-          "cli_ratio": 1.071,
-          "delta_pct": 0.02
+          "stdlib_ratio": 1.435,
+          "cli_ratio": 1.435,
+          "delta_pct": 0.0
+        },
+        "symbols": {
+          "stdlib_ratio": 2.9546,
+          "cli_ratio": 2.955,
+          "delta_pct": 0.01
+        },
+        "wasm": {
+          "stdlib_ratio": 2.3544,
+          "cli_ratio": 2.354,
+          "delta_pct": 0.01
+        },
+        "winexe": {
+          "stdlib_ratio": 2.8007,
+          "cli_ratio": 2.801,
+          "delta_pct": 0.01
+        },
+        "armexe": {
+          "stdlib_ratio": 2.146,
+          "cli_ratio": 2.146,
+          "delta_pct": 0.0
         }
       }
     },
     "xz -9": {
-      "stdlib_squishy": 4.384,
-      "cli_squishy": 4.384,
-      "worst_file_delta_pct": 0.03,
+      "stdlib_squishy": 4.117,
+      "cli_squishy": 4.116,
+      "worst_file_delta_pct": 0.06,
       "agrees": true,
       "per_file": {
         "dickens": {
@@ -222,9 +262,9 @@
           "delta_pct": 0.0
         },
         "parquet": {
-          "stdlib_ratio": 1.9555,
-          "cli_ratio": 1.956,
-          "delta_pct": 0.02
+          "stdlib_ratio": 1.8461,
+          "cli_ratio": 1.846,
+          "delta_pct": 0.01
         },
         "sqlite": {
           "stdlib_ratio": 7.5649,
@@ -247,9 +287,29 @@
           "delta_pct": 0.0
         },
         "weights": {
-          "stdlib_ratio": 1.1178,
-          "cli_ratio": 1.118,
+          "stdlib_ratio": 1.4208,
+          "cli_ratio": 1.42,
+          "delta_pct": 0.06
+        },
+        "symbols": {
+          "stdlib_ratio": 3.7823,
+          "cli_ratio": 3.782,
           "delta_pct": 0.01
+        },
+        "wasm": {
+          "stdlib_ratio": 2.5387,
+          "cli_ratio": 2.539,
+          "delta_pct": 0.01
+        },
+        "winexe": {
+          "stdlib_ratio": 3.6063,
+          "cli_ratio": 3.606,
+          "delta_pct": 0.01
+        },
+        "armexe": {
+          "stdlib_ratio": 2.6904,
+          "cli_ratio": 2.69,
+          "delta_pct": 0.02
         }
       }
     }

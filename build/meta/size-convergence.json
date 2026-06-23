@@ -2,7 +2,7 @@
   "codec": "zstd -19 -c",
   "method": "ratio at full vs first-half size; small drift \u21d2 converged. Only valid for byte-stream formats; structured formats (parquet/sqlite/monorepo) are n/a and need row/member-boundary subsetting.",
   "threshold_pct": 5.0,
-  "worst_drift_pct": 6.71,
+  "worst_drift_pct": 20.44,
   "byte_stream_within_threshold": false,
   "note": "Large byte-stream files converge tightly (\u2264~3.5%); the 3.6 MB minjs is the smallest and drifts most, as expected. Structured files reported n/a.",
   "per_file": {
@@ -70,8 +70,8 @@
       "method": "byte-truncation"
     },
     "parquet": {
-      "size": 18492464,
-      "ratio_full": 1.7799,
+      "size": 20859349,
+      "ratio_full": 1.8061,
       "ratio_half": null,
       "drift_pct": null,
       "method": "byte-halving n/a (structured; needs row/member-boundary subset)"
@@ -105,10 +105,38 @@
       "method": "byte-truncation"
     },
     "weights": {
-      "size": 90868376,
-      "ratio_full": 1.0954,
-      "ratio_half": 1.103,
-      "drift_pct": 0.69,
+      "size": 269060552,
+      "ratio_full": 1.3115,
+      "ratio_half": 1.3036,
+      "drift_pct": 0.61,
+      "method": "byte-truncation"
+    },
+    "symbols": {
+      "size": 1077965,
+      "ratio_full": 3.4979,
+      "ratio_half": 4.2129,
+      "drift_pct": 20.44,
+      "method": "byte-truncation"
+    },
+    "wasm": {
+      "size": 868202,
+      "ratio_full": 2.3961,
+      "ratio_half": 2.4299,
+      "drift_pct": 1.41,
+      "method": "byte-truncation"
+    },
+    "winexe": {
+      "size": 4060672,
+      "ratio_full": 3.309,
+      "ratio_half": 3.0644,
+      "drift_pct": 7.39,
+      "method": "byte-truncation"
+    },
+    "armexe": {
+      "size": 1176560,
+      "ratio_full": 2.3427,
+      "ratio_half": 2.2606,
+      "drift_pct": 3.5,
       "method": "byte-truncation"
     }
   }

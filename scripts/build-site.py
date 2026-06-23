@@ -161,7 +161,7 @@ SHORT = {
     "markup": "Shakespeare", "json": "Earthquakes", "log": "NASA log", "genome": "E. coli",
     "csv": "Weather", "parquet": "Airline", "sqlite": "USDA foods", "exe": "Hugo",
     "symbols": "Lua DWARF", "wasm": "SQLite/Wasm", "winexe": "fd (PE)", "armexe": "hyperfine (ARM64)",
-    "photo": "Blue Marble", "movie": "Big Buck Bunny", "weights": "MiniLM",
+    "photo": "Blue Marble", "movie": "Big Buck Bunny", "weights": "SmolLM2-135M",
     "noaa-ghcn-daily-2024-full.csv": "Weather ’24", "noaa-ghcn-daily-2021-2023.csv": "Weather ’21–23",
     "big-buck-bunny-1080p.mov": "Big Buck Bunny HD", "ecoli-DRR002013-full.fastq": "E. coli (full)",
     "enwik9.txt": "enwik9", "llvm-project-19.1.0.src.tar": "LLVM (full)",
@@ -251,12 +251,10 @@ def coverage_table(cube: dict) -> str:
 
 def scale_what(name: str) -> str:
     n = name.lower()
-    if "135m" in n:
-        return ("SmolLM2-135M — a small (135M-parameter) language model's weights "
-                "(Apache-2.0). The middle rung of the weights size-ladder.")
     if "0.5b" in n or "0p5b" in n:
         return ("Qwen2.5-0.5B — a 0.5B-parameter language model's weights "
-                "(Apache-2.0). The second rung of the weights size-ladder.")
+                "(Apache-2.0). The lower rung of the weights size-ladder above the "
+                "scored SmolLM2-135M cell.")
     if "1.5b" in n or "1p5b" in n:
         return ("Qwen2.5-1.5B — a larger (1.5B-parameter) language model's weights "
                 "(Apache-2.0). The top rung of the ladder; multi-GB, for large-window "
