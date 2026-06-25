@@ -444,7 +444,7 @@
     var running = true;
     function tick() {
       if (!running) return;
-      if (auto) { yaw += 0.0004; draw(); }
+      if (auto) { yaw += 0.00008; draw(); }
       requestAnimationFrame(tick);
     }
     var ro = (typeof ResizeObserver !== "undefined")
