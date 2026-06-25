@@ -69,7 +69,8 @@ the rest is on your honor and is checkable by anyone who re-runs you.
    host-specific noise that says nothing about which code ran.) Ratios are byte-deterministic for a given
    (version, argv), so scores *should* match across machines; this provenance is what
    lets any future discrepancy be traced precisely, exactly as each dataset carries its
-   own sha256. (Recorded automatically in `build/meta/squishy-scores.json` and
+   own sha256. (Recorded automatically in the published board
+   `build/meta/squishy-board-complete.json` and the round-trip-verified reference
    `build/meta/squishy-score-complete.json`.)
 6. **Lossless round-trip is required.** A Squishy Score only counts if the codec
    decompresses every file back to its exact original bytes. A codec that

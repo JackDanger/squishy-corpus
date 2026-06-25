@@ -35,10 +35,10 @@ def main() -> int:
     base = json.loads((REPO / "build/meta/baseline.json").read_text())
     fails: list[str] = []
 
-    # 1. scored-set fingerprint unchanged
+    # 1. scored-set fingerprint unchanged (scored cells only — must mirror build-baseline.py)
     ed = json.loads((REPO / "build/meta/edition.json").read_text())
     fp = [(f["name"], f["sha256"], f["kind"], f["category"])
-          for f in sorted(ed["files"], key=lambda x: x["name"])]
+          for f in sorted(ed["files"], key=lambda x: x["name"]) if f.get("scored")]
     cur = hashlib.sha256(json.dumps(fp, sort_keys=True).encode()).hexdigest()
     if cur != base["scored_set_fingerprint"]:
         fails.append(f"scored-set fingerprint changed\n  baseline {base['scored_set_fingerprint']}\n  current  {cur}")

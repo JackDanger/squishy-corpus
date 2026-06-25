@@ -1,10 +1,10 @@
 {
   "edition": "Squishy-2026",
   "schema_version": "1.0",
-  "generated_utc": "2026-06-23T01:02:01Z",
+  "generated_utc": "2026-06-25T19:29:26Z",
   "n_files": 30,
   "n_scored_size_points": 26,
-  "scored_set_fingerprint": "6ed7f40361f4a7df1644d9a8742b5ed286d97319af0a8a2c3224b0235f67c7cb",
+  "scored_set_fingerprint": "8fb20d115d1a31bf852afedaab83ba47b6535c2b5b9befa4e1c905d8ef2c5a10",
   "files_sha256": {
     "dickens": "7312e776a3d7e5e25b7415116d3777c934f3c9c47fc153356ca16608d6428bc0",
     "aozora.txt": "c12106e76b22b238f43bcc62b26d6426192425e5f819d7406e2c2af7f8ef0237",
@@ -48,7 +48,7 @@
       "machine": "arm64",
       "processor": "arm",
       "python": "3.14.4",
-      "recorded_utc": "2026-06-23T01:02:01Z"
+      "recorded_utc": "2026-06-25T19:29:26Z"
     }
   }
 }

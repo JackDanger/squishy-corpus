@@ -88,7 +88,10 @@ def test_every_recipe_has_valid_origin():
             assert rec.get("gen") or rec.get("note"), f"{key}: minted member needs 'gen' or 'note'"
 
 
-def test_core_matches_checksums():
+def test_checksums_cover_every_distributed_file():
+    """CHECKSUMS.sha256 is the published trust-root: it must list EVERY distributed
+    file — the named core AND the scale tier (all of edition.json), so the one-line
+    downloader can verify the whole edition, not just the core."""
     p = META / "CHECKSUMS.sha256"
     if not p.exists():
         pytest.skip("no CHECKSUMS.sha256")
@@ -98,7 +101,9 @@ def test_core_matches_checksums():
         if len(parts) == 2:
             assert len(parts[0]) == 64, f"bad sha length: {line!r}"
             keys.add(parts[1])
-    assert keys == _core_keys(), f"CHECKSUMS ⇄ CORE drift: {keys ^ _core_keys()}"
+    ed = _read_json("edition.json")
+    want = {f["key"] for f in ed["files"]}
+    assert keys == want, f"CHECKSUMS ⇄ edition drift: {keys ^ want}"
 
 
 def test_core_matches_file_properties():
@@ -216,9 +221,11 @@ def test_coverage_map_colours_every_scale_kind():
     files = json.loads(p.read_text()).get("files", {})
     for fname, m in files.items():
         key = m.get("key", "")
-        if key.count("/") < 2:
+        # edition-relative key: scale/<kind>/<name> (never the draft/ working prefix)
+        parts = key.split("/")
+        if len(parts) < 3 or parts[0] != "scale":
             continue
-        kind = key.split("/")[2]
+        kind = parts[1]
         assert kind in cm.KIND_CATEGORY, (
             f"scale kind {kind!r} (from {fname}) has no colour in coverage-map.KIND_CATEGORY "
             f"→ would render in the default grey")

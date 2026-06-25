@@ -1,4 +1,4 @@
-Squishy-2026 — attribution & license notices for the named core.
+Squishy-2026 — attribution & license notices for the corpus (named core + scale tier).
 See LICENSE-MANIFEST.csv for per-file source URLs and SHA-256, and LICENSES/ for
 full license texts. This NOTICE discharges the attribution obligations below.
 
@@ -60,7 +60,7 @@ armexe    — hyperfine 1.20.0 (sharkdp), MIT (© 2018 David Peter). ARM64 Linux
 
 Large size-rungs (members of the one corpus; same provenance as their kind unless
 noted), plus non-scored diagnostics:
-csv (large)      — NOAA GHCN-Daily full years 2021–2023 + 2024 (PD-USGov), concatenated.
+csv (large)      — NOAA GHCN-Daily full years 2021–2023 (PD-USGov/NCEI). Scored large rung.
 monorepo (large) — full LLVM 19.1.0 monorepo source tree (Apache-2.0 WITH LLVM-exception).
 archive          — clang release source trees 16.0.0/17.0.1/18.1.8/19.1.0 concatenated
                    (Apache-2.0 WITH LLVM-exception; LICENSES/LLVM-LICENSE.TXT).
@@ -69,6 +69,8 @@ log (large)      — NASA-HTTP web logs, full July+August 1995 (LBL Internet Tra
 text/enwik9      — first 1e9 bytes of an English Wikipedia XML dump (Hutter Prize corpus).
                    © Wikipedia contributors, **CC-BY-SA 3.0** — the one ShareAlike file
                    in the corpus; redistributed under those terms (attribution + share-alike).
+csv (2024 full)  — NOAA GHCN-Daily full year 2024 (PD-USGov/NCEI). A separate file from
+                   the 2021–2023 scored rung (not concatenated). Non-scored size diagnostic.
 movie (1080p)    — "Big Buck Bunny" 1080p, © 2008 Blender Foundation, CC-BY 3.0 (full film).
                    Non-scored throughput/behaviour diagnostic.
 weights ladder   — Qwen2.5-0.5B, Qwen2.5-1.5B safetensors (Apache-2.0). Non-scored

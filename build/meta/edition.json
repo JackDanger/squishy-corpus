@@ -1,7 +1,7 @@
 {
   "edition": "Squishy-2026",
   "schema_version": "1.0",
-  "generated_utc": "2026-06-23T00:39:27Z",
+  "generated_utc": "2026-06-25T19:21:57Z",
   "base_url": "https://squishy.jackdanger.com",
   "note": "Per-file addressable inventory. `scored:true` files are the corpus cells (one vote each in the Squishy Score; roster defined by build/meta/schema.json); `scored:false` files are distributed diagnostics (throughput ladder, incompressible/redundant rungs) that never enter the score. Fetch any file by its url and verify against sha256.",
   "n_files": 30,
@@ -619,7 +619,7 @@
       "key": "scale/weights/weights-qwen2.5-0.5b.safetensors",
       "url": "https://squishy.jackdanger.com/scale/weights/weights-qwen2.5-0.5b.safetensors",
       "license": "Apache-2.0",
-      "source_url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/model.safetensors",
+      "source_url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/7ae557604adf67be50417f59c2c2f167def9a775/model.safetensors",
       "origin": "upstream",
       "diagnostic_reason": "Model-weight throughput/RAM ladder \u2014 unmeasured speed fixture, never a ratio vote."
     },
@@ -637,7 +637,7 @@
       "key": "scale/weights/weights-qwen2.5-1.5b.safetensors",
       "url": "https://squishy.jackdanger.com/scale/weights/weights-qwen2.5-1.5b.safetensors",
       "license": "Apache-2.0",
-      "source_url": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/main/model.safetensors",
+      "source_url": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/989aa7980e4cf806f80c7fef2b1adb7bc71aa306/model.safetensors",
       "origin": "upstream",
       "diagnostic_reason": "Model-weight throughput/RAM ladder \u2014 unmeasured speed fixture, never a ratio vote."
     }

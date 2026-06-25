@@ -14,6 +14,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 BUCKET = "squishy-corpus"
+WORK_PREFIX = "draft"   # S3 working prefix the live bytes are served from (never frozen into metadata)
 
 
 def main() -> int:
@@ -37,13 +38,17 @@ def main() -> int:
     tmp.mkdir(parents=True, exist_ok=True)
     for name in targets:
         v = files[name]
-        key = v["key"]                       # e.g. draft/scale/text/enwik9.txt
+        # Stored key is edition-relative (e.g. scale/text/enwik9.txt) — never the working
+        # prefix; the live bytes are fetched from WORK_PREFIX/<key>. Tolerate a legacy
+        # draft/-prefixed key still sitting in the file.
+        key = v["key"]
+        rel_key = key[len(WORK_PREFIX) + 1:] if key.startswith(WORK_PREFIX + "/") else key
         local = tmp / name
-        print(f"  ↓ {key} ...", flush=True)
-        subprocess.run(["aws", "s3", "cp", f"s3://{BUCKET}/{key}", str(local), "--no-progress"], check=True)
+        print(f"  ↓ {WORK_PREFIX}/{rel_key} ...", flush=True)
+        subprocess.run(["aws", "s3", "cp", f"s3://{BUCKET}/{WORK_PREFIX}/{rel_key}", str(local), "--no-progress"], check=True)
         props = fp.measure(local)
         local.unlink()
-        merged = {**props, "category": v.get("category", "Scale tier"), "key": key, "sha256": v.get("sha256")}
+        merged = {**props, "category": v.get("category", "Scale tier"), "key": rel_key, "sha256": v.get("sha256")}
         files[name] = merged                 # whole-file props; scanned_prefix/_bytes dropped
         sp.write_text(json.dumps(data, indent=2) + "\n")
         print(f"  ✓ {name}: {props}", flush=True)

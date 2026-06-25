@@ -162,16 +162,21 @@ def test_round_trip_ok_detects_lossless_and_lossy():
 
 import json  # noqa: E402
 
-_SCORES = Path(__file__).resolve().parent.parent / "build" / "meta" / "squishy-scores.json"
-
-
+_BOARD = Path(__file__).resolve().parent.parent / "build" / "meta" / "squishy-board-complete.json"
 _COMPLETE = Path(__file__).resolve().parent.parent / "build" / "meta" / "squishy-score-complete.json"
+_EDITION = Path(__file__).resolve().parent.parent / "build" / "meta" / "edition.json"
 
 
 def _published_board():
-    if not _SCORES.exists():
-        pytest.skip("no published squishy-scores.json")
-    return json.loads(_SCORES.read_text())
+    if not _BOARD.exists():
+        pytest.skip("no published squishy-board-complete.json")
+    return json.loads(_BOARD.read_text())
+
+
+def _scored_names() -> set[str]:
+    """The scored cells (one vote each) by edition name — the board's per_file keys."""
+    ed = json.loads(_EDITION.read_text())
+    return {f["name"] for f in ed["files"] if f.get("scored")}
 
 
 def _assert_tool_provenance(t):
@@ -192,7 +197,7 @@ def test_scored_artifacts_record_tool_and_host_provenance():
     board = _published_board()
     host = board.get("host_provenance", {})
     assert host.get("machine") and host.get("platform"), "board must record host machine/platform"
-    for codec, row in board["panel"].items():
+    for codec, row in board["codecs"].items():
         assert "tool_provenance" in row, f"{codec}: no tool_provenance"
         _assert_tool_provenance(row["tool_provenance"])
     if _COMPLETE.exists():
@@ -203,20 +208,17 @@ def test_scored_artifacts_record_tool_and_host_provenance():
 
 def test_published_board_is_internally_consistent():
     """Each codec's headline must equal the PLAIN geomean of every per-file ratio (one
-    vote per file — no category nesting, no compressibility gate), and bpb is byte-weighted.
-
-    The published board may be a snapshot over a subset of the current CORE (e.g. a
-    15-member draft while CORE has grown to 19): per_file keys must be a subset of
-    core_displays, not necessarily equal.  The headline is checked against the geomean
-    of whatever files the board row actually covers.
+    vote per file — no category nesting, no compressibility gate), and corpus_bpb is
+    byte-weighted 8·out/in. Validates the PUBLISHED, frozen whole-corpus board: its
+    per_file keys must be exactly the scored cells.
     """
     board = _published_board()
-    core_displays = {d for c, files in sq.CORE.items() for (d, _s, _n) in files}
-    for codec, row in board["panel"].items():
+    scored = _scored_names()
+    for codec, row in board["codecs"].items():
         pf = row.get("per_file", {})
-        unknown = set(pf) - core_displays
-        assert not unknown, f"{codec}: per_file contains files not in CORE: {unknown}"
-        # headline = flat geomean over EVERY file the board covers.
+        assert set(pf) == scored, \
+            f"{codec}: per_file ≠ scored cells (extra {set(pf)-scored}, missing {scored-set(pf)})"
+        # headline = flat geomean over EVERY scored file (one vote per file).
         flat = sq.geomean(list(pf.values()))
         assert flat == pytest.approx(row["squishy_score"], abs=0.01), \
             f"{codec}: stored {row['squishy_score']} ≠ plain geomean {flat:.3f}"
@@ -229,18 +231,23 @@ def test_published_board_is_internally_consistent():
 
 @pytest.mark.slow
 def test_published_gzip_row_matches_live_bytes():
-    """Real-bytes regression guard: recompute gzip -9 over the actual core and
-    confirm it reproduces the published gzip row (per-file + headline)."""
+    """Real-bytes regression guard: recompute gzip -9 over the locally-present scored
+    files and confirm it reproduces the published gzip row (per-file)."""
     board = _published_board()
-    if "gzip -9" not in board["panel"]:
+    if "gzip -9" not in board["codecs"]:
         pytest.skip("no gzip row")
     if sq.verify_core_checksums():
         pytest.skip("core bytes not present/verified")
-    want = board["panel"]["gzip -9"]["per_file"]
-    for display, s, name in [(d, s, n) for files in sq.CORE.values() for (d, s, n) in files]:
-        p = sq.raw_path(s, name)
+    want = board["codecs"]["gzip -9"]["per_file"]
+    raw = Path(__file__).resolve().parent.parent / "build" / "raw"
+    ed = json.loads(_EDITION.read_text())
+    for f in ed["files"]:
+        name = f["name"]
+        if not f.get("scored") or name not in want:
+            continue
+        p = raw / f["key"]
         if not p.exists():
-            pytest.skip(f"{display} bytes absent")
+            pytest.skip(f"{name} bytes absent")
         live = sq._live_ratio("gzip -9 -c", p)[0]
-        assert live == pytest.approx(want[display], rel=0.001), \
-            f"{display}: live {live:.3f} ≠ published {want[display]}"
+        assert live == pytest.approx(want[name], rel=0.001), \
+            f"{name}: live {live:.3f} ≠ published {want[name]}"

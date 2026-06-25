@@ -47,10 +47,12 @@ def main() -> int:
     ed_path = REPO / "build/meta/edition.json"
     ed = json.loads(ed_path.read_text())
     files = {f["name"]: f["sha256"] for f in ed["files"]}
-    # deterministic fingerprint of the edition's scored set (independent of the
-    # generated_utc timestamp in edition.json), so re-generation diffs cleanly.
+    # deterministic fingerprint of the edition's SCORED set — the cells that produce
+    # the Squishy Score (scored:true only; non-scored diagnostics are excluded so the
+    # identity tracks what the number is computed over). Independent of the
+    # generated_utc timestamp in edition.json, so re-generation diffs cleanly.
     fp = [(f["name"], f["sha256"], f["kind"], f["category"])
-          for f in sorted(ed["files"], key=lambda x: x["name"])]
+          for f in sorted(ed["files"], key=lambda x: x["name"]) if f.get("scored")]
     scored_set_fingerprint = hashlib.sha256(json.dumps(fp, sort_keys=True).encode()).hexdigest()
 
     baseline = {

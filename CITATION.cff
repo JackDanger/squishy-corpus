@@ -13,8 +13,9 @@ authors:
   - family-names: Danger
     given-names: Jack
 version: "Squishy-2026"
-# TODO(freeze): set date-released to the actual Squishy-2026 freeze date.
-date-released: 2026-01-01
+# date-released is the Squishy-2026 edition release date. If the owner freezes on a
+# different day, update this together with the DOI line below (the only post-mint edits).
+date-released: 2026-06-25
 license-url: "https://github.com/JackDanger/squishy-corpus/blob/main/build/meta/LICENSE-MANIFEST.csv"
 url: "https://github.com/JackDanger/squishy-corpus"
 keywords:

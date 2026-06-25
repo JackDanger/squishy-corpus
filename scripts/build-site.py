@@ -420,18 +420,24 @@ def main() -> int:
     if extra:
         cards += ('<h2>The big ones</h2>'
                   '<p class="cap">The same kinds of data at gigabyte scale, where long-range '
-                  'matching and big compression windows start to matter — scored in the board '
-                  'above as part of the whole-corpus Squishy Score.</p>')
+                  'matching and big compression windows start to matter. Most are scored cells '
+                  'in the board above; the largest few — the 1080p film, the full-year NOAA CSV, '
+                  'and the two larger Qwen weights — are non-scored diagnostics (throughput and '
+                  'behaviour at extreme sizes, never folded into the Squishy Score).</p>')
         for r in sorted(extra, key=lambda r: int(r["size_bytes"])):
             nm = r["name"]; e = ed_by_name.get(nm, {}); pm = scale["files"].get(nm)
             size = (pm or {}).get("size") or int(r["size_bytes"])
             url = e.get("url", "")
+            is_scored = bool(e.get("scored", False))
+            badge = "scored" if is_scored else "diagnostic"
             local = next((p for p in REPO.glob(f"build/raw/*/{nm}") if p.exists()), None)
             prev = preview_safetensors(local) if (local and nm.endswith(".safetensors")) else ""
-            what = SCALE_DESC.get(nm) or scale_what(nm)
+            what = (SCALE_DESC.get(nm) or scale_what(nm))
+            if not is_scored:
+                what = "Non-scored diagnostic — distributed for throughput/behaviour at scale, never in the score. " + what
             dl = f'<a class="dl" href="{esc(url)}" download>download ↓</a> · ' if url else ""
             cards += f'''<section class="card" id="file-{esc(re.sub(r"[^a-z0-9]+","-",nm.lower()).strip("-"))}">
-  <div class="dh"><span class="num">scale</span><h3><code>{esc(nm)}</code></h3>
+  <div class="dh"><span class="num">{esc(badge)}</span><h3><code>{esc(nm)}</code></h3>
     <span class="sz">{esc(human_bytes(size))} · {esc(r['license'])}</span></div>
   <p class="what">{esc(what)}</p>
   {prev}
@@ -634,6 +640,16 @@ over all bytes, where the big files dominate.</p>
 The headline column is the Squishy Score (geomean of per-file ratio); corpus bpb is the
 byte-weighted companion. Click a column to sort.</p>
 <div class="lbwrap"><table class="lead" id="lead"><thead><tr>{lbhead}</tr></thead><tbody>{lb}</tbody></table></div>
+
+<h2>How to cite</h2>
+<p class="cap">Cite the dated edition you ran against. The DOI resolves to the immutable
+Zenodo deposit — corpus bytes, score, and metadata — so a citation can never drift from
+what you measured.</p>
+<pre class="run">Jack Danger. Squishy-2026: a citable compression benchmark corpus and score. 2026.
+DOI: 10.5281/zenodo.XXXXXXX</pre>
+<p class="cap">The machine-readable citation (and BibTeX) live in <code>CITATION.cff</code>.
+The <code>XXXXXXX</code> is assigned when the edition is minted, then filled in once and
+never changed.</p>
 
 <h2>Every file</h2>
 <p class="cap">What each file is, a peek inside, and how each tool compresses it.</p>

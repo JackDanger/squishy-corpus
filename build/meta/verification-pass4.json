@@ -1,316 +1,336 @@
 {
-  "method": "independent stdlib re-score (zlib/bz2/lzma) vs the pinned-CLI board",
+  "method": "independent stdlib re-score (zlib/bz2/lzma) of the locally-present, \u226464 MiB scored cells vs the published pinned-CLI board (squishy-board-complete.json); larger/absent files are listed under each codec's 'skipped' with a reason.",
+  "board": "squishy-board-complete.json",
   "tolerance_pct": 2.0,
+  "size_cap_bytes": 67108864,
   "worst_delta_pct": 0.63,
   "all_agree": true,
   "codecs": {
     "gzip -9": {
-      "stdlib_squishy": 3.063,
-      "cli_squishy": 3.062,
+      "cli_squishy": 3.63,
+      "verified_files": 18,
+      "skipped_files": 8,
       "worst_file_delta_pct": 0.63,
       "agrees": true,
       "per_file": {
         "dickens": {
           "stdlib_ratio": 2.6871,
-          "cli_ratio": 2.69,
-          "delta_pct": 0.11
+          "cli_ratio": 2.6896,
+          "delta_pct": 0.09
         },
-        "aozora": {
+        "aozora.txt": {
           "stdlib_ratio": 3.0019,
           "cli_ratio": 3.004,
           "delta_pct": 0.07
         },
-        "monorepo": {
+        "monorepo.tar": {
           "stdlib_ratio": 5.1836,
-          "cli_ratio": 5.185,
+          "cli_ratio": 5.1849,
           "delta_pct": 0.03
         },
-        "minjs": {
+        "minjs.min.js": {
           "stdlib_ratio": 3.314,
-          "cli_ratio": 3.313,
-          "delta_pct": 0.03
+          "cli_ratio": 3.3134,
+          "delta_pct": 0.02
         },
-        "markup": {
+        "markup.xml": {
           "stdlib_ratio": 3.7115,
-          "cli_ratio": 3.714,
-          "delta_pct": 0.07
+          "cli_ratio": 3.7138,
+          "delta_pct": 0.06
         },
-        "json": {
+        "data.json": {
           "stdlib_ratio": 9.4878,
-          "cli_ratio": 9.428,
+          "cli_ratio": 9.4284,
           "delta_pct": 0.63
         },
-        "log": {
+        "access.log": {
           "stdlib_ratio": 10.4024,
-          "cli_ratio": 10.362,
+          "cli_ratio": 10.3622,
           "delta_pct": 0.39
         },
-        "genome": {
+        "ecoli.fastq": {
           "stdlib_ratio": 5.9709,
-          "cli_ratio": 5.974,
-          "delta_pct": 0.05
+          "cli_ratio": 5.9743,
+          "delta_pct": 0.06
         },
-        "csv": {
+        "data.csv": {
           "stdlib_ratio": 7.9555,
-          "cli_ratio": 7.947,
+          "cli_ratio": 7.9474,
+          "delta_pct": 0.1
+        },
+        "data.parquet": {
+          "stdlib_ratio": 1.4782,
+          "cli_ratio": 1.4765,
           "delta_pct": 0.11
         },
-        "parquet": {
-          "stdlib_ratio": 1.4782,
-          "cli_ratio": 1.476,
-          "delta_pct": 0.15
-        },
-        "sqlite": {
+        "data.sqlite": {
           "stdlib_ratio": 3.7544,
-          "cli_ratio": 3.746,
+          "cli_ratio": 3.7463,
           "delta_pct": 0.22
         },
-        "exe": {
+        "tool.bin": {
           "stdlib_ratio": 2.999,
-          "cli_ratio": 2.993,
-          "delta_pct": 0.2
+          "cli_ratio": 2.9932,
+          "delta_pct": 0.19
         },
-        "photo": {
-          "stdlib_ratio": 1.0033,
-          "cli_ratio": 1.005,
-          "delta_pct": 0.17
-        },
-        "movie": {
-          "stdlib_ratio": 1.0025,
-          "cli_ratio": 1.003,
-          "delta_pct": 0.05
-        },
-        "weights": {
-          "stdlib_ratio": 1.2591,
-          "cli_ratio": 1.261,
+        "symbols.dwarf": {
+          "stdlib_ratio": 2.906,
+          "cli_ratio": 2.9016,
           "delta_pct": 0.15
         },
-        "symbols": {
-          "stdlib_ratio": 2.906,
-          "cli_ratio": 2.902,
-          "delta_pct": 0.14
-        },
-        "wasm": {
+        "engine.wasm": {
           "stdlib_ratio": 2.1619,
-          "cli_ratio": 2.159,
-          "delta_pct": 0.13
+          "cli_ratio": 2.1593,
+          "delta_pct": 0.12
         },
-        "winexe": {
+        "winexe.exe": {
           "stdlib_ratio": 2.6743,
           "cli_ratio": 2.676,
           "delta_pct": 0.06
         },
-        "armexe": {
+        "armexe.elf": {
           "stdlib_ratio": 2.0217,
-          "cli_ratio": 2.026,
-          "delta_pct": 0.21
+          "cli_ratio": 2.0262,
+          "delta_pct": 0.22
+        },
+        "photo.jpg": {
+          "stdlib_ratio": 1.0033,
+          "cli_ratio": 1.0046,
+          "delta_pct": 0.13
+        },
+        "movie.mp4": {
+          "stdlib_ratio": 1.0025,
+          "cli_ratio": 1.0031,
+          "delta_pct": 0.06
         }
+      },
+      "skipped": {
+        "llvm-project-19.1.0.src.tar": "bytes absent locally",
+        "enwik9.txt": "bytes absent locally",
+        "clang-releases-16-17-18-19.tar": "bytes absent locally",
+        "nasa-http-jul-aug-1995.log": "bytes absent locally",
+        "ecoli-DRR002013-full.fastq": "bytes absent locally",
+        "noaa-ghcn-daily-2021-2023.csv": "bytes absent locally",
+        "bts-ontime-2022-2024.parquet": "bytes absent locally",
+        "weights.safetensors": "larger than 64 MiB cap"
       }
     },
     "bzip2 -9": {
-      "stdlib_squishy": 3.68,
-      "cli_squishy": 3.68,
-      "worst_file_delta_pct": 0.04,
+      "cli_squishy": 4.45,
+      "verified_files": 18,
+      "skipped_files": 8,
+      "worst_file_delta_pct": 0.0,
       "agrees": true,
       "per_file": {
         "dickens": {
           "stdlib_ratio": 3.7285,
-          "cli_ratio": 3.729,
-          "delta_pct": 0.01
-        },
-        "aozora": {
-          "stdlib_ratio": 4.3364,
-          "cli_ratio": 4.336,
-          "delta_pct": 0.01
-        },
-        "monorepo": {
-          "stdlib_ratio": 6.8023,
-          "cli_ratio": 6.802,
+          "cli_ratio": 3.7285,
           "delta_pct": 0.0
         },
-        "minjs": {
+        "aozora.txt": {
+          "stdlib_ratio": 4.3364,
+          "cli_ratio": 4.3364,
+          "delta_pct": 0.0
+        },
+        "monorepo.tar": {
+          "stdlib_ratio": 6.8023,
+          "cli_ratio": 6.8023,
+          "delta_pct": 0.0
+        },
+        "minjs.min.js": {
           "stdlib_ratio": 3.811,
           "cli_ratio": 3.811,
           "delta_pct": 0.0
         },
-        "markup": {
+        "markup.xml": {
           "stdlib_ratio": 5.3631,
-          "cli_ratio": 5.363,
+          "cli_ratio": 5.3631,
           "delta_pct": 0.0
         },
-        "json": {
+        "data.json": {
           "stdlib_ratio": 14.8288,
-          "cli_ratio": 14.829,
+          "cli_ratio": 14.8288,
           "delta_pct": 0.0
         },
-        "log": {
+        "access.log": {
           "stdlib_ratio": 16.9658,
-          "cli_ratio": 16.966,
+          "cli_ratio": 16.9658,
           "delta_pct": 0.0
         },
-        "genome": {
+        "ecoli.fastq": {
           "stdlib_ratio": 7.2448,
-          "cli_ratio": 7.245,
+          "cli_ratio": 7.2448,
           "delta_pct": 0.0
         },
-        "csv": {
+        "data.csv": {
           "stdlib_ratio": 9.6857,
-          "cli_ratio": 9.686,
+          "cli_ratio": 9.6857,
           "delta_pct": 0.0
         },
-        "parquet": {
+        "data.parquet": {
           "stdlib_ratio": 1.5146,
-          "cli_ratio": 1.515,
-          "delta_pct": 0.03
-        },
-        "sqlite": {
-          "stdlib_ratio": 4.7283,
-          "cli_ratio": 4.728,
-          "delta_pct": 0.01
-        },
-        "exe": {
-          "stdlib_ratio": 3.2377,
-          "cli_ratio": 3.238,
-          "delta_pct": 0.01
-        },
-        "photo": {
-          "stdlib_ratio": 1.0215,
-          "cli_ratio": 1.021,
-          "delta_pct": 0.04
-        },
-        "movie": {
-          "stdlib_ratio": 1.0012,
-          "cli_ratio": 1.001,
-          "delta_pct": 0.02
-        },
-        "weights": {
-          "stdlib_ratio": 1.435,
-          "cli_ratio": 1.435,
+          "cli_ratio": 1.5146,
           "delta_pct": 0.0
         },
-        "symbols": {
+        "data.sqlite": {
+          "stdlib_ratio": 4.7283,
+          "cli_ratio": 4.7283,
+          "delta_pct": 0.0
+        },
+        "tool.bin": {
+          "stdlib_ratio": 3.2377,
+          "cli_ratio": 3.2377,
+          "delta_pct": 0.0
+        },
+        "symbols.dwarf": {
           "stdlib_ratio": 2.9546,
-          "cli_ratio": 2.955,
-          "delta_pct": 0.01
+          "cli_ratio": 2.9546,
+          "delta_pct": 0.0
         },
-        "wasm": {
+        "engine.wasm": {
           "stdlib_ratio": 2.3544,
-          "cli_ratio": 2.354,
-          "delta_pct": 0.01
+          "cli_ratio": 2.3544,
+          "delta_pct": 0.0
         },
-        "winexe": {
+        "winexe.exe": {
           "stdlib_ratio": 2.8007,
-          "cli_ratio": 2.801,
-          "delta_pct": 0.01
+          "cli_ratio": 2.8007,
+          "delta_pct": 0.0
         },
-        "armexe": {
+        "armexe.elf": {
           "stdlib_ratio": 2.146,
           "cli_ratio": 2.146,
           "delta_pct": 0.0
+        },
+        "photo.jpg": {
+          "stdlib_ratio": 1.0215,
+          "cli_ratio": 1.0215,
+          "delta_pct": 0.0
+        },
+        "movie.mp4": {
+          "stdlib_ratio": 1.0012,
+          "cli_ratio": 1.0012,
+          "delta_pct": 0.0
         }
+      },
+      "skipped": {
+        "llvm-project-19.1.0.src.tar": "bytes absent locally",
+        "enwik9.txt": "bytes absent locally",
+        "clang-releases-16-17-18-19.tar": "bytes absent locally",
+        "nasa-http-jul-aug-1995.log": "bytes absent locally",
+        "ecoli-DRR002013-full.fastq": "bytes absent locally",
+        "noaa-ghcn-daily-2021-2023.csv": "bytes absent locally",
+        "bts-ontime-2022-2024.parquet": "bytes absent locally",
+        "weights.safetensors": "larger than 64 MiB cap"
       }
     },
     "xz -9": {
-      "stdlib_squishy": 4.117,
-      "cli_squishy": 4.116,
-      "worst_file_delta_pct": 0.06,
+      "cli_squishy": 5.1,
+      "verified_files": 18,
+      "skipped_files": 8,
+      "worst_file_delta_pct": 0.0,
       "agrees": true,
       "per_file": {
         "dickens": {
           "stdlib_ratio": 3.6643,
-          "cli_ratio": 3.664,
-          "delta_pct": 0.01
+          "cli_ratio": 3.6643,
+          "delta_pct": 0.0
         },
-        "aozora": {
+        "aozora.txt": {
           "stdlib_ratio": 4.6924,
-          "cli_ratio": 4.692,
-          "delta_pct": 0.01
+          "cli_ratio": 4.6924,
+          "delta_pct": 0.0
         },
-        "monorepo": {
+        "monorepo.tar": {
           "stdlib_ratio": 7.5388,
-          "cli_ratio": 7.539,
+          "cli_ratio": 7.5388,
           "delta_pct": 0.0
         },
-        "minjs": {
+        "minjs.min.js": {
           "stdlib_ratio": 4.2572,
-          "cli_ratio": 4.257,
+          "cli_ratio": 4.2571,
           "delta_pct": 0.0
         },
-        "markup": {
+        "markup.xml": {
           "stdlib_ratio": 4.828,
           "cli_ratio": 4.828,
           "delta_pct": 0.0
         },
-        "json": {
+        "data.json": {
           "stdlib_ratio": 12.8247,
-          "cli_ratio": 12.825,
+          "cli_ratio": 12.8246,
           "delta_pct": 0.0
         },
-        "log": {
+        "access.log": {
           "stdlib_ratio": 14.9999,
-          "cli_ratio": 15.0,
+          "cli_ratio": 14.9998,
           "delta_pct": 0.0
         },
-        "genome": {
+        "ecoli.fastq": {
           "stdlib_ratio": 8.775,
           "cli_ratio": 8.775,
           "delta_pct": 0.0
         },
-        "csv": {
+        "data.csv": {
           "stdlib_ratio": 13.543,
-          "cli_ratio": 13.543,
+          "cli_ratio": 13.5429,
           "delta_pct": 0.0
         },
-        "parquet": {
+        "data.parquet": {
           "stdlib_ratio": 1.8461,
-          "cli_ratio": 1.846,
-          "delta_pct": 0.01
-        },
-        "sqlite": {
-          "stdlib_ratio": 7.5649,
-          "cli_ratio": 7.565,
+          "cli_ratio": 1.8461,
           "delta_pct": 0.0
         },
-        "exe": {
+        "data.sqlite": {
+          "stdlib_ratio": 7.5649,
+          "cli_ratio": 7.5649,
+          "delta_pct": 0.0
+        },
+        "tool.bin": {
           "stdlib_ratio": 4.1514,
-          "cli_ratio": 4.151,
-          "delta_pct": 0.01
+          "cli_ratio": 4.1514,
+          "delta_pct": 0.0
         },
-        "photo": {
+        "symbols.dwarf": {
+          "stdlib_ratio": 3.7823,
+          "cli_ratio": 3.7822,
+          "delta_pct": 0.0
+        },
+        "engine.wasm": {
+          "stdlib_ratio": 2.5387,
+          "cli_ratio": 2.5387,
+          "delta_pct": 0.0
+        },
+        "winexe.exe": {
+          "stdlib_ratio": 3.6063,
+          "cli_ratio": 3.6063,
+          "delta_pct": 0.0
+        },
+        "armexe.elf": {
+          "stdlib_ratio": 2.6904,
+          "cli_ratio": 2.6904,
+          "delta_pct": 0.0
+        },
+        "photo.jpg": {
           "stdlib_ratio": 1.0103,
-          "cli_ratio": 1.01,
-          "delta_pct": 0.03
+          "cli_ratio": 1.0103,
+          "delta_pct": 0.0
         },
-        "movie": {
+        "movie.mp4": {
           "stdlib_ratio": 1.005,
           "cli_ratio": 1.005,
           "delta_pct": 0.0
-        },
-        "weights": {
-          "stdlib_ratio": 1.4208,
-          "cli_ratio": 1.42,
-          "delta_pct": 0.06
-        },
-        "symbols": {
-          "stdlib_ratio": 3.7823,
-          "cli_ratio": 3.782,
-          "delta_pct": 0.01
-        },
-        "wasm": {
-          "stdlib_ratio": 2.5387,
-          "cli_ratio": 2.539,
-          "delta_pct": 0.01
-        },
-        "winexe": {
-          "stdlib_ratio": 3.6063,
-          "cli_ratio": 3.606,
-          "delta_pct": 0.01
-        },
-        "armexe": {
-          "stdlib_ratio": 2.6904,
-          "cli_ratio": 2.69,
-          "delta_pct": 0.02
         }
+      },
+      "skipped": {
+        "llvm-project-19.1.0.src.tar": "bytes absent locally",
+        "enwik9.txt": "bytes absent locally",
+        "clang-releases-16-17-18-19.tar": "bytes absent locally",
+        "nasa-http-jul-aug-1995.log": "bytes absent locally",
+        "ecoli-DRR002013-full.fastq": "bytes absent locally",
+        "noaa-ghcn-daily-2021-2023.csv": "bytes absent locally",
+        "bts-ontime-2022-2024.parquet": "bytes absent locally",
+        "weights.safetensors": "larger than 64 MiB cap"
       }
     }
   }

@@ -24,21 +24,26 @@ echo "== 2/4 verify $PREFIX/ is empty (must be pristine) =="
 n=$(aws s3 ls "s3://$B/$PREFIX/" --recursive 2>/dev/null | wc -l | tr -d ' ')
 [[ "$n" == "0" ]] || { echo "ABORT: s3://$B/$PREFIX/ is not empty ($n objects). Freeze must be the first write."; exit 1; }
 
+echo "== 2.5/4 preflight: the frozen set == the Zenodo deposit set, all bytes verified =="
+# Single gate that the immutable S3 prefix and the immutable DOI record will carry the
+# IDENTICAL object set, byte-for-byte, and that live draft/ metadata is not stale.
+uv run python scripts/preflight-freeze.py "$B" || { echo "ABORT: preflight failed (see above)."; exit 1; }
+
 echo "== 3/4 copy draft/ -> $PREFIX/ (server-side, immutable cache) =="
-# Allowlist ONLY the frozen product. draft/ also holds retired byte-property-cube
-# build artifacts (individual/, bundle/, bundles/, negative/, bench/) — ~57 GB
-# that must NOT be immortalized in the permanent DOI. Copy the curated set only.
+# Allowlist ONLY the frozen product: DATA + METADATA + LICENSES. The permanent 2026/
+# prefix is data-only — NO presentation assets (index.html, the 3D cube, preview
+# images, legacy redirects). The browsable site lives in git + the mutable draft/
+# prefix (what the CDN serves) and the human-readable landing is the Zenodo record;
+# freezing a page here would immortalize a placeholder DOI in an immutable prefix.
+# draft/ also holds retired byte-property-cube build artifacts (individual/, bundle/,
+# bundles/, negative/, bench/) — ~57 GB that must NOT enter the DOI. Copy the curated
+# set only. This metadata set MUST equal zenodo-deposit.py META_ARTIFACTS
+# (scripts/preflight-freeze.py asserts it).
 INCLUDES=(
   --exclude "*"
   --include "corpus/*"                      # the named core files
   --include "scale/*"                     # scale-tier (weights ladder, large files)
   --include "LICENSES/*"                  # full license texts
-  --include "index.html"                  # the primary page (hero + 3D cube + datasets)
-  --include "squishy-cube.js"             # the 3D-cube renderer
-  --include "cube-data.json"              # the 3D-cube data (live metrics)
-  --include "photo.jpg" --include "movie.jpg"   # rendered preview assets
-  --include "provenance/*"                # legacy explorer path (redirect to primary)
-  --include "provenance.html" --include "review.html"   # legacy redirects
   --include "LICENSE-MANIFEST.csv"
   --include "CHECKSUMS.sha256"
   --include "NOTICE"
@@ -65,7 +70,9 @@ cat <<EOF
   - git tag Squishy-2026 && git push --tags
   - mint the DOI:   ZENODO_TOKEN=<fresh-token> uv run python scripts/zenodo-deposit.py
   - backup:         aws s3 sync s3://$B/$PREFIX/ s3://<dr-bucket>/$PREFIX/   (cross-region)
-  - update CITATION.cff + the runner's DOI fetch with the minted DOI
+  - paste the minted DOI into CITATION.cff + the website's "How to cite" section,
+    then redeploy the LIVE draft/ site (the ONLY post-mint change — the runner fetches
+    by --base/SQUISHY_BASE, not by DOI, so nothing else needs touching)
   - announce
 $PREFIX/ is now populated and immutable. Squishy-2026 is frozen.
 EOF

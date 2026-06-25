@@ -19,7 +19,7 @@ ARTIFACTS policy:
                 below if you want to hard-fail on missing data too.
 """
 from __future__ import annotations
-import argparse, json, os, re, sys, urllib.error, urllib.request
+import argparse, hashlib, json, os, re, sys, urllib.error, urllib.request
 from pathlib import Path
 
 
@@ -53,30 +53,48 @@ REPO = Path(__file__).resolve().parent.parent
 # ── META FILES ───────────────────────────────────────────────────────────────
 # These are small, committed or always-generated before freeze.  Hard-fail if any
 # are absent so the DOI record is never missing its manifest/license/checksum.
+# This set MUST equal the metadata that freeze.sh copies into the immutable 2026/
+# prefix (scripts/preflight-freeze.py asserts that equality) — otherwise the DOI
+# record and the frozen S3 prefix would disagree.
+_META = REPO / "build" / "meta"
 META_ARTIFACTS = [
-    REPO / "build" / "meta" / "edition.json",
-    REPO / "build" / "meta" / "schema.json",
-    REPO / "build" / "meta" / "baseline.json",
-    REPO / "build" / "meta" / "CHECKSUMS.sha256",
-    REPO / "build" / "meta" / "LICENSE-MANIFEST.csv",
-    REPO / "build" / "meta" / "NOTICE",
-    REPO / "build" / "meta" / "squishy-board-complete.json",   # the whole-corpus board (every codec)
-    REPO / "build" / "meta" / "squishy-score-complete.json",   # the round-trip-verified reference score
-]
+    _META / "edition.json",
+    _META / "schema.json",
+    _META / "baseline.json",
+    _META / "CHECKSUMS.sha256",
+    _META / "LICENSE-MANIFEST.csv",
+    _META / "NOTICE",
+    _META / "squishy-board-complete.json",   # the whole-corpus board (every codec)
+    _META / "squishy-score-complete.json",   # the round-trip-verified reference score
+    _META / "file-properties.json",          # intrinsic byte axes (named core)
+    _META / "scale-properties.json",          # intrinsic byte axes (scale tier)
+    _META / "size-convergence.json",          # ratio-vs-size convergence evidence
+    _META / "verification-pass4.json",        # independent stdlib cross-check of the board
+] + sorted((_META / "LICENSES").glob("*"))   # full license texts (one per license)
 
 # ── DATA FILES ───────────────────────────────────────────────────────────────
 # Derived at runtime from edition.json: every distributed corpus+scale file maps to
 # build/raw/<key> on disk (same layout as squishy.py's raw_path()).  Missing files
 # warn + continue (see ARTIFACTS policy in module docstring).
 
-def _data_artifacts() -> list[Path]:
-    """Return a list of local paths for every file in edition.json."""
+def _data_expected() -> list[tuple[Path, str, str]]:
+    """Return (local_path, key, sha256) for every distributed file in edition.json.
+    The sha256 is the authoritative published hash the local bytes must match."""
     ed_path = REPO / "build" / "meta" / "edition.json"
     if not ed_path.exists():
         return []  # META check will catch this first
     ed = json.loads(ed_path.read_text())
     raw_root = REPO / "build" / "raw"
-    return [raw_root / f["key"] for f in ed.get("files", []) if f.get("key")]
+    return [(raw_root / f["key"], f["key"], f.get("sha256", ""))
+            for f in ed.get("files", []) if f.get("key")]
+
+
+def _sha256(p: Path) -> str:
+    h = hashlib.sha256()
+    with p.open("rb") as fh:
+        for c in iter(lambda: fh.read(1 << 20), b""):
+            h.update(c)
+    return h.hexdigest()
 
 
 def _scored_set_fingerprint() -> str | None:
@@ -92,13 +110,17 @@ def _scored_set_fingerprint() -> str | None:
 
 META = {
     "metadata": {
-        "title": "Squishy-2026: a compression benchmark corpus",
+        "title": "Squishy-2026: a citable compression benchmark corpus and score",
         "upload_type": "dataset",
-        "description": ("The Squishy-2026 named core: a small, curated set of real, "
-                        "redistributable modern files that compress differently, plus "
-                        "the Squishy Score (geometric mean of per-file compression "
-                        "ratio). Successor to the Silesia corpus. See NOTICE and "
-                        "LICENSE-MANIFEST.csv for per-file provenance and licenses."),
+        "description": ("Squishy-2026 — a curated, citable compression benchmark corpus "
+                        "(successor to the Silesia corpus) and its headline metric, the "
+                        "Squishy Score: the geometric mean of per-file compression ratio "
+                        "over the whole corpus (one vote per file), reported with a "
+                        "byte-weighted corpus bits-per-byte companion. 30 real, "
+                        "redistributable files — 26 scored cells spanning kinds and sizes "
+                        "(tens of MB to multi-GB) plus 4 non-scored diagnostics. See "
+                        "NOTICE and LICENSE-MANIFEST.csv for per-file provenance and "
+                        "licenses; CHECKSUMS.sha256 verifies every file."),
         "creators": [{"name": "Danger, Jack"}],
         "keywords": ["compression", "benchmark", "corpus", "lossless"],
         "version": "Squishy-2026",
@@ -143,6 +165,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--sandbox", action="store_true", help="use sandbox.zenodo.org")
     ap.add_argument("--publish", action="store_true", help="publish (mint final DOI) — irreversible")
+    ap.add_argument("--allow-partial", action="store_true",
+                    help="allow missing/mismatched data files (dry-run only; NEVER for the real mint)")
     args = ap.parse_args()
     token = os.environ.get("ZENODO_TOKEN")
     if not token:
@@ -157,15 +181,43 @@ def main() -> int:
               f"  {missing_meta}", file=sys.stderr)
         return 1
 
-    # ── guard: warn-but-continue on missing DATA files ────────────────────────
-    data_artifacts = _data_artifacts()
-    missing_data = [str(a) for a in data_artifacts if not a.exists()]
+    # ── guard: every DATA file must be present AND match its published sha256 ──
+    # The DOI is permanent: it must anchor the EXACT, COMPLETE set of bytes the
+    # edition publishes. A missing file (e.g. the scale tier not checked out) or a
+    # byte that does not match edition.json would silently mint an incomplete/wrong
+    # record. Hard-fail unless explicitly running a dry-run (--sandbox/--allow-partial).
+    data_expected = _data_expected()
+    present_data, missing_data, mismatched = [], [], []
+    print(f"verifying {len(data_expected)} data files against edition.json sha256…")
+    for path, key, want_sha in data_expected:
+        if not path.exists():
+            missing_data.append(key); continue
+        if want_sha and _sha256(path) != want_sha:
+            mismatched.append(key); continue
+        present_data.append(path)
     if missing_data:
-        print(f"WARNING: {len(missing_data)}/{len(data_artifacts)} data files not found locally "
-              f"(normal in sandbox/dry-run; they must be present for the final public deposit):")
-        for p in missing_data:
-            print(f"  missing: {p}")
-    present_data = [a for a in data_artifacts if a.exists()]
+        print(f"  {len(missing_data)} missing: {missing_data}")
+    if mismatched:
+        print(f"  {len(mismatched)} sha MISMATCH: {mismatched}")
+    incomplete = bool(missing_data or mismatched)
+    lenient = args.sandbox or args.allow_partial
+    if incomplete and args.publish:
+        # --publish mints the permanent DOI; it can NEVER anchor an incomplete set,
+        # regardless of --allow-partial (which only loosens DRAFT creation).
+        print(f"ERROR: refusing to PUBLISH — {len(missing_data)} missing + {len(mismatched)} "
+              f"mismatched of {len(data_expected)} data files. The minted DOI must carry the "
+              f"complete, byte-correct edition.", file=sys.stderr)
+        return 1
+    if incomplete and not lenient:
+        print(f"ERROR: {len(missing_data)} missing + {len(mismatched)} mismatched data files. "
+              f"The deposit must carry all {len(data_expected)} files, byte-correct. "
+              f"Check out the full corpus (incl. the scale tier) and retry, or pass "
+              f"--sandbox/--allow-partial for a dry-run.", file=sys.stderr)
+        return 1
+    if incomplete and lenient:
+        print(f"WARNING: proceeding WITHOUT {len(missing_data)+len(mismatched)} data files "
+              f"(dry-run mode) — this deposit must NOT be published.")
+    print(f"  ✓ {len(present_data)}/{len(data_expected)} data files present and sha-verified")
 
     # ── stamp the edition fingerprint in the metadata ─────────────────────────
     # The scored_set_fingerprint is a stable, timestamp-independent hash of the
