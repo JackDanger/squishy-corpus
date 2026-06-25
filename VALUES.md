@@ -3,20 +3,23 @@
 Squishy is meant to be a shared yardstick for decades. Every rule in
 [`RULES.md`](RULES.md) and every guardrail in the code descends from a small set
 of values. They're worth stating plainly, because they explain *why* the project
-is careful where it's careful — and why it would rather show you a labelled draft
-than an impressive number it can't yet stand behind.
+is careful where it's careful — and why it ties every number to verified bytes and a
+dated, DOI-backed edition rather than quoting an impressive figure it can't stand behind.
 
 ### 1. Honesty over hype
 
-No number is citable until the edition is frozen and DOI-backed — and we say so,
-loudly. The one near-full run on record is stamped `DO_NOT_CITE` because it
-predates the near-incompressible members (photo / movie / weights) being folded
-into the scored corpus — so its number is a known over-estimate. We left the flag
-in the file rather than quietly drop the number. A draft is labelled a draft.
+A Squishy Score is real and reproducible: the runner verifies every file against its
+published SHA-256 and **refuses to score bytes it can't verify** (always-on,
+fail-closed), so a number can never quietly drift from the corpus it claims. The
+headline is the **complete-edition** geomean over *every* scored file — the
+near-incompressible members (photo / movie / weights) folded in, not cherry-picked away
+to flatter the ratio. And a score is never a floating figure: it is pinned to a dated,
+DOI-backed edition (`Squishy-2026`), so what you cite can't shift under you.
 
-> *See it:* the `DO_NOT_CITE` flag in
-> [`build/meta/squishy-score-complete.json`](build/meta/squishy-score-complete.json);
-> the pre-freeze status note at the foot of the [README](README.md).
+> *See it:* the complete board in
+> [`build/meta/squishy-board-complete.json`](build/meta/squishy-board-complete.json)
+> (`round_trip_verified` on the reference codec); the per-file hashes in
+> [`build/meta/edition.json`](build/meta/edition.json).
 
 ### 2. Reproducible by anyone, forever
 

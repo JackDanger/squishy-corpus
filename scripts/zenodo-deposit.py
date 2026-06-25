@@ -60,7 +60,8 @@ META_ARTIFACTS = [
     REPO / "build" / "meta" / "CHECKSUMS.sha256",
     REPO / "build" / "meta" / "LICENSE-MANIFEST.csv",
     REPO / "build" / "meta" / "NOTICE",
-    REPO / "build" / "meta" / "squishy-scores.json",
+    REPO / "build" / "meta" / "squishy-board-complete.json",   # the whole-corpus board (every codec)
+    REPO / "build" / "meta" / "squishy-score-complete.json",   # the round-trip-verified reference score
 ]
 
 # ── DATA FILES ───────────────────────────────────────────────────────────────

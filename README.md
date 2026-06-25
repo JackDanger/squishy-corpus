@@ -27,19 +27,18 @@ spot, which is what makes "I tested on Squishy" mean something.
 ```
 git clone https://github.com/JackDanger/squishy-corpus && cd squishy-corpus
 uv run squishy-calculate --cmd "zstd -19 -c"   # streams + verifies the FULL corpus, scores your codec
-→ Squishy Score (draft): N.NN×   # real & reproducible NOW — citable once Squishy-2026 freezes (DOI pending)
+→ Squishy Score: N.NN×           # the whole corpus, every file verified against its published SHA-256
 ```
 
-You get a **real, reproducible number today**; a **citable** number lands when
-Squishy-2026 freezes. We keep those two separate on purpose — labelling a draft a draft is
-[value #1](VALUES.md). The runner verifies every file against its published
-SHA-256 (fail-closed on any mismatch), caches results, and is resumable.
+You get a **real, reproducible number**: the runner verifies every file against its
+published SHA-256 (fail-closed on any mismatch), caches results, and is resumable. The
+headline **Squishy Score** is the geometric mean of per-file ratio over the complete
+corpus — one vote per file.
 
-> **Which number?** Two panels exist and they are *not* the same: a quick
-> **small-member** panel (zstd -19 = **4.15×**, table in the [reference
-> board](#reference-board)) for ranking codecs fast, and the **complete-edition**
-> run, which is larger and is the only thing that ever prints a citable *Squishy
-> Score* — none exists yet (the one near-complete run is flagged `DO_NOT_CITE`).
+> **The number.** The headline is the **complete-edition** Squishy Score — every
+> file, core *and* large rungs (zstd -19 = **4.74×**; full panel in the [Squishy
+> Score board](#the-squishy-score-board)). The edition is the unit you cite: its
+> bytes, SHA-256s, and Zenodo DOI define **Squishy-2026**.
 > [What the numbers mean →](#what-the-numbers-mean)
 
 ## What the numbers mean
@@ -253,40 +252,35 @@ diffs, [not a Squishy Score](#the-squishy-score).
 local-bytes path (both `squishy-calculate` and `squishy bench` are implemented in
 `scripts/squishy.py`).
 
-## Reference board
+## The Squishy Score board
 
-There is **no complete-edition Squishy Score yet** — the only full-corpus run on
-record ([`build/meta/squishy-score-complete.json`](build/meta/squishy-score-complete.json))
-is flagged `DO_NOT_CITE`: it predates folding the near-incompressible members into the
-score (so its number is an over-estimate) and there's no frozen edition/DOI behind it.
-What *is* real: the large rungs compress better than their small siblings (LLVM 12.6×,
-csv-4 GB 12.6×, clang-archive 17.5×) — long-range matching at scale shows up in the
-per-file ratios.
-
-The table below is the **fast panel over the small members only** (draft) — handy
-for ranking codecs quickly; the full panel over the complete edition (the **26
-scored cells** declared in [`build/meta/schema.json`](build/meta/schema.json)) is the
-expensive periodic computation. Every codec build is pinned in
-[`build/tools.lock`](build/tools.lock). This panel predates the 4 new Binary & Media
-cells (`symbols`, `wasm`, `winexe`, `armexe`) and the large rungs; once those bytes
-are published and re-scored with the pinned codec builds the full roster folds into
-the panel.
+The headline board is the **complete-edition** Squishy Score
+([`build/meta/squishy-board-complete.json`](build/meta/squishy-board-complete.json)):
+every panel codec over **every scored file** — all 26 cells declared in
+[`build/meta/schema.json`](build/meta/schema.json), core *and* large rungs, the
+near-incompressible members (photo / movie / weights) folded in. The reference
+codec (zstd -19) additionally carries a full-edition round-trip
+([`squishy-score-complete.json`](build/meta/squishy-score-complete.json),
+`round_trip_verified: true`). Every codec build is pinned in
+[`build/tools.lock`](build/tools.lock).
 
 | codec | Squishy Score (×) | corpus bpb (byte-weighted) |
 |-------|------------------:|---------------------------:|
-| xz -9 | 4.37× | 2.977 |
-| brotli -11 | 4.34× | 3.021 |
-| zstd -22 | 4.20× | 3.092 |
-| zstd -19 | 4.15× | 3.106 |
-| bzip2 -9 | 3.98× | 3.278 |
-| gzip -9 | 3.23× | 3.495 |
+| xz -9 | 5.10× | 1.086 |
+| brotli -11 | 5.03× | 1.107 |
+| zstd -22 | 4.94× | 1.108 |
+| zstd -19 | 4.74× | 1.189 |
+| bzip2 -9 | 4.45× | 1.345 |
+| gzip -9 | 3.63× | 1.594 |
 
-Columns are the **Squishy Score** (×, equal-vote) and **corpus bpb**
-(byte-weighted) — see [What the numbers mean](#what-the-numbers-mean). Only
-**mainstream, version-pinned, installable** codecs are on the reproducible board;
-high-ratio context-mixing codecs (zpaq/cmix/paq) are submitter-reported on the
-leaderboard, since a hand-carried binary can't be reproduced bit-for-bit by a
-third party.
+Columns are the **Squishy Score** (×, equal-vote — one geomean vote per file) and
+**corpus bpb** (byte-weighted, where the big files dominate) — see [What the numbers
+mean](#what-the-numbers-mean). The large rungs compress better than their small
+siblings (LLVM 12.6×, csv-4 GB 12.6×, clang-archive 17.5×) — long-range matching at
+scale shows up in the per-file ratios. Only **mainstream, version-pinned, installable**
+codecs are on the reproducible board; high-ratio context-mixing codecs (zpaq/cmix/paq)
+are submitter-reported on the leaderboard, since a hand-carried binary can't be
+reproduced bit-for-bit by a third party.
 
 ## Editions & permanence
 
@@ -311,12 +305,9 @@ Buck Bunny) is © Blender Foundation, CC-BY 3.0. The build system is [MIT](LICEN
 
 ---
 
-*Status: pre-freeze draft. The scored roster is constituted as **26 cells** in
-[`build/meta/schema.json`](build/meta/schema.json) (19 small named members + 6 large
-rungs + the `archive` long-range member; the near-incompressible budget is 3). The 4
-newest Binary & Media cells (`symbols`, `wasm`, `winexe`, `armexe`) are in the manifest
-but their bytes are pending upload to the public mirror — a complete streaming run will
-404 on them until the next `make publish`, and the reference board still reflects the
-older small-member set. The complete-edition Squishy Score is computed once those bytes
-land; the edition **will be** frozen and DOI-minted as `Squishy-2026`. Roadmap:
-[`plans/squishy-2026-readiness.md`](plans/squishy-2026-readiness.md).*
+*Status: Squishy-2026. The scored roster is constituted as **26 cells** in
+[`build/meta/schema.json`](build/meta/schema.json) (19 named core members + 7 large
+rungs; the near-incompressible budget is 3). Every member's bytes are published to the
+public mirror and verified end-to-end (`make audit` HEADs each file for size + SHA-256),
+and the complete-edition Squishy Score is computed over the whole corpus. The edition's
+permanence anchor is its Zenodo DOI, recorded in [`CITATION.cff`](CITATION.cff).*

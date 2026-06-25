@@ -3,8 +3,10 @@
 running each pinned panel codec on every core file. Replaces the old
 individual/-matrix path. Writes build/meta/squishy-scores.json in the published
 schema (score + byte-weighted corpus_bpb + per-file + per-category +
-codec_version/codec_command), labelled DRAFT/partial (small members only; the
-large rungs are the periodic whole-corpus computation).
+codec_version/codec_command) over the named core members — the fast per-file
+reference board. The headline whole-corpus Squishy Score (every file, core +
+large rungs) is the complete board: scripts/calculate-all.py →
+build/meta/squishy-board-complete.json.
 
   uv run python scripts/board-live.py [--json build/meta/squishy-scores.json]
 """
@@ -49,10 +51,11 @@ def main() -> int:
         "core_files": n_core,
         "host_provenance": sq.host_provenance(),       # machine/arch the scores ran on
         "missing": missing,
-        "status": ("DRAFT — partial board over the small core members only. The large size "
-                   "rungs are scored in the periodic whole-corpus computation; until then this "
-                   "is NOT a citable Squishy Score. Each row is a property of "
-                   "(corpus, codec, codec_version, codec_command), reproducible for the pinned build."),
+        "status": ("Per-file reference board over the named core members — a fast view for "
+                   "ranking codecs file-by-file. The headline whole-corpus Squishy Score (every "
+                   "file, core + large rungs) is the complete board in squishy-board-complete.json. "
+                   "Each row is a property of (corpus, codec, codec_version, codec_command), "
+                   "reproducible for the pinned build."),
         "panel": panel,
     }
     a.json.parent.mkdir(parents=True, exist_ok=True)

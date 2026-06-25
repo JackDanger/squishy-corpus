@@ -339,7 +339,10 @@ def main() -> int:
     s = importlib.util.spec_from_file_location("sq", REPO / "scripts" / "squishy.py")
     sq = importlib.util.module_from_spec(s); s.loader.exec_module(sq)
     man = {r["core_slot"]: r for r in csv.DictReader((REPO / "build/meta/LICENSE-MANIFEST.csv").open())}
-    sj = json.loads((REPO / "build/meta/squishy-scores.json").read_text()) if (REPO / "build/meta/squishy-scores.json").exists() else {"panel": {}}
+    # The headline board = the complete whole-corpus computation (every panel codec over
+    # every scored file, core + large rungs). This is THE Squishy Score the site displays.
+    cbp = REPO / "build/meta/squishy-board-complete.json"
+    cb = json.loads(cbp.read_text()) if cbp.exists() else {"codecs": {}}
 
     # Edition manifest = the source of truth for what we SERVE: every member's public
     # download URL and size. We key it by display (core) and by name (scale) so a card
@@ -353,12 +356,17 @@ def main() -> int:
     sp = REPO / "build/meta/scale-properties.json"
     scale = json.loads(sp.read_text()) if sp.exists() else {"files": {}}
 
-    # tools: scalable list of (label, flag, squishy, bpb, categories, per_file)
+    # tools: scalable list of (label, flag, squishy, bpb, categories, per_file).
+    # The complete board keys per_file by filename; the dataset cards key by display
+    # slug — map filename → display so the per-file bars line up. (Scale-tier filenames
+    # have no display slug and pass through unchanged, harmless to the core cards.)
+    name2disp = {n: d for files in sq.CORE.values() for (d, _s, n) in files}
     tools = []
-    for codec, r in sj.get("panel", {}).items():
+    for codec, r in cb.get("codecs", {}).items():
         nm, flag = tool_label(codec, r.get("codec_version", ""), r.get("codec_command", ""))
+        pf = {name2disp.get(k, k): v for k, v in r.get("per_file", {}).items()}
         tools.append({"label": nm, "flag": flag, "sq": r.get("squishy_score"), "bpb": r.get("corpus_bpb"),
-                      "cats": r.get("categories", {}), "pf": r.get("per_file", {})})
+                      "cats": r.get("categories", {}), "pf": pf})
     cats = list(sq.CORE.keys())
 
     core = [(d, st, n) for files in sq.CORE.values() for (d, st, n) in files]
@@ -412,7 +420,8 @@ def main() -> int:
     if extra:
         cards += ('<h2>The big ones</h2>'
                   '<p class="cap">The same kinds of data at gigabyte scale, where long-range '
-                  'matching and big compression windows start to matter. Still being assembled.</p>')
+                  'matching and big compression windows start to matter — scored in the board '
+                  'above as part of the whole-corpus Squishy Score.</p>')
         for r in sorted(extra, key=lambda r: int(r["size_bytes"])):
             nm = r["name"]; e = ed_by_name.get(nm, {}); pm = scale["files"].get(nm)
             size = (pm or {}).get("size") or int(r["size_bytes"])
@@ -447,7 +456,8 @@ def main() -> int:
     META = REPO / "build" / "meta"
     served_meta = [
         "edition.json", "schema.json", "baseline.json", "CHECKSUMS.sha256",
-        "LICENSE-MANIFEST.csv", "NOTICE", "squishy-scores.json",
+        "LICENSE-MANIFEST.csv", "NOTICE",
+        "squishy-board-complete.json", "squishy-score-complete.json",
         "file-properties.json", "scale-properties.json", "size-convergence.json",
         "verification-pass4.json",
     ]
@@ -619,9 +629,10 @@ over all bytes, where the big files dominate.</p>
   <li>Files and results are cached, so re-runs are instant.</li>
 </ul>
 
-<h2>Reference board <span class="hint">· draft</span></h2>
-<p class="cap">Familiar tools on the small files only, so not an official Squishy Score yet.
-Click a column to sort.</p>
+<h2>The Squishy Score board</h2>
+<p class="cap">Six familiar codecs over the whole corpus — every file counts once.
+The headline column is the Squishy Score (geomean of per-file ratio); corpus bpb is the
+byte-weighted companion. Click a column to sort.</p>
 <div class="lbwrap"><table class="lead" id="lead"><thead><tr>{lbhead}</tr></thead><tbody>{lb}</tbody></table></div>
 
 <h2>Every file</h2>

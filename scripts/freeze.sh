@@ -42,7 +42,8 @@ INCLUDES=(
   --include "LICENSE-MANIFEST.csv"
   --include "CHECKSUMS.sha256"
   --include "NOTICE"
-  --include "squishy-scores.json"
+  --include "squishy-board-complete.json"   # the whole-corpus Squishy Score board (every codec)
+  --include "squishy-score-complete.json"   # the round-trip-verified reference score
   --include "verification-pass4.json"
   --include "size-convergence.json"
   --include "file-properties.json"        # intrinsic byte properties (the 3D-cube axes)
