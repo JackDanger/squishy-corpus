@@ -14,7 +14,7 @@ get their own VersionIds when copied) and is therefore NOT itself part of the fr
   uv run python scripts/capture-frozen-versions.py BUCKET [--prefix 2026]
 """
 from __future__ import annotations
-import argparse, importlib.util, json, subprocess, sys, time
+import argparse, hashlib, importlib.util, json, subprocess, sys, tempfile, time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -26,9 +26,13 @@ def _load(name: str, rel: str):
 
 
 def _head(bucket: str, key: str) -> dict | None:
+    """HEAD with checksum mode → {size, sha (x-amz-meta-sha256, owner-set),
+    crc64 (S3-computed CRC64NVME), version, modified}. None if absent."""
     r = subprocess.run(
         ["aws", "s3api", "head-object", "--bucket", bucket, "--key", key,
-         "--query", "{size:ContentLength,sha:Metadata.sha256,version:VersionId,modified:LastModified}",
+         "--checksum-mode", "ENABLED",
+         "--query", "{size:ContentLength,sha:Metadata.sha256,crc64:ChecksumCRC64NVME,"
+                    "version:VersionId,modified:LastModified}",
          "--output", "json"],
         capture_output=True, text=True)
     if r.returncode != 0:
@@ -37,6 +41,22 @@ def _head(bucket: str, key: str) -> dict | None:
         return json.loads(r.stdout)
     except Exception:
         return None
+
+
+def _sha256_of_version(bucket: str, key: str, version_id: str) -> str | None:
+    """Download an EXACT object version and SHA-256 its actual bytes. S3 verifies its own
+    CRC64NVME on GET, so a clean download is provably the real object. None on error."""
+    with tempfile.TemporaryDirectory(prefix="squishy-sha-") as td:
+        dest = Path(td) / "obj"
+        r = subprocess.run(["aws", "s3api", "get-object", "--bucket", bucket, "--key", key,
+                            "--version-id", version_id, str(dest)], capture_output=True, text=True)
+        if r.returncode != 0:
+            return None
+        h = hashlib.sha256()
+        with dest.open("rb") as f:
+            for c in iter(lambda: f.read(1 << 20), b""):
+                h.update(c)
+        return h.hexdigest()
 
 
 def _expected_rel_keys() -> list[str]:
@@ -58,15 +78,29 @@ def main() -> int:
     a = ap.parse_args()
 
     rel_keys = _expected_rel_keys()
-    objects, missing, unversioned = {}, [], []
+    objects, missing, unversioned, computed = {}, [], [], 0
     for rk in rel_keys:
-        h = _head(a.bucket, f"{a.prefix}/{rk}")
+        full = f"{a.prefix}/{rk}"
+        h = _head(a.bucket, full)
         if h is None:
             missing.append(rk); continue
-        if not h.get("version") or h.get("version") == "null":
+        ver = h.get("version")
+        if not ver or ver == "null":
             unversioned.append(rk)
-        objects[rk] = {"size": h.get("size"), "sha256": h.get("sha"),
-                       "version_id": h.get("version"), "last_modified": h.get("modified")}
+        # Data files carry owner-set x-amz-meta-sha256; meta/license objects do NOT (S3
+        # only stored a CRC64NVME), so compute SHA-256 from the actual frozen bytes.
+        sha = h.get("sha")
+        if not sha and ver and ver != "null":
+            sha = _sha256_of_version(a.bucket, full, ver)
+            if sha:
+                computed += 1
+        objects[rk] = {"size": h.get("size"), "sha256": sha,
+                       "crc64nvme": h.get("crc64"),          # S3-computed integrity checksum
+                       "version_id": ver, "last_modified": h.get("modified")}
+    no_sha = [rk for rk, o in objects.items() if not o["sha256"]]
+    if no_sha:
+        print(f"WARNING: could not obtain sha256 for {len(no_sha)} objects: {no_sha}", file=sys.stderr)
+    print(f"  computed sha256 for {computed} objects S3 had none for (meta/licenses)")
     if missing or unversioned:
         print(f"ERROR: cannot capture a complete versioned manifest — "
               f"{len(missing)} missing {missing}; {len(unversioned)} unversioned {unversioned}. "
@@ -93,9 +127,11 @@ def main() -> int:
         return 1
     base = json.loads((REPO / "build/meta/baseline.json").read_text())
     manifest = {
-        "note": ("Exact immutable identity of every object in the frozen prefix "
-                 "(key, size, sha256, S3 VersionId). Provenance for the DOI; not part of "
-                 "the frozen data set itself."),
+        "note": ("Exact immutable identity of every object in the frozen prefix: size, "
+                 "sha256 (from x-amz-meta-sha256 for data; computed from the actual bytes for "
+                 "meta/license objects, which S3 stored only a CRC64NVME for), the "
+                 "S3-computed CRC64NVME, and the S3 VersionId. Provenance for the DOI; not "
+                 "part of the frozen data set itself."),
         "bucket": a.bucket,
         "prefix": a.prefix,
         "edition": ed.get("edition"),
