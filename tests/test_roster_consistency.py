@@ -90,8 +90,9 @@ def test_every_recipe_has_valid_origin():
 
 def test_checksums_cover_every_distributed_file():
     """CHECKSUMS.sha256 is the published trust-root: it must list EVERY distributed
-    file — the named core AND the scale tier (all of edition.json), so the one-line
-    downloader can verify the whole edition, not just the core."""
+    object so the one-line downloader can verify the WHOLE distribution — the 30 data
+    files (core + scale, all of edition.json) AND the metadata + license tier — minus
+    CHECKSUMS.sha256 itself (it cannot contain its own hash)."""
     p = META / "CHECKSUMS.sha256"
     if not p.exists():
         pytest.skip("no CHECKSUMS.sha256")
@@ -102,8 +103,12 @@ def test_checksums_cover_every_distributed_file():
             assert len(parts[0]) == 64, f"bad sha length: {line!r}"
             keys.add(parts[1])
     ed = _read_json("edition.json")
+    zen = _load("zen_roster", "scripts/zenodo-deposit.py")
     want = {f["key"] for f in ed["files"]}
-    assert keys == want, f"CHECKSUMS ⇄ edition drift: {keys ^ want}"
+    want |= {p.name for p in zen.META_ARTIFACTS
+             if p.parent.name == "meta" and p.name != "CHECKSUMS.sha256"}
+    want |= {f"LICENSES/{p.name}" for p in zen.META_ARTIFACTS if p.parent.name == "LICENSES"}
+    assert keys == want, f"CHECKSUMS ⇄ distribution drift: {keys ^ want}"
 
 
 def test_core_matches_file_properties():

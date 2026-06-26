@@ -37,27 +37,30 @@ fi
 
 echo "→ deploying $site → $dest  (cdn: $DIST_ID)"
 
-# 1) Large/static assets: sync, only changed files upload. Long cache (the CDN
-#    invalidation below covers any that did change this run).
-aws s3 sync "$site" "$dest" \
-  --no-progress \
-  --cache-control "public, max-age=86400" \
-  --exclude '*.html' --exclude '*.js' --exclude '*.json'
-
-# 2) Text files (html/js/json): always re-put
-#    with an explicit charset content-type and a short cache. They're tiny.
-find "$site" -type f \( -name '*.html' -o -name '*.js' -o -name '*.json' \) -print0 \
+# 1+2) Upload every file with an explicit content-type, its bytes' SHA-256 as
+#      x-amz-meta-sha256, AND an S3-native SHA256 checksum (--checksum-algorithm SHA256)
+#      so every object is self-describing and integrity-verifiable straight from the S3
+#      HEAD/GET API — the data tier already carries x-amz-meta-sha256 (set at publish);
+#      this gives the metadata + license tier the same. Per-file (not `s3 sync`) because
+#      the sha metadata is per-file; build/site is small so re-putting each deploy is cheap.
+find "$site" -type f -print0 \
   | while IFS= read -r -d '' f; do
       rel="${f#"$site"/}"
-      case "$f" in
-        *.html) ct="text/html; charset=utf-8" ;;
-        *.js)   ct="application/javascript; charset=utf-8" ;;
-        *.json) ct="application/json; charset=utf-8" ;;
+      sha=$(shasum -a 256 "$f" | cut -d' ' -f1)
+      case "$rel" in
+        *.html)               ct="text/html; charset=utf-8";            cache="public, max-age=120, must-revalidate" ;;
+        *.js)                 ct="application/javascript; charset=utf-8"; cache="public, max-age=120, must-revalidate" ;;
+        *.json)               ct="application/json; charset=utf-8";      cache="public, max-age=120, must-revalidate" ;;
+        *.csv)                ct="text/csv; charset=utf-8";              cache="public, max-age=86400" ;;
+        *.jpg|*.jpeg)         ct="image/jpeg";                           cache="public, max-age=86400" ;;
+        *.svg)                ct="image/svg+xml";                        cache="public, max-age=86400" ;;
+        *)                    ct="text/plain; charset=utf-8";            cache="public, max-age=86400" ;;
       esac
       aws s3 cp "$f" "$dest/$rel" \
         --content-type "$ct" \
-        --cache-control "public, max-age=120, must-revalidate" \
-        --metadata-directive REPLACE \
+        --cache-control "$cache" \
+        --metadata "sha256=$sha" \
+        --checksum-algorithm SHA256 \
         --no-progress
     done
 
