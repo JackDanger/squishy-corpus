@@ -21,7 +21,9 @@ echo "== 1/4 audit draft/ (the live base_url serves the draft prefix) =="
 uv run python scripts/audit-distribution.py
 
 echo "== 2/4 verify $PREFIX/ is empty (must be pristine) =="
-n=$(aws s3 ls "s3://$B/$PREFIX/" --recursive 2>/dev/null | wc -l | tr -d ' ')
+# NOTE: `aws s3 ls` exits 1 when the prefix is EMPTY (the state we want), so `|| true`
+# keeps `set -e`/pipefail from killing the script before the count is checked.
+n=$(aws s3 ls "s3://$B/$PREFIX/" --recursive 2>/dev/null | wc -l | tr -d ' ') || true
 [[ "$n" == "0" ]] || { echo "ABORT: s3://$B/$PREFIX/ is not empty ($n objects). Freeze must be the first write."; exit 1; }
 
 echo "== 2.5/4 preflight: the frozen set == the Zenodo deposit set, all bytes verified =="
