@@ -148,7 +148,8 @@ def upload_file(bucket: str, token: str, path: Path) -> None:
     never loaded into RAM.  No upload timeout is set so that very large files
     (e.g. a 4 GB CSV) do not time out mid-transfer.
     """
-    url = f"{bucket}/{path.name}?access_token={token}"
+    arcname = path.name
+    url = f"{bucket}/{arcname}?access_token={token}"
     size = path.stat().st_size
     try:
         with path.open("rb") as fh:
@@ -157,8 +158,78 @@ def upload_file(bucket: str, token: str, path: Path) -> None:
             with urllib.request.urlopen(req) as r:
                 pass  # response body not needed for PUT
     except urllib.error.URLError as e:
-        raise _http_fail(f"upload {path.name}", e) from None
-    print(f"  uploaded {path.name} ({size:,} bytes)")
+        raise _http_fail(f"upload {arcname}", e) from None
+    print(f"  uploaded {arcname} ({size:,} bytes)")
+
+
+def _s3_head(bucket: str, key: str) -> dict | None:
+    """HEAD an S3 object → {size, sha (x-amz-meta-sha256), version}. None if absent."""
+    import subprocess
+    r = subprocess.run(
+        ["aws", "s3api", "head-object", "--bucket", bucket, "--key", key,
+         "--query", "{size:ContentLength,sha:Metadata.sha256,version:VersionId}",
+         "--output", "json"],
+        capture_output=True, text=True)
+    if r.returncode != 0:
+        return None
+    try:
+        return json.loads(r.stdout)
+    except Exception:
+        return None
+
+
+def _fetch_s3(bucket: str, key: str, dest: Path) -> None:
+    """Download s3://bucket/key (current version) → dest. One file; bounded footprint."""
+    import subprocess
+    subprocess.run(["aws", "s3", "cp", f"s3://{bucket}/{key}", str(dest), "--no-progress"],
+                   check=True)
+
+
+def _fetch_s3_version(bucket: str, key: str, version_id: str, dest: Path) -> None:
+    """Download an EXACT object version → dest (pins the byte set even if the key is
+    later overwritten)."""
+    import subprocess
+    subprocess.run(["aws", "s3api", "get-object", "--bucket", bucket, "--key", key,
+                    "--version-id", version_id, str(dest)],
+                   check=True, capture_output=True)
+
+
+def _validate_frozen_manifest(mpath: Path, bucket: str, work: str, ed: dict,
+                              fingerprint: str | None) -> tuple[dict, list[str]]:
+    """Validate a frozen-manifest.json against THIS edition; return (version_by_key, errors).
+    Ensures the manifest names this bucket/prefix and this edition, and pins every
+    distributed file with a size+sha that matches edition.json."""
+    errs: list[str] = []
+    m = json.loads(mpath.read_text())
+    if m.get("bucket") != bucket:
+        errs.append(f"manifest bucket {m.get('bucket')!r} != {bucket!r}")
+    if m.get("prefix") != work:
+        errs.append(f"manifest prefix {m.get('prefix')!r} != --work {work!r} "
+                    f"(deposit must source the same prefix the manifest pins)")
+    if m.get("edition") != ed.get("edition"):
+        errs.append(f"manifest edition {m.get('edition')!r} != {ed.get('edition')!r}")
+    if fingerprint and m.get("scored_set_fingerprint") != fingerprint:
+        errs.append("manifest scored_set_fingerprint != baseline")
+    objs = m.get("objects", {})
+    ver: dict[str, str] = {}
+    for f in ed["files"]:
+        o = objs.get(f["key"])
+        if not o:
+            errs.append(f"manifest missing {f['key']}"); continue
+        if f.get("sha256") and o.get("sha256") != f["sha256"]:
+            errs.append(f"{f['key']}: manifest sha != edition")
+        if f.get("size_bytes") is not None and o.get("size") != f["size_bytes"]:
+            errs.append(f"{f['key']}: manifest size != edition")
+        if not o.get("version_id"):
+            errs.append(f"{f['key']}: manifest has no version_id")
+        else:
+            ver[f["key"]] = o["version_id"]
+    return ver, errs
+
+
+def _free_bytes(path: Path) -> int:
+    import shutil as _sh
+    return _sh.disk_usage(path).free
 
 
 def main() -> int:
@@ -167,6 +238,18 @@ def main() -> int:
     ap.add_argument("--publish", action="store_true", help="publish (mint final DOI) — irreversible")
     ap.add_argument("--allow-partial", action="store_true",
                     help="allow missing/mismatched data files (dry-run only; NEVER for the real mint)")
+    ap.add_argument("--bucket",
+                    help="S3 bucket to source the data bytes from (e.g. squishy-corpus). When set, "
+                         "data files are streamed from s3://<bucket>/<work>/<key> — the same "
+                         "authoritative, versioned bytes the freeze copies into 2026/ — instead of a "
+                         "local checkout. Meta files are always taken from build/meta.")
+    ap.add_argument("--work", default="draft", help="S3 working prefix the live bytes are served from")
+    ap.add_argument("--frozen-manifest", type=Path,
+                    help="build/meta/frozen-manifest.json (from capture-frozen-versions.py): deposited "
+                         "as provenance AND used to fetch each data file by its exact VersionId. "
+                         "Required for --publish.")
+    ap.add_argument("--tmpdir", help="directory for the one-file-at-a-time S3 download buffer "
+                                     "(default: system temp; needs ≥ 2× the largest file free)")
     args = ap.parse_args()
     token = os.environ.get("ZENODO_TOKEN")
     if not token:
@@ -183,18 +266,35 @@ def main() -> int:
 
     # ── guard: every DATA file must be present AND match its published sha256 ──
     # The DOI is permanent: it must anchor the EXACT, COMPLETE set of bytes the
-    # edition publishes. A missing file (e.g. the scale tier not checked out) or a
-    # byte that does not match edition.json would silently mint an incomplete/wrong
-    # record. Hard-fail unless explicitly running a dry-run (--sandbox/--allow-partial).
+    # edition publishes. A missing file or a byte that does not match edition.json
+    # would silently mint an incomplete/wrong record. Hard-fail unless explicitly
+    # running a dry-run (--sandbox/--allow-partial).
+    #
+    # Source of truth: with --bucket, the AUTHORITATIVE versioned bytes in
+    # s3://<bucket>/<work>/ (the same set the freeze copies into 2026/), verified by
+    # x-amz-meta-sha256 — no local corpus needed. Otherwise, a local checkout.
     data_expected = _data_expected()
-    present_data, missing_data, mismatched = [], [], []
-    print(f"verifying {len(data_expected)} data files against edition.json sha256…")
-    for path, key, want_sha in data_expected:
-        if not path.exists():
-            missing_data.append(key); continue
-        if want_sha and _sha256(path) != want_sha:
-            mismatched.append(key); continue
-        present_data.append(path)
+    missing_data, mismatched, ready = [], [], []   # ready: list of (key, want_sha)
+    if args.bucket:
+        print(f"verifying {len(data_expected)} data files in "
+              f"s3://{args.bucket}/{args.work}/ against edition.json sha256…")
+        for _path, key, want_sha in data_expected:
+            h = _s3_head(args.bucket, f"{args.work}/{key}")
+            if h is None:
+                missing_data.append(key)
+            elif want_sha and h.get("sha") != want_sha:
+                mismatched.append(key)
+            else:
+                ready.append((key, want_sha))
+    else:
+        print(f"verifying {len(data_expected)} local data files against edition.json sha256…")
+        for path, key, want_sha in data_expected:
+            if not path.exists():
+                missing_data.append(key)
+            elif want_sha and _sha256(path) != want_sha:
+                mismatched.append(key)
+            else:
+                ready.append((key, want_sha))
     if missing_data:
         print(f"  {len(missing_data)} missing: {missing_data}")
     if mismatched:
@@ -217,14 +317,37 @@ def main() -> int:
     if incomplete and lenient:
         print(f"WARNING: proceeding WITHOUT {len(missing_data)+len(mismatched)} data files "
               f"(dry-run mode) — this deposit must NOT be published.")
-    print(f"  ✓ {len(present_data)}/{len(data_expected)} data files present and sha-verified")
+    print(f"  ✓ {len(ready)}/{len(data_expected)} data files verified "
+          f"({'S3 ' + args.work + '/' if args.bucket else 'local'})")
+
+    # The minted DOI must pin the exact frozen object versions. --publish REQUIRES a valid
+    # post-freeze VersionId manifest; when provided, data is fetched BY VersionId so the
+    # deposit anchors precisely the frozen bytes (immune to a later key overwrite).
+    fingerprint = _scored_set_fingerprint()
+    version_by_key: dict[str, str] = {}
+    if args.frozen_manifest and args.frozen_manifest.exists():
+        ed_full = json.loads((REPO / "build/meta/edition.json").read_text())
+        if not args.bucket:
+            print("ERROR: --frozen-manifest requires --bucket (it pins S3 VersionIds to fetch by).",
+                  file=sys.stderr)
+            return 1
+        version_by_key, merrs = _validate_frozen_manifest(
+            args.frozen_manifest, args.bucket, args.work, ed_full, fingerprint)
+        if merrs:
+            print("ERROR: frozen-manifest validation failed:\n  " + "\n  ".join(merrs), file=sys.stderr)
+            return 1
+        print(f"  ✓ frozen-manifest validated: {len(version_by_key)} objects pinned to VersionIds")
+    elif args.publish:
+        print("ERROR: --publish requires --frozen-manifest (run capture-frozen-versions.py after the "
+              "freeze) so the DOI pins the exact frozen VersionIds and re-validates the bytes.",
+              file=sys.stderr)
+        return 1
 
     # ── stamp the edition fingerprint in the metadata ─────────────────────────
     # The scored_set_fingerprint is a stable, timestamp-independent hash of the
     # edition's scored roster (names/shas/kinds/categories).  Including it in the
     # deposit description and version notes lets the DOI name the exact edition
     # by a content-derived identifier — independent of git tags or wall time.
-    fingerprint = _scored_set_fingerprint()
     if fingerprint:
         META["metadata"]["description"] += (
             f" Edition fingerprint (scored-set sha256, timestamp-independent): {fingerprint}.")
@@ -256,16 +379,59 @@ def main() -> int:
 
     dep = api(base, "deposit/depositions", token, "POST", {})
     dep_id = dep["id"]
-    bucket = dep["links"]["bucket"]
+    zbucket = dep["links"]["bucket"]          # Zenodo's upload bucket (NOT the S3 source)
     print(f"deposition {dep_id} created; reserved DOI: {dep['metadata'].get('prereserve_doi',{}).get('doi','(on publish)')}")
     api(base, f"deposit/depositions/{dep_id}", token, "PUT", META)
 
-    # Upload meta files first (small, always present), then data files (streamed).
-    all_to_upload = META_ARTIFACTS + present_data
-    print(f"uploading {len(all_to_upload)} files "
-          f"({len(META_ARTIFACTS)} meta + {len(present_data)} data)…")
-    for a in all_to_upload:
-        upload_file(bucket, token, a)
+    # Meta files (always local), then the optional VersionId provenance manifest.
+    to_upload_meta = list(META_ARTIFACTS)
+    if args.frozen_manifest and args.frozen_manifest.exists():
+        to_upload_meta.append(args.frozen_manifest)
+    print(f"uploading {len(to_upload_meta)} meta files…")
+    for a in to_upload_meta:
+        upload_file(zbucket, token, a)
+
+    # Data files. With --bucket: stream each from S3 to a temp file — BY VersionId when a
+    # manifest pins one — RE-HASH the actual transferred bytes against edition.json
+    # (defence in depth over the HEAD metadata), upload, then delete: one file's footprint
+    # at a time. Otherwise upload local bytes. On any failure the deposition is a DRAFT
+    # (never auto-published) and is safe to delete on Zenodo.
+    print(f"uploading {len(ready)} data files ({'streamed from S3' if args.bucket else 'local'})…")
+    if args.bucket:
+        import tempfile
+        tmp_root = Path(args.tmpdir) if args.tmpdir else None
+        biggest = max((f["size_bytes"] or 0 for f in json.loads(
+            (REPO / "build/meta/edition.json").read_text())["files"]), default=0)
+        with tempfile.TemporaryDirectory(prefix="squishy-deposit-", dir=tmp_root) as td:
+            tdp = Path(td)
+            if _free_bytes(tdp) < biggest * 2:
+                print(f"ERROR: only {_free_bytes(tdp)//(1<<30)} GiB free in {tdp}; need ≥ "
+                      f"{biggest*2//(1<<30)} GiB headroom for the largest file. Use --tmpdir.",
+                      file=sys.stderr)
+                return 1
+            for key, want_sha in ready:
+                dest = tdp / Path(key).name
+                try:
+                    if version_by_key.get(key):
+                        _fetch_s3_version(args.bucket, f"{args.work}/{key}", version_by_key[key], dest)
+                    else:
+                        _fetch_s3(args.bucket, f"{args.work}/{key}", dest)
+                except Exception as e:
+                    print(f"ERROR: fetch {key} failed: {e}. Deposition {dep_id} is an unpublished "
+                          f"DRAFT — delete it at {base}/deposit/{dep_id} and retry.", file=sys.stderr)
+                    return 1
+                got = _sha256(dest)
+                if want_sha and got != want_sha:
+                    print(f"ERROR: {key}: transferred bytes sha {got[:12]} != edition "
+                          f"{want_sha[:12]}. Deposition {dep_id} is an unpublished DRAFT — delete it "
+                          f"and retry.", file=sys.stderr)
+                    return 1
+                upload_file(zbucket, token, dest)
+                dest.unlink()
+    else:
+        raw_root = REPO / "build" / "raw"
+        for key, _want in ready:
+            upload_file(zbucket, token, raw_root / key)
 
     if args.publish:
         pub = api(base, f"deposit/depositions/{dep_id}/actions/publish", token, "POST")

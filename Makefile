@@ -112,5 +112,8 @@ test:
 
 freeze:
 	@echo "OWNER (irreversible, after counsel sign-off):"
+	@echo "  uv run python scripts/preflight-freeze.py $(S3_BUCKET)      # must be all-green"
 	@echo "  $(AWS_VAULT) bash scripts/freeze.sh $(S3_BUCKET) --confirm"
-	@echo "  ZENODO_TOKEN=<fresh> uv run python scripts/zenodo-deposit.py"
+	@echo "  uv run python scripts/capture-frozen-versions.py $(S3_BUCKET)   # -> frozen-manifest.json"
+	@echo "  ZENODO_TOKEN=<fresh> uv run python scripts/zenodo-deposit.py \\"
+	@echo "      --bucket $(S3_BUCKET) --work 2026 --frozen-manifest build/meta/frozen-manifest.json --publish"

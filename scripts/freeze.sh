@@ -68,7 +68,11 @@ aws s3 cp "s3://$B/draft/" "s3://$B/$PREFIX/" --recursive "${INCLUDES[@]}" \
 echo "== 4/4 done. Remaining MANUAL steps =="
 cat <<EOF
   - git tag Squishy-2026 && git push --tags
-  - mint the DOI:   ZENODO_TOKEN=<fresh-token> uv run python scripts/zenodo-deposit.py
+  - pin versions:   uv run python scripts/capture-frozen-versions.py $B   (-> build/meta/frozen-manifest.json)
+  - mint the DOI (data streamed from the FROZEN, immutable, versioned $PREFIX/ bytes —
+    no local corpus needed; --work $PREFIX sources the exact frozen objects):
+      ZENODO_TOKEN=<fresh-token> uv run python scripts/zenodo-deposit.py \\
+        --bucket $B --work $PREFIX --frozen-manifest build/meta/frozen-manifest.json --publish
   - backup:         aws s3 sync s3://$B/$PREFIX/ s3://<dr-bucket>/$PREFIX/   (cross-region)
   - paste the minted DOI into CITATION.cff + the website's "How to cite" section,
     then redeploy the LIVE draft/ site (the ONLY post-mint change — the runner fetches

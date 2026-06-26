@@ -9,10 +9,10 @@
     "machine": "arm64",
     "processor": "arm",
     "python": "3.14.4",
-    "recorded_utc": "2026-06-23T01:54:34Z"
+    "recorded_utc": "2026-06-25T19:56:19Z"
   },
   "missing": [],
-  "status": "DRAFT \u2014 partial board over the small core members only. The large size rungs are scored in the periodic whole-corpus computation; until then this is NOT a citable Squishy Score. Each row is a property of (corpus, codec, codec_version, codec_command), reproducible for the pinned build.",
+  "status": "Per-file reference board over the named core members \u2014 a fast view for ranking codecs file-by-file. The headline whole-corpus Squishy Score (every file, core + large rungs) is the complete board in squishy-board-complete.json. Each row is a property of (corpus, codec, codec_version, codec_command), reproducible for the pinned build.",
   "panel": {
     "gzip -9": {
       "squishy_score": 3.062,
