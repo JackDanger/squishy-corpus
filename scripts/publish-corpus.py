@@ -30,7 +30,7 @@ Modes:
   --force             redo even if the destination already matches
   --only KEY          restrict to one key (repeatable)
 
-Needs creds for everything but --plan:  aws-vault exec personal -- make publish
+Needs AWS credentials in the environment for everything but --plan.
 """
 from __future__ import annotations
 import argparse, gzip, hashlib, importlib.util, json, lzma, os, subprocess, sys, tarfile, tempfile, urllib.request, zipfile
@@ -419,8 +419,8 @@ def main() -> int:
     if a.plan:
         return do_plan(files)
     if not have_creds():
-        print("AWS creds missing/expired — run via 'aws-vault exec personal -- …' "
-              "(or 'aws sso login'). Use --plan for an offline preview.", file=sys.stderr)
+        print("AWS credentials missing/expired — set them in your environment. "
+              "Use --plan for an offline preview.", file=sys.stderr)
         return 2
     if a.check:
         return do_check(files, a.bucket, a.prefix)

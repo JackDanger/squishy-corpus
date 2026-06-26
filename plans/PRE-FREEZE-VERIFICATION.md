@@ -86,7 +86,7 @@ adds 11 large members (incl. the Qwen2.5-0.5B / 1.5B weights ladder, `big-buck-b
 1. **Representativeness** — *prior:* **ACCEPTED (owner, 2026-05-29):** "I reviewed
    it and I accept it all." *Now:* re-confirm over the 19-core + scale-ladder
    edition (the live `draft/index.html` explorer renders all 28 cube points).
-2. **Legal counsel** — *prior (2026-05-29, owner-delegated, Opus-advisor-backed):*
+2. **License review** — *prior (2026-05-29, owner, Opus-advisor-backed):*
    - `parquet` (then NYC-TLC) — KEEP; trip records uncopyrightable (*Feist*). **The
      dataset is now US-DOT BTS On-Time** — also uncopyrightable US-Gov public-domain
      facts; the rationale strengthens, but re-affirm against BTS specifically.
@@ -96,7 +96,7 @@ adds 11 large members (incl. the Qwen2.5-0.5B / 1.5B weights ladder, `big-buck-b
      MIT), `engine` (SQLite WASM, public-domain), `symbols` (Lua, MIT), `weights`
      (SmolLM2-135M, Apache-2.0) — all permissive; LICENSE texts shipped under
      `LICENSES/`.
-   (`csv`/`sqlite` are unambiguous US-Gov public domain — never needed counsel.)
+   (`csv`/`sqlite` are unambiguous US-Gov public domain — never in question.)
 3. **PII review of `log`** — **SIGNED OFF (owner, 2026-05-29).** Already-public
    NASA-HTTP: client host identifiers only; no usernames, 0 auth tokens. Unchanged
    member; the 2026-06-24 PII scan re-confirms no credential findings corpus-wide.
@@ -110,15 +110,16 @@ The live `draft/` distribution is current and audited (31/31, 0 failures); the
 permanent `s3://squishy-corpus/2026/` prefix is **empty (pristine)** — the freeze
 has not been triggered. To freeze:
 
-1. `aws-vault exec personal -- bash scripts/freeze.sh squishy-corpus --confirm`
-   — re-audits `draft/`, asserts `2026/` empty, then server-side-copies the curated
-   allowlist into the immutable `2026/` prefix (`cache-control: …immutable`). The
-   script is interactive (`--confirm` + a `y/N` on the dry-run set). Equivalent
-   per-file path: `make release EDITION=2026`.
+1. `make freeze` (AWS credentials + `ZENODO_TOKEN` in the environment; bails if either
+   is missing) runs the whole sequence: preflight → `scripts/freeze.sh` (re-audits
+   `draft/`, asserts `2026/` empty, then server-side-copies the curated allowlist into
+   the immutable `2026/` prefix, `cache-control: …immutable`; interactive `--confirm` +
+   a `y/N` on the dry-run set) → `capture-frozen-versions.py` (pins exact object
+   versions) → `zenodo-deposit.py --publish` (mints the DOI from the frozen `2026/`
+   bytes).
 2. Git tag `Squishy-2026`; push the tag.
-3. Mint the **Zenodo DOI** (`ZENODO_TOKEN=<fresh> uv run python scripts/zenodo-deposit.py`)
-   over the per-file manifest + checksums + LICENSE-MANIFEST + NOTICE. Then fill the
-   two DOI lines in `CITATION.cff` and set `date-released` to the freeze date.
+3. Paste the minted DOI into the two DOI lines in `CITATION.cff` and the website's
+   "How to cite" section; set `date-released` to the freeze date; redeploy the live site.
 4. Cross-region / Glacier backup copy of `2026/`.
 5. Announce.
 

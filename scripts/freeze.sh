@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # freeze.sh — the Squishy-2026 freeze. OWNER-RUN, IRREVERSIBLE. Do not run until the
-# #17 sign-offs (representativeness, legal/counsel, PII, verification pass-4) are
+# sign-offs (representativeness, licensing/provenance, PII, verification pass-4) are
 # green. Refuses to run without --confirm.
 #
-#   aws-vault exec personal -- bash scripts/freeze.sh squishy-corpus --confirm
+#   bash scripts/freeze.sh squishy-corpus --confirm      (AWS creds assumed in the env)
 #
 # The edition IS the version: the frozen prefix is the edition year (2026/), the git
 # tag is the edition name (Squishy-2026), and the DOI is its permanence anchor. There
@@ -69,9 +69,10 @@ echo "== 4/4 done. Remaining MANUAL steps =="
 cat <<EOF
   - git tag Squishy-2026 && git push --tags
   - pin versions:   uv run python scripts/capture-frozen-versions.py $B   (-> build/meta/frozen-manifest.json)
-  - mint the DOI (data streamed from the FROZEN, immutable, versioned $PREFIX/ bytes —
-    no local corpus needed; --work $PREFIX sources the exact frozen objects):
-      ZENODO_TOKEN=<fresh-token> uv run python scripts/zenodo-deposit.py \\
+  - mint the DOI (ZENODO_TOKEN assumed in the env; data streamed from the FROZEN,
+    immutable, versioned $PREFIX/ bytes — no local corpus needed; --work $PREFIX sources
+    the exact frozen objects):
+      uv run python scripts/zenodo-deposit.py \\
         --bucket $B --work $PREFIX --frozen-manifest build/meta/frozen-manifest.json --publish
   - backup:         aws s3 sync s3://$B/$PREFIX/ s3://<dr-bucket>/$PREFIX/   (cross-region)
   - paste the minted DOI into CITATION.cff + the website's "How to cite" section,

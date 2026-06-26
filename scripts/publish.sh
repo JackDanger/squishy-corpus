@@ -13,8 +13,8 @@
 #   6) delete the local file (and parent dir if now empty) to keep disk lean.
 #      Set CORPUS_KEEP_LOCAL=1 in the environment to disable local cleanup.
 #
-# Usage:
-#   aws-vault exec personal -- bash publish.sh <bucket> [--dry-run] < publish.tsv
+# Usage (AWS creds assumed in the environment):
+#   bash publish.sh <bucket> [--dry-run] < publish.tsv
 
 set -euo pipefail
 

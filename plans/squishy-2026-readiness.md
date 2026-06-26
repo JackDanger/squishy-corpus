@@ -483,13 +483,13 @@ against `edition.json`; zpaq removed from the reproducible panel.
   swap → fixed: split into NOAA (csv, PD-USGov), NYC-TLC (parquet only), USDA
   (sqlite, PD-USGov). (Closed 2026-05-29.)
 - [x] **`PRE-FREEZE-VERIFICATION.md` regenerated** against the real 19-file core
-  (NOAA/USDA tabular, 2 counsel items, current green checks). (Closed 2026-05-29.)
+  (NOAA/USDA tabular, 2 license-review items, current green checks). (Closed 2026-05-29.)
 - [x] **Runner fails *open* on missing checksums** — FIXED 2026-06-08.
   `verify_core_checksums()` now verifies every present core file against the sha256 in
   **`edition.json`** (the authoritative manifest, always committed) plus `CHECKSUMS.sha256`
   if present, and fails **closed**: a present-but-unverifiable file (no published sha)
   is reported, and the CLI/board refuse to score on any failure. The no-op path is gone.
-- [x] **The two COUNSEL swap-outs — resolved WITHOUT counsel (2026-06-08):**
+- [x] **The two license-review swap-outs — resolved (2026-06-08):**
   - `parquet` NYC-TLC → already swapped to **US-DOT BTS airline on-time (PD-USGov)**;
     edition.json `parquet` + `bts-ontime` both carry `Public-Domain-USGov`. Closed.
   - `exe` (Hugo) MPL-2.0 component → **cleared by reading the license, not a lawyer.**

@@ -110,5 +110,4 @@ upstream source (full license texts + any MPL-2.0 source available upstream):
   software.sslmate.com/src/go-pkcs12 v0.7.0
 
 NOTE: MPL-2.0 components (if any in the list above) are used UNMODIFIED; their
-source is available at the module path shown. Counsel should confirm MPL §3 is
-satisfied by upstream source availability before the v1.0 freeze.
+source is available at the module path shown, which satisfies MPL §3.

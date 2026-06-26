@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Mint the Squishy-2026 Zenodo DOI. OWNER-RUN at freeze.
 
-Reads ZENODO_TOKEN from the environment (NEVER hard-code it; never commit it).
+Reads ZENODO_TOKEN from the environment.
 Creates a deposition, uploads the citable artifacts (meta files + ALL distributed
 data files), sets metadata (including the scored-set fingerprint), and RESERVES a
 DOI.  It does NOT auto-publish — review on zenodo.org, then click Publish (or pass

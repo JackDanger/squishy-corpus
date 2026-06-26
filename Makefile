@@ -5,7 +5,6 @@
 # nothing here is synthetic. End-to-end reproduction + verification is `make all`.
 
 S3_BUCKET ?= squishy-corpus
-AWS_VAULT ?=
 
 .PHONY: help all properties edition board calculate calculate-all map site deploy publish mint release coverage validate audit pii \
         baseline check test freeze
@@ -65,20 +64,19 @@ site: map
 
 # Build the site fresh, then push to S3 (origin only — never direct S3) and
 # invalidate CloudFront so squishy.jackdanger.com updates immediately.
-# Prefix the whole thing with your creds if you use aws-vault:
-#   aws-vault exec personal -- make deploy
+# Assumes AWS credentials are present in the environment.
 deploy: site
 	bash scripts/deploy-site.sh
 
 # Stream every edition member into S3, idempotently. Members are partitioned by
 # provenance: UPSTREAM (third-party, re-fetched + sha-verified) vs MINTED (our own
 # canonical copy in source/, because re-fetching could differ). One file at a time so
-# the ~17 GB corpus never lands on disk at once. Needs creds — prefix with aws-vault:
-#   make publish ARGS=--plan                          # offline preview, no AWS
-#   aws-vault exec personal -- make publish ARGS=--check
-#   aws-vault exec personal -- make mint              # seed source-of-record (run before publish/release)
-#   aws-vault exec personal -- make publish           # populate the working (draft) corpus
-#   aws-vault exec personal -- make release EDITION=2026   # freeze the edition
+# the ~17 GB corpus never lands on disk at once. Assumes AWS credentials in the env:
+#   make publish ARGS=--plan        # offline preview, no AWS
+#   make publish ARGS=--check
+#   make mint                       # seed source-of-record (run before publish/release)
+#   make publish                    # populate the working (draft) corpus
+#   make release EDITION=2026       # freeze the edition
 publish:
 	uv run --with pyarrow python scripts/publish-corpus.py $(ARGS)
 
@@ -110,10 +108,14 @@ pii:
 test:
 	uv run pytest -q -m "not slow"
 
+# Freeze the edition, end to end: preflight → copy draft/ → 2026/ → pin the exact
+# object versions → mint the Zenodo DOI. IRREVERSIBLE. Assumes AWS credentials and
+# ZENODO_TOKEN are already in the environment; bails up front if either is missing.
+# freeze.sh prompts before the one irreversible S3 copy.
 freeze:
-	@echo "OWNER (irreversible, after counsel sign-off):"
-	@echo "  uv run python scripts/preflight-freeze.py $(S3_BUCKET)      # must be all-green"
-	@echo "  $(AWS_VAULT) bash scripts/freeze.sh $(S3_BUCKET) --confirm"
-	@echo "  uv run python scripts/capture-frozen-versions.py $(S3_BUCKET)   # -> frozen-manifest.json"
-	@echo "  ZENODO_TOKEN=<fresh> uv run python scripts/zenodo-deposit.py \\"
-	@echo "      --bucket $(S3_BUCKET) --work 2026 --frozen-manifest build/meta/frozen-manifest.json --publish"
+	@aws sts get-caller-identity >/dev/null 2>&1 || { echo "freeze: set AWS credentials in your environment first" >&2; exit 1; }
+	@[ -n "$$ZENODO_TOKEN" ] || { echo "freeze: set ZENODO_TOKEN in your environment first" >&2; exit 1; }
+	uv run python scripts/preflight-freeze.py $(S3_BUCKET)
+	bash scripts/freeze.sh $(S3_BUCKET) --confirm
+	uv run python scripts/capture-frozen-versions.py $(S3_BUCKET)
+	uv run python scripts/zenodo-deposit.py --bucket $(S3_BUCKET) --work 2026 --frozen-manifest build/meta/frozen-manifest.json --publish

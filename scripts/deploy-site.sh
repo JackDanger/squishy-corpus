@@ -11,7 +11,6 @@
 # Usage:
 #   make deploy                      # builds the site first, then runs this
 #   bash scripts/deploy-site.sh      # deploy whatever is already in build/site
-#   aws-vault exec personal -- bash scripts/deploy-site.sh   # if you use aws-vault
 #
 # Env overrides: S3_BUCKET, S3_PREFIX, CF_DISTRIBUTION_ID, SITE_URL.
 set -euo pipefail
